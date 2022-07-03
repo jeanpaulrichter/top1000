@@ -10,7 +10,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU General Public License for more details.
 */
 
-import { setupSelect2, setSelect2Value } from "./vote/select2.js";
+import { setupSelect2, setSelect2Value, updateProgress } from "./vote/select2.js";
 import { findGame, findSlide } from "./vote/help.js";
 import { setFocus } from "./vote/focus.js";
 import { SlideOptions, UserInfo, VoteInfo } from "./vote/types.js";
@@ -206,6 +206,7 @@ function createSlides() {
                 }
             }
         }
+        updateProgress();
     }).catch(err => {
         console.error(err);
     });

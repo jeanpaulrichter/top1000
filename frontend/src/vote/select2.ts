@@ -22,10 +22,10 @@ let eventhandler_set = false;
 
 /* ------------------------------------------------------------------------------------------------------------------------------------------ */
 
-function updateProgress() {
+export function updateProgress() {
     let votes = 0;
     for(let i = 0; i < game_ids.length; i++) {
-        if(game_ids[i].length > 0) {
+        if(game_ids[i].length === 24) {
             votes++;
         }
     }
@@ -150,7 +150,6 @@ export function setSelect2Value(el: HTMLSelectElement, game: GameInfo) {
     const newOption = new Option(getLabel(game), game.id, false, false);
     $(el).html("").append(newOption).trigger("change");
     game_ids[game_index] = game.id;
-    updateProgress();
 }
 
 /* ------------------------------------------------------------------------------------------------------------------------------------------ */

@@ -5,6 +5,7 @@ Abstimmungstool um der community von wasted.de zu ermöglichen, die besten 1000 
 ```
 git clone https://github.com/jeanpaulrichter/top1000.git
 cd top1000
+npm install
 ```
 
 Erstelle und ergänze Datei backend/src/config.ts

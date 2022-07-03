@@ -102,7 +102,7 @@ router.get("/validate", async(req: express.Request, res: express.Response, next:
             throw new InputError("Missing token");
         }
         await db.validateUser(req.query.token);
-        res.redirect("/");
+        res.redirect("/vote");
     } catch(exc) {
         next(exc);
     }
