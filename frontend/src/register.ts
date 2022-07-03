@@ -36,7 +36,7 @@ async function register() {
             }
             el_error.classList.add("hidden");
             el_controls.classList.add("hidden");
-            el_message.innerHTML = "Alles klar. Bitte überprüfe deine Emails wegen des Aktivierungslinks! Derweilen noch schnell zur <a href=\"/list\">Liste</a>?";
+            el_message.innerHTML = "Alles klar. Bitte überprüfe deine Emails wegen des Aktivierungslinks! Derweilen noch schnell zur <a href=\"/\">Liste</a>?";
         } catch(exc) {
             console.error(exc);
             el_error.innerHTML = "Registrierung fehlgeschlagen :(";
