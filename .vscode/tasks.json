@@ -1,0 +1,67 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "watch_backend_ts",
+            "type": "shell",
+            "command": "npx tsc -b backend --watch",
+            "group": "test",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": [
+                "$tsc-watch"
+            ]
+        },
+        {
+            "label": "watch_frontend_ts",
+            "type": "shell",
+            "command": "npx tsc -b frontend --watch",
+            "group": "test",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": [
+                "$tsc-watch"
+            ]
+        },
+        {
+            "label": "watch_css",
+            "type": "shell",
+            "command": "npx sass --watch ./frontend/css:./debug/www/css",
+            "group": "test",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": [
+                "$node-sass"
+            ]
+        },
+        {
+            "label": "watch_frontend",
+            "type": "shell",
+            "command": "node ./scripts/watch.js",
+            "group": "test",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "watch",
+            "dependsOn": [
+                "watch_backend_ts",
+                "watch_frontend_ts",
+                "watch_css",
+                "watch_frontend"
+            ],
+            "problemMatcher": []
+        }
+    ]
+}

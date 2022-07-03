@@ -1,0 +1,105 @@
+/*
+This file is part of http://www.github.com/jeanpaulrichter/top1000
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+*/
+
+/* ------------------------------------------------------------------------------------------------------------------------------------------ */
+
+$wasted-color: rgb(246,34,123);
+$background-color: rgb(0,42,65);
+
+/* ------------------------------------------------------------------------------------------------------------------------------------------ */
+
+html {
+    font-size: 10px;
+}
+
+#main {
+    max-width: 1140px !important;
+    background-color: $background-color;
+    position: relative;
+}
+
+#background {
+    position: absolute;
+    width: 100vw;
+    height: 100vh;
+    background-color: white;
+    z-index: -1;
+}
+
+#top {
+    position: relative;
+}
+
+#menu {
+    position: absolute;
+    right: 1rem;
+    top: 1rem;
+
+    button {
+        width: 3rem;
+        height: 3rem;
+        margin: 0;
+        border: none;
+        background-repeat: no-repeat;
+        background-position: 50%;
+        background-color: transparent;
+        background-size: 100%;
+        border-radius: 50%;
+    
+        &:hover {
+            filter: brightness(0) saturate(100%) invert(30%) sepia(63%) saturate(5260%) hue-rotate(319deg) brightness(96%) contrast(100%);
+        }
+    }
+}
+
+h1 {
+    text-align: left;
+    color: $wasted-color;
+    font-weight: bold;
+    padding-top: 1rem;
+    padding-left: 2rem;
+}
+
+@media screen and (min-width: 420px) {
+    h1 { 
+        text-align: center !important;
+        padding-left: 0;
+    }
+}
+@media screen and (min-width: 1023px) {
+    html { font-size: 11px; }
+}
+@media screen and (min-width: 1100px) {
+    html { font-size: 12px; }
+}
+@media screen and (min-width: 1300px) {
+    html { font-size: 13px; }
+}
+@media screen and (min-width: 1600px) {
+    html { font-size: 14px; }
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* ------------------------------------------------------------------------------------------------------------------------------------------ */
+
+.icon-expand { background-image: url(icons/expand.svg); }
+.icon-collapse { background-image: url(icons/collapse.svg); }
+.icon-menu { background-image: url(icons/menu.svg); }
+.icon-menu-open { background-image: url(icons/menu_open.svg); }
+.icon-help { background-image: url(icons/help.svg); }
+.icon-list { background-image: url(icons/list.svg); }
+.icon-logout { background-image: url(icons/logout.svg); }
+.icon-vote { background-image: url(icons/vote.svg); }
+.icon-expand-black { background-image: url(icons/expand-black.svg); }

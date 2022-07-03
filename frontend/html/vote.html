@@ -1,0 +1,180 @@
+<!--
+This file is part of http://www.github.com/jeanpaulrichter/top1000
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+-->
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Wasted Top1000</title>
+    <link rel="shortcut icon" href="images/favicon.webp">
+    <link rel="stylesheet" href="css/lib/bootstrap.min.css">
+    <link rel="stylesheet" href="css/lib/select2.min.css">
+    <link rel="stylesheet" href="css/vote.css">
+    <script src="javascript/lib/jquery.min.js"></script>
+    <script src="javascript/lib/bootstrap.min.js"></script>
+    <script src="javascript/lib/select2.min.js"></script>
+    <script src="javascript/vote.js" type="module"></script>
+  </head>
+  <body>
+    <div id="background"></div>
+    <div class="container-lg" id="main">
+      <div id="top">
+        <h1>Wasted Top1000</h1>
+        <nav id="menu">
+          <a href="/"><button class="icon-list" value="list" data-bs-placement="bottom" title="Zur Liste"></button></a>
+          <button class="icon-help" data-bs-toggle="modal"></button>
+          <a href="/logout"><button class="icon-logout" data-bs-placement="bottom" title="Logout"></button></a>
+        </nav>
+      </div>
+      <div id="progress">56%</div>
+      <form action="/" method="post" id="form">
+        <div id="slide1" class="slide">
+          <span class="slide__step">1/4</span>
+          <div class="slide__info">
+              <span class="slide__text">
+                Hallo! Willkommen zur Abstimmung über die Wasted Top1000! Gefragt sind deine persönlichen Top-30 Videospiele: 
+                Du solltest dir also durchaus etwas Zeit nehmen. Zunächst aber ein paar (freiwillige) Angaben zu deiner Person.
+                Oder willst du direkt zur <a href="/list">Liste</a>?
+              </span>
+          </div>
+          <div class="row mb-3">
+            <label class="col-sm-6 col-form-label" for="genderSelect">Welchem Geschlecht fühlst du dich zugehörig?</label>
+            <div class="col-sm-6">
+              <select class="form-select" id="genderSelect" name="gender">
+                <option value="" selected>Keine Angabe...</option>
+                <option value="female">Weiblich</option>
+                <option value="male">Männlich</option>
+                <option value="other">Divers</option>
+              </select>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <label class="col-sm-6 col-form-label" for="ageSelect">Welcher Altersgruppe gehörst du an?</label>
+            <div class="col-sm-6">
+              <select class="form-select" id="ageSelect" name="age">
+                <option value="0" selected>Keine Angabe...</option>
+                <option value="1">0 - 10 Jahre</option>
+                <option value="2">11 - 20 Jahre</option>
+                <option value="3">21 - 30 Jahre</option>
+                <option value="4">31 - 40 Jahre</option>
+                <option value="5">41 - 50 Jahre</option>
+                <option value="6">51 - 60 Jahre</option>
+                <option value="7">61 - 70 Jahre</option>
+                <option value="8">71 - 80 Jahre</option>
+                <option value="9">81 - 90 Jahre</option>
+              </select>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-sm-6">Welcher Gruppe gehörst du an?</div>
+            <div class="col-sm-6">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="checkGroupHobby" value="gamer" name="gamer">
+                <label class="form-check-label" for="checkGroupHobby">Hobbygamer:in</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="checkGroupJournalist" value="journalist" name="journalist">
+                <label class="form-check-label" for="checkGroupJournalist">Journalist:in</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="checkGroupScientist" value="scientist" name="scientist">
+                <label class="form-check-label" for="checkGroupScientist">Wissenschaftler:in</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="checkGroupCritic" value="critic" name="critic">
+                <label class="form-check-label" for="checkGroupCritic">Spielekritiker:in</label>
+              </div>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-sm-6">Bist du Teil der WASTED Community?</div>
+            <div class="col-sm-6">
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="wasted" value="yes" id="radioWasted" checked>
+                <label class="form-check-label" for="radioWasted">
+                  Ich bin totally wasted.
+                </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="wasted" value="no" id="radioNotWasted">
+                <label class="form-check-label" for="radioNotWasted">
+                  Ich bin kein Teil der WASTED Community
+                </label>
+              </div>
+            </div>
+          </div>
+          <div class="slide__buttons">
+            <button type="button" class="btn btn-primary" value="next" id="btnSlide1Next">Weiter</button>
+          </div>
+          <div class="slide__footer"></div>
+        </div>
+      </form>
+    </div>
+
+    <div class="modal fade" id="dlgHelp" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content help-dialog">
+          <div class="modal-header">
+            <h5 class="modal-title">Hilfe</h5>
+            <button type="button" class="btn-close help-dialog-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p>Du kannst ein Spiel nicht in der Auswahl finden? Es könnte sein, dass es unter einem anderen Namen gespeichert ist. Probiere es in der Datenbank von <a href="https://www.mobygames.com/" target="_blank" rel="noopener noreferrer">www.mobygames.com</a> zu finden und versuche es dann mit dem dort präverierten Titel.</p>
+            <p>Wird das Spiel immernoch nicht gefunden? Klicke auf der mobygames Seite des Spiels rechts oben auf den grünen "contribute" Button. Dann auf den Link "New Platform". Nun sollest du dem URL Feld deines Browsers die GameID entnehmen können. Kopiere sie in das Eingabefeld unten:</p>
+            <form>
+              <div class="mb-3">
+                <input type="email" class="form-control" id="inputGameID" aria-describedby="helpGameID">
+                <div id="helpGameID" class="form-text">GameID von mobygames.com</div>
+              </div>
+              <button type="button" class="btn btn-primary" id="btnAddGame">Spiel hinzufügen</button>
+              <span class="hidden" id="addGameMsg"></span>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Schließen</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- To remain flexible (i.e. ask user for top10, top15 or topXXX) slides with game select dropdowns are created dynamically from these templates (see script) -->
+    <template id="tml_slide">
+      <div class="slide hidden">
+        <span class="slide__step"></span>
+        <div class="slide__info">
+          <span class="slide__text"></span>
+          <span class="slide__error hidden">Bitte fülle das Formular vollständig aus!</span>
+        </div>
+        <div class="slide__games"></div>
+        <div class="slide__buttons">
+          <button type="button" class="btn btn-secondary"></button>
+          <button type="button" class="btn btn-primary"></button>
+        </div>
+        <div class="slide__footer"></div>
+      </div>
+    </template>
+
+    <template id="tml_game">
+      <div class="game">
+        <div class="game__head">
+          <div><span class="game__number"></span></div>
+          <div><select style="width: 100%; height: 100%"></select></div>
+          <div><button type="button" value="expand"><span class="game__expand icon-expand"></span></button></div>
+        </div>
+        <div class="game__body hidden">
+          <div></div>
+          <div><textarea></textarea></div>
+        </div>
+      </div>
+    </template>
+  </body>
+</html>

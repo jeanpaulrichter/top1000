@@ -1,0 +1,17 @@
+{
+    "compilerOptions": {
+        "outDir": "../debug/www/javascript",
+        "allowJs": true,
+        "target": "es2015",
+        "module": "es2015",
+        "strict": true,
+        "noImplicitAny": true,
+        "strictNullChecks": true,
+        "moduleResolution": "node",
+        "sourceMap": true,
+        "mapRoot": "http://localhost:8001/javascript/",
+        "rootDir": "src",
+        "baseUrl": "src",
+    },
+    "include": ["src/**/*"]
+}

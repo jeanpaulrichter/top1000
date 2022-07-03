@@ -1,0 +1,133 @@
+<!--
+This file is part of http://www.github.com/jeanpaulrichter/top1000
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+-->
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Wasted Top1000</title>
+    <link rel="shortcut icon" href="images/favicon.webp">
+    <link rel="stylesheet" href="css/lib/bootstrap.min.css">
+    <link rel="stylesheet" href="css/list.css">
+    <script src="javascript/lib/bootstrap.min.js"></script>
+    <script src="javascript/list.js" type="module"></script>
+  </head>
+  <body>
+    <div id="background"></div>
+    <div class="container-lg" id="main">
+      <div id="mask" class="hidden"></div>
+      <div id="top">
+        <h1>Wasted Top1000</h1>
+        <nav id="menu">
+          <a href="/vote"><button class="icon-vote" data-bs-placement="bottom" title="Abstimmen"></button></a>
+          <button id="filterToggle" class="icon-menu"></button>
+        </nav>
+        <div id="filter" class="hidden">
+          <div class="row mb-3">
+            <label class="col-sm-6 col-form-label" for="filterGender">Geschlecht</label>
+            <div class="col-sm-6">
+              <select class="form-select" id="filterGender" name="gender">
+                <option value="" selected>Egal</option>
+                <option value="female">Weiblich</option>
+                <option value="male">Männlich</option>
+                <option value="other">Divers</option>
+              </select>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <label class="col-sm-6 col-form-label" for="filterAge">Altersgruppe</label>
+            <div class="col-sm-6">
+              <select class="form-select" id="filterAge" name="age">
+                <option value="0" selected>Egal</option>
+                <option value="1">0 - 10 Jahre</option>
+                <option value="2">11 - 20 Jahre</option>
+                <option value="3">21 - 30 Jahre</option>
+                <option value="4">31 - 40 Jahre</option>
+                <option value="5">41 - 50 Jahre</option>
+                <option value="6">51 - 60 Jahre</option>
+                <option value="7">61 - 70 Jahre</option>
+                <option value="8">71 - 80 Jahre</option>
+                <option value="9">81 - 90 Jahre</option>
+              </select>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-sm-6">Gruppen</div>
+            <div class="col-sm-6" id="filterGroups">
+              <div class="form-check">
+                <input class="form-check-input" type="radio" id="checkGroupAll" name="group" value="" checked>
+                <label class="form-check-label" for="checkGroupAll">Alle</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" id="checkGroupGamer" name="group" value="gamer">
+                <label class="form-check-label" for="checkGroupGamer">Hobbygamer:innen</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" id="checkGroupJournalist" name="group" value="journalist">
+                <label class="form-check-label" for="checkGroupJournalist">Journalist:innen</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" id="checkGroupScientist" name="group" value="scientist">
+                <label class="form-check-label" for="checkGroupScientist">Wissenschaftler:innen</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" id="checkGroupCritic" name="group" value="critic">
+                <label class="form-check-label" for="checkGroupCritic">Spielekritiker:innen</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" id="checkGroupWasted" name="group" value="wasted">
+                <label class="form-check-label" for="checkGroupWasted">Wastedmitglieder:innen</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="message" class="hidden"></div>
+      <div id="games"></div>
+      <div id="pages"></div>
+      <div id="footer"></div>
+    </div>
+
+    <template id="tml_game">
+      <div class="game">
+        <div class="game__head">
+          <div><span class="game__rank"></span></div>
+          <div><img src=""></div>
+          <div><span class="game__title"></span></div>
+          <div><span class="game__ifocus icon-expand"></span></div>
+        </div>
+        <div class="game__body hidden">
+          <div>
+            <div><img class="game__screenshot"></div>
+            <div>
+              <div class="container">
+                <div class="row justify-content-start">
+                  <div class="col-4">Platformen:</div>
+                  <div class="col-8 game__platforms"></div>
+                </div>
+                <div class="row justify-content-start">
+                  <div class="col-4">Link:</div>
+                  <div class="col-8"><a href="" class="game__link">Mobygames</a></div>
+                </div>
+                <div class="row justify-content-start">
+                  <div class="col-4">Stimmen:</div>
+                  <div class="col-8 game__votes"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="game__comments"></div>
+        </div>
+      </div>
+    </template>
+  </body>
+</html>

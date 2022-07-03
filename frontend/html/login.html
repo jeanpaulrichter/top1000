@@ -1,0 +1,44 @@
+<!--
+This file is part of http://www.github.com/jeanpaulrichter/top1000
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+-->
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Wasted Top1000</title>
+    <link rel="shortcut icon" href="images/favicon.webp">
+    <link rel="stylesheet" href="css/lib/bootstrap.min.css">
+    <link rel="stylesheet" href="css/lib/select2.min.css">
+    <link rel="stylesheet" href="css/login.css">
+    <script src="javascript/login.js" type="module"></script>
+  </head>
+  <body>
+    <div id="background"></div>
+    <div id="main" class="container-sm">
+      <h1>Wasted Top1000</h1>
+      <form action="" method="" id="form">
+        <div class="login-text">Bitte melde dich an. Oder einfach nur <a href="/">Liste</a> anschauen?</div>
+        <div class="hidden error" id="errorMessage"></div>
+        <div class="mb-3">
+          <label for="inputEmail" class="form-label">Email</label>
+          <input type="email" class="form-control" id="inputEmail" aria-describedby="emailHelp">
+        </div>
+        <div class="mb-3">
+          <label for="inputPassword" class="form-label">Password</label>
+          <input type="password" class="form-control" id="inputPassword">
+        </div>
+        <button type="button" class="btn btn-primary" id="btnSubmit">Login</button>
+        <span class="register"><a href="/register">Neuen Account erstellen</a></span>
+      </form>
+    </div>
+  </body>
+</html>

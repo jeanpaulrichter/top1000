@@ -1,0 +1,231 @@
+/*
+This file is part of http://www.github.com/jeanpaulrichter/top1000
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+*/
+
+@import "common.scss";
+
+/* ------------------------------------------------------------------------------------------------------------------------------------------ */
+
+#progress {
+    position: absolute;
+    right: 8rem;
+    bottom: 0.5rem;
+    color: white;
+    font-size: 3rem;
+    user-select: none;
+    font-style: italic;
+}
+
+/* ------------------------------------------------------------------------------------------------------------------------------------------ */
+
+.help-dialog {
+    background-color: $background-color;
+    color: white;
+}
+
+.help-dialog__msg {
+    font-size: 1.1rem;
+    margin-left: 1rem;
+    font-weight: bold;
+}
+
+.help-dialog__msg--success {
+    color: green;
+
+}
+
+.help-dialog__msg--error {
+    color: red;
+}
+
+.help-dialog-close {
+    filter:  brightness(0) invert(1);
+}
+
+/* ------------------------------------------------------------------------------------------------------------------------------------------ */
+
+.slide {
+    color: white;
+    padding: 1rem;
+    position: relative;
+}
+
+.slide__buttons {
+    padding-top: 1rem;
+}
+
+.slide__info {
+    color: white;
+    padding: 1rem;
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.slide__error {
+    color: red;
+    font-weight: bold;
+}
+
+.slide__step {
+    position: absolute;
+    right: 0.5rem;
+    bottom: 0.5rem;
+    color: white;
+    font-size: 3rem;
+    user-select: none;
+    font-style: italic;
+}
+
+.slide__footer {
+    height: 2rem;
+}
+
+/* ------------------------------------------------------------------------------------------------------------------------------------------ */
+
+.game--focus {
+    .game__expand {
+        filter: brightness(0) saturate(100%) invert(30%) sepia(63%) saturate(5260%) hue-rotate(319deg) brightness(96%) contrast(100%) !important;
+    }    
+
+    span {
+        color: $wasted-color !important;
+    }
+}
+
+// Game selector control
+.game {
+    margin-top: 3px;
+
+    // Game selector top with dropdown etc.
+    >div.game__head {
+        width: 100%;
+        display: flex;
+        flex-flow: row nowrap;
+
+        &:hover {
+            .game__expand {
+                filter: brightness(0) saturate(100%) invert(30%) sepia(63%) saturate(5260%) hue-rotate(319deg) brightness(96%) contrast(100%) !important;
+            }    
+            span {
+                color: $wasted-color !important;
+            }
+        }
+
+        // "Number div" i.e. 1., 2. ...
+        >div:first-of-type {
+            order: 1;
+            flex-grow: 0;
+            flex-shrink: 0;
+            width: 3rem;
+            display: table;
+
+            span {
+                font-size: 1.4rem;
+                font-weight: bolder;
+                display: table-cell;
+                vertical-align: middle;
+                text-align: center;
+                color: white;
+            }
+        }
+
+        // Dropdown select div
+        >div:nth-of-type(2) {
+            order: 2;
+            flex-grow: 5;
+            flex-shrink: 5;
+            overflow: hidden;
+        }
+
+        // Expand button div
+        >div:last-of-type {
+            order: 3;
+            flex-grow: 0;
+            flex-shrink: 0;
+            width: 2.5rem;
+
+            button {
+                width: 100%;
+                height: 100%;
+                margin-left: 2px;
+                border: 0;
+                border-radius: 3px;
+                background-repeat: no-repeat;
+                background-position: 50%;
+                display: block;
+                background-color: white;
+            }
+
+            span.game__expand {
+                width: 100%;
+                height: 100%;
+                filter: brightness(0) invert(0);
+                display: block;
+                background-repeat: no-repeat;
+                background-position: 50%;
+                background-size: 180%;
+                background-color: transparent;
+            }
+        }
+    }
+
+    // Game selector body that can be expanded/collapsed
+    >div.game__body {
+        width: 100%;
+        display: flex;
+        flex-flow: row nowrap;
+
+        // Indentation container...
+        >div:first-of-type {
+            order: 1;
+            flex-grow: 0;
+            flex-shrink: 0;
+            width: 3rem;
+        }
+
+        // Main body container
+        >div:last-of-type {
+            order: 2;
+            flex-grow: 1;
+            padding: 3px;
+
+            textarea {
+                width: 100%; 
+                height: 5rem;
+                resize: none;
+                box-sizing: border-box;
+                font-size: 0.7rem;
+            }
+        }
+    }
+}
+
+/* ------------------------------------------------------------------------------------------------------------------------------------------ */
+
+.select2__suggestion {
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
+    img {
+        order: 1;
+        height: 3rem;
+        width: 3rem;
+    }
+    span {
+        order: 2;
+        padding-left: 1rem;
+    }
+}
+
+.select2--highlight {
+    background-color: lightsalmon !important;
+    border-color: lightsalmon !important;
+}

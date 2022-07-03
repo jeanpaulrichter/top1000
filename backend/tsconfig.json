@@ -1,0 +1,19 @@
+{
+    "compilerOptions": {
+        "outDir": "../debug/src",
+        "allowJs": false,
+        "strict": true,
+        "target": "es2020",
+        "sourceMap": true,
+        "allowSyntheticDefaultImports": true,
+        "esModuleInterop": true,
+        "module": "CommonJS",
+        "moduleResolution": "node",
+        "noImplicitAny": true,
+        "noImplicitThis": true,
+        "strictNullChecks": true,
+        "lib": ["ES2020.Promise", "DOM"],
+        "rootDir": "src"
+    },
+    "include": ["src/**/*"]
+}

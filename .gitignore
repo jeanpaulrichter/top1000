@@ -1,0 +1,5 @@
+vs.code-workspace
+node_modules
+debug
+built
+backend/src/config.ts
