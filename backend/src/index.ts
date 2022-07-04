@@ -441,6 +441,7 @@ router.use((err: unknown, req: express.Request, res: express.Response, next: exp
 
 // Start server
 db.connect().then(() => {
+    app.set("trust proxy", "loopback");
     // Set path of staticlly served files (css/javascript/images)
     app.use(express.static(joinPath(__dirname, "../www")));
     // Setup request parser
