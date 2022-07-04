@@ -10,6 +10,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU General Public License for more details.
 */
 
+import { createHash } from "crypto";
 import MongoStore from "connect-mongo";
 import { Store as SessionStore } from "express-session";
 import { Logger } from "winston";
@@ -111,8 +112,10 @@ export class MongoDB
             }
             await this.ipBlockCheck(ip, "login", 10, 15);
 
+            const email_hash = createHash("sha256").update(email).digest("hex");
+
             const ret = await this.users.findOne<User>({
-                "email": email,
+                "email": email_hash,
                 "token": { "$exists": false }
             }, {
                 "projection": {
@@ -151,8 +154,10 @@ export class MongoDB
             }
             await this.ipBlockCheck(ip, "register", 1, 30);
 
+            const email_hash = createHash("sha256").update(email).digest("hex");
+
             const ret = await this.users.insertOne({
-                "email": email,
+                "email": email_hash,
                 "key": key,
                 "salt": salt,
                 "gender": "",
