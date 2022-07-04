@@ -51,7 +51,8 @@ async function login() {
     if(password.length > 0 && email.length > 0) {
         try {
             await loginRequest(email, password);
-            window.location.href = "/";
+            history.go(0);
+            //window.location.href = "/";
             //window.location.reload();
         } catch(exc) {
             if(typeof exc === "string") {
