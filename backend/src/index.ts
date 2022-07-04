@@ -71,7 +71,7 @@ router.post("/login", async(req: express.Request, res: express.Response, next: e
 
         const test = derivedKey.toString("hex");
         if(test !== user.key) {
-            log.info("Invalid login attempt by user " + email);
+            log.info("Invalid login attempt by user " + user.id);
             throw new InputError("Invalid password");
         }
 

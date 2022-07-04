@@ -51,7 +51,8 @@ async function login() {
     if(password.length > 0 && email.length > 0) {
         try {
             await loginRequest(email, password);
-            window.location.reload();
+            window.location.href = "/";
+            //window.location.reload();
         } catch(exc) {
             if(typeof exc === "string") {
                 el_message.innerHTML = exc;
