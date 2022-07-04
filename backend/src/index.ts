@@ -90,10 +90,9 @@ router.post("/login", async(req: express.Request, res: express.Response, next: e
 });
 
 router.get("/logout", (req: express.Request, res: express.Response) => {
-    if(req.session.user !== undefined) {
-        delete req.session.user;
-    }
-    res.redirect("/");
+    req.session.destroy(() => {
+        res.redirect("/");
+    })
 });
 
 router.get("/validate", async(req: express.Request, res: express.Response, next: express.NextFunction) => {
