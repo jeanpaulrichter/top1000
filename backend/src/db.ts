@@ -156,6 +156,13 @@ export class MongoDB
 
             const email_hash = createHash("sha256").update(email).digest("hex");
 
+            const check = await this.users.findOne({
+                "email": email_hash
+            });
+            if(check !== null) {
+                throw new InputError("Email already exits.")
+            }
+
             const ret = await this.users.insertOne({
                 "email": email_hash,
                 "key": key,
