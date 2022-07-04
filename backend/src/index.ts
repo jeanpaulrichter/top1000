@@ -37,11 +37,15 @@ router.get("/", (req: express.Request, res: express.Response) => {
 
 router.get("/vote", (req: express.Request, res: express.Response) => {
     if(req.session.user === undefined) {
-        res.type("html").sendFile(joinPath(__dirname, "../html/login.html"));
+        res.redirect("/login");
     } else {
         res.type("html").sendFile(joinPath(__dirname, "../html/vote.html"));
     }
 });
+
+router.get("/login", (req: express.Request, res: express.Response) => {
+    res.type("html").sendFile(joinPath(__dirname, "../html/login.html"));
+})
 
 router.get("/register", (req: express.Request, res: express.Response) => {
     res.type("html").sendFile(joinPath(__dirname, "../html/register.html"));
