@@ -466,17 +466,17 @@ db.connect().then(() => {
     app.use(router);
 
     const server = http.createServer(app);
-    server.on('error', err => {
-        console.error(err);
+    server.on("error", err => {
+        log.error(err);
     });
     server.listen(config.port, () => {
         const address = server.address();
         if(typeof address === "object" && address !== null) {
-            console.log("Server started. Listening at port " + address.port);    
+            log.info("Server started. Listening at port " + address.port);    
         } else {
-            console.log("Failed to get server address");
+            log.error("Failed to get server address");
         }
     });
 }).catch(exc => {
-    console.error(exc);
+    log.error(exc);
 })

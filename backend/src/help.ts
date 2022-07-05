@@ -173,7 +173,7 @@ export async function getMobygamesInfo(game_id: number): Promise<GameInfo> {
             try {
                 game.icon = await getImageThumbnail(thumb_url);
             } catch(err) {
-                console.error(err);
+                //
             }
         }
     }
