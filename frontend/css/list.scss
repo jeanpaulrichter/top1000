@@ -91,7 +91,7 @@ GNU General Public License for more details.
     cursor: pointer;
 
     &:hover {
-        color: rgb(246,34,123) !important;
+        color: $wasted-color !important;
         .game__ifocus {
             filter: brightness(0) saturate(100%) invert(30%) sepia(63%) saturate(5260%) hue-rotate(319deg) brightness(96%) contrast(100%) !important;
         }
