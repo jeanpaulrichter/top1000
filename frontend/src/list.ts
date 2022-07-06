@@ -73,6 +73,7 @@ async function loadList(page: number, filter: FilterOptions) {
             const el_screen = el_body.querySelector("img.game__screenshot") as HTMLImageElement;
             const el_platforms = el_body.querySelector(".game__platforms") as HTMLElement;
             const el_votes = el_body.querySelector(".game__votes") as HTMLElement;
+            const el_score = el_body.querySelector(".game__score") as HTMLElement;
             const el_comments = el_body.querySelector(".game__comments") as HTMLElement;
 
             if(game.screenshots.length > 0) {
@@ -83,6 +84,7 @@ async function loadList(page: number, filter: FilterOptions) {
             el_link.href = game.moby_url;
             el_platforms.innerHTML = getPlatformString(game.platforms);
             el_votes.innerHTML = data[i].votes.toString();
+            el_score.innerHTML = data[i].score.toFixed(3).toString();
             if(Array.isArray(data[i].comments) && data[i].comments.length > 0) {
                 let comments_str = "";
                 for(let ii = 0; ii < data[i].comments.length; ii++) {

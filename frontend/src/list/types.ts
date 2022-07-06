@@ -41,6 +41,7 @@ export type GameInfo = {
 export type ListInfo = {
     rank: number,
     votes: number,
+    score: number,
     comments: string[],
     game: GameInfo
 }

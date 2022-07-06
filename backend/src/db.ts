@@ -21,6 +21,17 @@ import { getMobygamesInfo, getMobyIDFromURL } from "./help";
 import config from "./config";
 
 /**
+ * Determines the weight of each vote. A linear distribution is assumed from 1 for the last place (=VOTES_PER_USER) to MAX_SCORE for the first.
+ */
+const VOTES_PER_USER = 30;
+const MAX_SCORE = 10;
+
+// Slope of the "score" straight
+const LINEAR_M = (1 - MAX_SCORE) / (VOTES_PER_USER - 1);
+// y-intercept
+const LINEAR_N = (VOTES_PER_USER * MAX_SCORE - 1) / (VOTES_PER_USER - 1);
+
+/**
  * MongoDB interface class
  */
 export class MongoDB
@@ -572,7 +583,7 @@ export class MongoDB
                 { "$match": query },
                 { "$group": {
                     "_id": "$game_id",
-                    "rank": { "$sum": { "$subtract": [10.3103448275862, { "$multiply": [0.3103448275862, "$position"]}] } },
+                    "score": { "$sum": { "$add": [LINEAR_N, { "$multiply": [LINEAR_M, "$position"]}] } },
                     "comments": { "$push": "$comment" },
                     "votes" : { "$sum": 1 }
                 } },
@@ -580,7 +591,7 @@ export class MongoDB
                     "meta": [ { "$count": "total" } ],
                     "data": [
                         { "$sort": {
-                            "rank": -1
+                            "score": -1
                         }},
                         { "$skip": (page - 1) * 20 },
                         { "$limit": 20 },
@@ -591,7 +602,7 @@ export class MongoDB
                             "as": "game"
                         } },
                         { "$project": {
-                            "rank": "$rank",
+                            "score": "$score",
                             "votes": "$votes",
                             "game": { "$arrayElemAt": [ "$game", 0 ] },
                             "comments": "$comments"
