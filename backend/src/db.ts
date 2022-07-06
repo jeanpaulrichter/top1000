@@ -297,7 +297,7 @@ export class MongoDB
      */
     public async updateVote(user: UserInfo, position: number, game_id: string): Promise<void> {
         try {
-            if(this.votes === undefined) {
+            if(this.votes === undefined || this.games === undefined) {
                 throw new Error("No database connection");
             }
             if(user.id.length !== 24) {
@@ -309,14 +309,30 @@ export class MongoDB
             if(!(Number.isInteger(position) && position > 0 && position <= 100)) {
                 throw new Error("Invalid position");
             }
+            const game_object_id = ObjectId.createFromHexString(game_id);
+            const game = await this.games.findOne({
+                "_id": game_object_id
+            }, {
+                "projection": {
+                    "title": 1,
+                    "moby_id": 1,
+                    "year": 1
+                }
+            });
+            if(game === null) {
+                throw new InputError("Game not found");
+            }
             const ret = await this.votes.updateOne({
-                "user": ObjectId.createFromHexString(user.id),
+                "user_id": ObjectId.createFromHexString(user.id),
                 "position": position,
                 "age": user.age,
                 "gender": user.gender,
                 "groups": user.groups
             }, { "$set": {
-                "game": ObjectId.createFromHexString(game_id)
+                "game_id": game_object_id,
+                "game_title": game.title,
+                "game_year": game.year,
+                "game_moby_id": game.moby_id
             } }, {
                 "upsert": true
             });
@@ -349,7 +365,7 @@ export class MongoDB
                 throw new Error("Invalid position");
             }
             const ret = await this.votes.updateOne({
-                "user": ObjectId.createFromHexString(user_id),
+                "user_id": ObjectId.createFromHexString(user_id),
                 "position": position
             }, { "$set": {
                 "comment": comment
@@ -390,7 +406,7 @@ export class MongoDB
                 session.startTransaction(transactionOptions);
                 // Update all user votes
                 let ret = await this.votes.updateMany({
-                    "user": user_id,
+                    "user_id": user_id,
                 }, { "$set": {
                     "age": user.age,
                     "gender": user.gender,
@@ -443,11 +459,11 @@ export class MongoDB
 
             const ret = await this.votes.aggregate([
                 { "$match": {
-                    "user": ObjectId.createFromHexString(user_id)
+                    "user_id": ObjectId.createFromHexString(user_id)
                 } },
                 { "$lookup": {
                     "from": "games",
-                    "localField": "game",
+                    "localField": "game_id",
                     "foreignField": "_id",
                     "as": "info"
                 } },
@@ -455,7 +471,7 @@ export class MongoDB
                     _id: 0,
                     position: "$position",
                     comment: "$comment",
-                    id: { "$toString" : "$game" },
+                    id: { "$toString" : "$game_id" },
                     title: { "$arrayElemAt": [ "$info.title", 0 ] },
                     year: { "$arrayElemAt": [ "$info.year", 0 ] },
                     platforms: { "$arrayElemAt": [ "$info.platforms", 0 ] },
@@ -499,7 +515,7 @@ export class MongoDB
             const ret = await this.votes.aggregate([
                 { "$match": query },
                 { "$group": {
-                    "_id": "$game",
+                    "_id": "$game_id",
                     "rank": { "$sum": { "$subtract": [10.3103448275862, { "$multiply": [0.3103448275862, "$position"]}] } },
                     "comments": { "$push": "$comment" },
                     "votes" : { "$sum": 1 }
