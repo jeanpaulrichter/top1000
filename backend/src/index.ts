@@ -17,6 +17,7 @@ import create_express from "express";
 import create_session from "express-session";
 import { join as joinPath } from "path";
 import { scryptSync, randomBytes } from "crypto";
+import { parse as json2csv } from "json2csv";
 import { MongoDB } from "./db";
 import { VoterGroups, Gender, VoterGroup } from "./types";
 import { AuthError, InputError, LoggedError } from "./exceptions";
@@ -418,6 +419,32 @@ router.get("/api/search", async(req: express.Request, res: express.Response, nex
             const result = await db.search(term, page);
             res.send(result);
         }
+    } catch(exc) {
+        next(exc);
+    }
+});
+
+router.get("/api/data", async(req: express.Request, res: express.Response, next: express.NextFunction) => {
+    try {
+        const email = req.query.email;
+        const password = req.query.password;
+
+        if(typeof email !== "string" || email.length == 0 || email.length > 128) {
+            throw new InputError("Invalid email");
+        }
+        if(typeof password !== "string" || password.length == 0 || password.length > 128) {
+            throw new InputError("Invalid password");
+        }
+
+        const data = await db.getData(req.ip, email, password);
+
+        res.set("Content-Type", "text/csv; charset=utf-8");
+        res.send(json2csv(data, {
+            "header": true,
+            "eol": "\n",
+            "fields": ["user", "age", "gender", "wasted", "gamer", "journalist", "critic", "scientist", "game", "year", "moby_id", "position"]
+        }));
+
     } catch(exc) {
         next(exc);
     }

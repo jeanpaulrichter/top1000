@@ -10,7 +10,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU General Public License for more details.
 */
 
-import { createHash } from "crypto";
+import { createHash, scryptSync } from "crypto";
 import MongoStore from "connect-mongo";
 import { Store as SessionStore } from "express-session";
 import { Logger } from "winston";
@@ -480,6 +480,65 @@ export class MongoDB
             ]).toArray();
             return ret as VoteGame[];
         } catch(exc) {
+            this.log.error(exc);
+            throw new LoggedError();
+        }
+    }
+
+    /**
+     * Get the whole votes collection
+     * @returns Array of votes
+     * @throws InputError, LoggedError
+     */
+     public async getData(ip: string, email: string, password: string) {
+        try {
+            if(this.votes === undefined || this.users === undefined) {
+                throw new Error("No database connection");
+            }
+            await this.ipBlockCheck(ip, "data", 10, 15);
+
+            const email_hash = createHash("sha256").update(email).digest("hex");
+            const user = await this.users.findOne({
+                "email": email_hash,
+                "token": { "$exists": false }
+            }, {
+                "projection": {
+                    "_id": 0,
+                    "salt": 1,
+                    "key": 1
+                }
+            });
+            if(user === null) {
+                throw new InputError("User not found");
+            }
+            const salt = Buffer.from(user.salt, "hex");
+            const test = scryptSync(password, salt, 64).toString("hex");
+            if(test !== user.key) {
+                throw new InputError("Invalid password");
+            }
+
+            const ret = await this.votes.find({}, {
+                "projection": {
+                    "_id": 0,
+                    "user": { "$toString": "$user_id" },
+                    "age": 1,
+                    "gender": 1,
+                    "wasted": "$groups.wasted",
+                    "gamer": "$groups.gamer",
+                    "journalist": "$groups.journalist",
+                    "critic": "$groups.critic",
+                    "scientist": "$groups.scientist",
+                    "game": "$game_title",
+                    "year": "$game_year",
+                    "moby_id": "$game_moby_id",
+                    "position": 1
+                }
+            }).toArray();
+            return ret;
+        } catch(exc) {
+            if(exc instanceof InputError) {
+                throw exc;
+            }
             this.log.error(exc);
             throw new LoggedError();
         }
