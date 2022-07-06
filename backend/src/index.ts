@@ -160,16 +160,12 @@ router.post("/api/addgame", async(req: express.Request, res: express.Response, n
             throw new AuthError();
         }
         
-        // Validate game_id
-        if(typeof req.body.moby_id !== "string" || req.body.moby_id.length === 0) {
-            throw new InputError("Missing moby_id");
-        }
-        const moby_id = parseInt(req.body.moby_id);
-        if(Number.isNaN(moby_id) || moby_id < 1 || moby_id > 9999999) {
-            throw new InputError("Invalid moby_id");
+        // Validate moby_url
+        if(typeof req.body.moby_url !== "string" || req.body.moby_url.length === 0) {
+            throw new InputError("Missing game_url");
         }
 
-        await db.addGame(req.ip, moby_id);
+        await db.addGame(req.ip, req.body.moby_url);
 
         res.send({
             "error": false

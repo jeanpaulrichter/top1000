@@ -17,7 +17,7 @@ import { Logger } from "winston";
 import { MongoClient, ReadPreference, Collection, MongoClientOptions, ObjectId, Document, TransactionOptions } from "mongodb";
 import { Gender, VoteGame, VoterGroup, User, UserInfo } from "./types";
 import { InputError, LoggedError } from "./exceptions";
-import { getMobygamesInfo } from "./help";
+import { getMobygamesInfo, getMobyIDFromURL } from "./help";
 import config from "./config";
 
 /**
@@ -244,18 +244,18 @@ export class MongoDB
     /**
      * Add game to database
      * @param ip Client IP
-     * @param moby_id Mobygames Game ID
+     * @param moby_url Mobygames game URL
      * @throws InputError, LoggedError
      */
-    public async addGame(ip: string, moby_id: number): Promise<void> {
+    public async addGame(ip: string, moby_url: string): Promise<void> {
         try {
             if(this.games === undefined) {
                 throw new Error("No database connection");
             }
-            // Validate moby_id
-            if(!(Number.isInteger(moby_id) && moby_id > 0 && moby_id < 9999999)) {
-                throw new InputError("Invalid GameID");
-            }
+            // Check if user has added too many games already
+            await this.ipBlockCheck(ip, "addgame", 5, 10);
+
+            const moby_id = await getMobyIDFromURL(moby_url);
 
             // Check if game is already in database
             const test = await this.games.findOne({
@@ -266,9 +266,6 @@ export class MongoDB
             if(test !== null) {
                 throw new InputError("Game already in database");
             }
-
-            // Check if user has added too many games already
-            await this.ipBlockCheck(ip, "addgame", 5, 10);
 
             // Get data from mobygames.com
             const game = await getMobygamesInfo(moby_id);

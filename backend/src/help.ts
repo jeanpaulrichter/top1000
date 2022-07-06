@@ -209,3 +209,45 @@ export async function sendVerificationEmail(email: string, token: string) {
         "html": "Hi,<br><br>um deinen Account bei Wasted Top1000 freizuschalten, klicke bitte auf folgenden <a href=\"" + url + "\">Link</a>.<br><br>Schöne Grüße!"
     });
 }
+
+/**
+ * Find game id from mobygames game page
+ * @param url Mobygames.com URL
+ * @returns Game Id
+ * @throws InputError, Error
+ */
+export async function getMobyIDFromURL(url: string): Promise<number> {
+    const test_url = url.match(/^(https:\/\/)?www.mobygames.com\/game\/(([a-z]+\/)?[a-z0-9\-_]+)$/);
+    if(test_url === null) {
+        throw new InputError("Invalid mobygames url");
+    }
+    const ret = await axios({
+        "url": "https://www.mobygames.com/game/" + test_url[2] + "/contribute",
+        "method": "get",
+        "responseType": "text",
+        "responseEncoding": "utf8"
+    });
+
+    if(ret.status !== 200) {
+        throw new Error(ret.statusText);
+    }
+    const html = ret.data as string;
+    const test = html.indexOf("new_game_wizard/gameId,");
+
+    if(test === -1) {
+        throw new Error("Game ID not found.");
+    }
+
+    const str = html.substring(test, test + 40);
+
+    const test_string = str.match(/gameId,([0-9]+)/);
+    if(test_string === null) {
+        throw new Error("Failed to parse game id.");
+    }
+
+    const gameid = parseInt(test_string[1]);
+    if(Number.isNaN(gameid)) {
+        throw new Error("Failed to parse game id.");
+    }
+    return gameid;
+}

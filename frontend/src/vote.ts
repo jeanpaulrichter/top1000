@@ -29,11 +29,11 @@ declare global {
  */
 const slides: SlideOptions[] = [
     {
-        "text": "Wähle jetzt deine Top-10 Videospiele aller Zeiten. Wenn du zu einem Spiel einen kurzen Kommentar hinterlassen möchtest, klicke auf den Button rechts neben dem Dropdown-Menü.",
+        "text": "Wähle jetzt deine Top-10 Videospiele aller Zeiten. Wenn du ein Spiel nicht finden kannst, klicke den Hilfe (?) Button rechts oben.",
         "games": 10
     },
     {
-        "text": "Weiter geht es: Die Spiele 11 bis 20 auf deiner ewigen Bestenliste!",
+        "text": "Wenn du zu einem Spiel einen kurzen Kommentar hinterlassen möchtest, klicke auf den Button rechts neben jeder Zeile.",
         "games": 10
     },
     {
@@ -316,7 +316,7 @@ function onGameCommentBlur(e: Event) {
  */
 function onClickAddGame(e: Event) {
     const el_btn = e.target as HTMLButtonElement;
-    const el_input = document.getElementById("inputGameID") as HTMLInputElement;
+    const el_input = document.getElementById("helpGameURL") as HTMLInputElement;
     const el_msg = document.getElementById("addGameMsg") as HTMLDivElement;
     el_btn.disabled = true;
     el_input.disabled = true;
@@ -324,7 +324,7 @@ function onClickAddGame(e: Event) {
 
     // Try to add game to database...
     axios.post("/api/addgame", {
-        "moby_id": el_input.value
+        "moby_url": el_input.value
     }).then(() => {
         el_msg.className = "help-dialog__msg help-dialog__msg--success";
         el_msg.innerHTML = "Spiel hinzugefügt."; 

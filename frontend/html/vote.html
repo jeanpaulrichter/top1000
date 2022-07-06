@@ -45,8 +45,7 @@ GNU General Public License for more details.
           <div class="slide__info">
               <span class="slide__text">
                 Hallo! Willkommen zur Abstimmung über die Wasted Top1000! Gefragt sind deine persönlichen Top-30 Videospiele: 
-                Du solltest dir also durchaus etwas Zeit nehmen. Zunächst aber ein paar (freiwillige) Angaben zu deiner Person.
-                Oder willst du direkt zur <a href="/">Liste</a>?
+                Zunächst aber ein paar (freiwillige) Angaben zu deiner Person. Übrigens: Alle Angaben werden sofort gespeichert und können jeder Zeit geändert werden!
               </span>
           </div>
           <div class="row mb-3">
@@ -132,11 +131,11 @@ GNU General Public License for more details.
           </div>
           <div class="modal-body">
             <p>Du kannst ein Spiel nicht in der Auswahl finden? Es könnte sein, dass es unter einem anderen Namen gespeichert ist. Probiere es in der Datenbank von <a href="https://www.mobygames.com/" target="_blank" rel="noopener noreferrer">www.mobygames.com</a> zu finden und versuche es dann mit dem dort präverierten Titel.</p>
-            <p>Wird das Spiel immernoch nicht gefunden? Klicke auf der mobygames Seite des Spiels rechts oben auf den grünen "contribute" Button. Dann auf den Link "New Platform". Nun sollest du dem URL Feld deines Browsers die GameID entnehmen können. Kopiere sie in das Eingabefeld unten:</p>
+            <p>Wird das Spiel immernoch nicht gefunden? Kopiere die URL des Spiels in das Eingabefeld unten:</p>
             <form>
               <div class="mb-3">
-                <input type="email" class="form-control" id="inputGameID" aria-describedby="helpGameID">
-                <div id="helpGameID" class="form-text">GameID von mobygames.com</div>
+                <input type="email" class="form-control" id="helpGameURL" aria-describedby="helpGameURL">
+                <div id="helpGameURL" class="form-text">URL von mobygames.com</div>
               </div>
               <button type="button" class="btn btn-primary" id="btnAddGame">Spiel hinzufügen</button>
               <span class="hidden" id="addGameMsg"></span>
