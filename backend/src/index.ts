@@ -69,8 +69,9 @@ router.post("/login", async(req: express.Request, res: express.Response, next: e
         if(typeof password !== "string" || password.length == 0 || password.length > 128) {
             throw new InputError("Invalid password");
         }
+        const email_lower = email.toLocaleLowerCase("de-DE");
 
-        const user = await db.getUser(req.ip, email);
+        const user = await db.getUser(req.ip, email_lower);
         const salt = Buffer.from(user.salt, "hex");
         const derivedKey = scryptSync(password, salt, 64);
 
@@ -126,14 +127,15 @@ router.post("/register", async(req: express.Request, res: express.Response, next
         if(typeof password !== "string" || password.length < 8 || password.length > 128) {
             throw new InputError("Invalid password");
         }
+        const email_lower = email.toLocaleLowerCase("de-DE");
 
         const salt = randomBytes(32);
         const derivedKey = scryptSync(password, salt, 64);
         const token = randomBytes(32).toString("hex");
 
-        const userid = await db.addUser(req.ip, email, derivedKey.toString("hex"), salt.toString("hex"), token);
+        const userid = await db.addUser(req.ip, email_lower, derivedKey.toString("hex"), salt.toString("hex"), token);
         try {
-            await sendVerificationEmail(email, token);
+            await sendVerificationEmail(email_lower, token);
         } catch(err) {
             await db.deleteUser(userid);
             throw err;
@@ -431,8 +433,9 @@ router.get("/api/data", async(req: express.Request, res: express.Response, next:
         if(typeof password !== "string" || password.length == 0 || password.length > 128) {
             throw new InputError("Invalid password");
         }
+        const email_lower = email.toLocaleLowerCase("de-DE");
 
-        const data = await db.getData(req.ip, email, password);
+        const data = await db.getData(req.ip, email_lower, password);
 
         res.set("Content-Type", "text/csv; charset=utf-8");
         res.send(json2csv(data, {
