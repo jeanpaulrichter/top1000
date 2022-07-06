@@ -185,7 +185,7 @@ async function processBackend() {
             "module": "esnext",
             "sourceMap": false
         })],
-        "external": ["mongodb", "connect-mongo", "nodemailer", "sharp", "path", "fs", "fs/promises", "file-type", "image-size", "http", "express", "express-session", "winston", "crypto", "axios"]
+        "external": ["mongodb", "connect-mongo", "json2csv", "nodemailer", "sharp", "path", "fs", "fs/promises", "file-type", "image-size", "http", "express", "express-session", "winston", "crypto", "axios"]
     });
     await bundle.write({
         "file": tFile,
