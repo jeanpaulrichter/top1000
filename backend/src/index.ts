@@ -16,15 +16,15 @@ import log from "./log";
 import create_express from "express";
 import create_session from "express-session";
 import { join as joinPath } from "path";
-import { scryptSync, randomBytes } from "crypto";
 import { parse as json2csv } from "json2csv";
 import { MongoDB } from "./db";
 import { VoterGroups, Gender, VoterGroup } from "./types";
 import { AuthError, InputError, LoggedError } from "./exceptions";
-import { getGenderFromString, getVoterGroupFromString, sendVerificationEmail } from "./help";
+import { getGenderFromString, getVoterGroupFromString } from "./help";
 import config from "./config";
 
-// Create express app and database interface
+/* ------------------------------------------------------------------------------------------------------------------------------------------ */
+
 const app = create_express();
 const db = new MongoDB(log.child({ module: "db" }));
 const router = express.Router();
@@ -52,6 +52,14 @@ router.get("/register", (req: express.Request, res: express.Response) => {
     res.type("html").sendFile(joinPath(__dirname, "../html/register.html"));
 });
 
+router.get("/password", (req: express.Request, res: express.Response) => {
+    res.type("html").sendFile(joinPath(__dirname, "../html/password.html"));
+});
+
+router.get("/reset", (req: express.Request, res: express.Response) => {
+    res.type("html").sendFile(joinPath(__dirname, "../html/reset.html"));
+});
+
 /* ------------------------------------------------------------------------------------------------------------------------------------------ */
 // User account
 
@@ -60,36 +68,21 @@ router.post("/login", async(req: express.Request, res: express.Response, next: e
         if(req.session.user !== undefined) {
             throw new InputError("Already logged in");
         }
+
+        // Validate POST params
         const email = req.body.email;
         const password = req.body.password;
-
         if(typeof email !== "string" || email.length == 0 || email.length > 128) {
             throw new InputError("Invalid email");
         }
         if(typeof password !== "string" || password.length == 0 || password.length > 128) {
             throw new InputError("Invalid password");
         }
-        const email_lower = email.toLocaleLowerCase("de-DE");
+        
+        // Get user info
+        req.session.user = await db.getUser(req.ip, email, password);
 
-        const user = await db.getUser(req.ip, email_lower);
-        const salt = Buffer.from(user.salt, "hex");
-        const derivedKey = scryptSync(password, salt, 64);
-
-        const test = derivedKey.toString("hex");
-        if(test !== user.key) {
-            log.info("Invalid login attempt by user " + user.id);
-            throw new InputError("Invalid password");
-        }
-
-        req.session.user = {
-            "id": user.id,
-            "age": user.age,
-            "gender": user.gender,
-            "groups": user.groups
-        };
-        res.send({
-            "error": false
-        });
+        res.send({ "error": false });
     } catch(exc) {
         next(exc);
     }
@@ -103,10 +96,15 @@ router.get("/logout", (req: express.Request, res: express.Response) => {
 
 router.get("/validate", async(req: express.Request, res: express.Response, next: express.NextFunction) => {
     try {
-        if(typeof req.query.token !== "string" || req.query.token.length === 0 || req.query.token.length > 100) {
-            throw new InputError("Missing token");
+        // Validate query
+        const token = req.query.token;
+        if(typeof token !== "string" || token.length === 0 || token.length > 128) {
+            throw new InputError("Invalid token");
         }
-        await db.validateUser(req.query.token);
+
+        // Validate user
+        await db.validateUser(token);
+
         res.redirect("/vote");
     } catch(exc) {
         next(exc);
@@ -118,32 +116,67 @@ router.post("/register", async(req: express.Request, res: express.Response, next
         if(req.session.user !== undefined) {
             throw new InputError("Already logged in");
         }
+
+        // Validate POST params
         const email = req.body.email;
         const password = req.body.password;
-
-        if(typeof email !== "string" || email.length == 0 || email.length > 128 || !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(email)) {
+        if(typeof email !== "string" || email.length === 0 || email.length > 128 || !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(email)) {
             throw new InputError("Invalid email");
         }
         if(typeof password !== "string" || password.length < 8 || password.length > 128) {
             throw new InputError("Invalid password");
         }
-        const email_lower = email.toLocaleLowerCase("de-DE");
 
-        const salt = randomBytes(32);
-        const derivedKey = scryptSync(password, salt, 64);
-        const token = randomBytes(32).toString("hex");
+        // Create new user
+        await db.addUser(req.ip, email, password);
 
-        const userid = await db.addUser(req.ip, email_lower, derivedKey.toString("hex"), salt.toString("hex"), token);
-        try {
-            await sendVerificationEmail(email_lower, token);
-        } catch(err) {
-            await db.deleteUser(userid);
-            throw err;
+        res.send({ "error": false });
+    } catch(exc) {
+        next(exc);
+    }
+});
+
+router.post("/reset", async(req: express.Request, res: express.Response, next: express.NextFunction) => {
+    try {
+        if(req.session.user !== undefined) {
+            throw new InputError("Already logged in");
         }
 
-        res.send({
-            "error": false
-        });
+        // Validate POST param
+        const email = req.body.email;
+        if(typeof email !== "string" || email.length == 0 || email.length > 128 || !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(email)) {
+            throw new InputError("Invalid email");
+        }
+
+        // Reset user
+        await db.resetUser(req.ip, email);
+
+        res.send({ "error": false });
+    } catch(exc) {
+        next(exc);
+    }
+});
+
+router.post("/password", async(req: express.Request, res: express.Response, next: express.NextFunction) => {
+    try {
+        if(req.session.user !== undefined) {
+            throw new InputError("Already logged in");
+        }
+
+        // Validate POST param
+        const password = req.body.password;
+        const token = req.body.token;
+        if(typeof password !== "string" || password.length < 8 || password.length > 128) {
+            throw new InputError("Invalid password");
+        }
+        if(typeof token !== "string" || token.length === 0 || token.length > 100) {
+            throw new InputError("Invalid token");
+        }
+
+        // Set new password
+        await db.setUserPassword(token, password);
+
+        res.send({ "error": false });
     } catch(exc) {
         next(exc);
     }
@@ -382,7 +415,7 @@ router.get("/api/list", async(req: express.Request, res: express.Response, next:
             }
         }
 
-        const data = await db.getList(page, gender, age, group);
+        const data = await db.getList(page, 20, gender, age, group);
         res.send(data);
     } catch(exc) {
         next(exc);
@@ -422,21 +455,28 @@ router.get("/api/search", async(req: express.Request, res: express.Response, nex
     }
 });
 
+/**
+ * Get complete votes data
+ * GET params:
+ *  email: user email
+ *  password: user password
+ */
 router.get("/api/data", async(req: express.Request, res: express.Response, next: express.NextFunction) => {
     try {
+        // Validate params
         const email = req.query.email;
         const password = req.query.password;
-
         if(typeof email !== "string" || email.length == 0 || email.length > 128) {
             throw new InputError("Invalid email");
         }
         if(typeof password !== "string" || password.length == 0 || password.length > 128) {
             throw new InputError("Invalid password");
         }
-        const email_lower = email.toLocaleLowerCase("de-DE");
 
-        const data = await db.getData(req.ip, email_lower, password);
+        // Get data
+        const data = await db.getData(req.ip, email, password);
 
+        // Send as csv
         res.set("Content-Type", "text/csv; charset=utf-8");
         res.send(json2csv(data, {
             "header": true,
@@ -468,7 +508,8 @@ router.use((err: unknown, req: express.Request, res: express.Response, next: exp
     }
 });
 
-// Start server
+/* ------------------------------------------------------------------------------------------------------------------------------------------ */
+
 db.connect().then(() => {
     app.set("trust proxy", "loopback");
     // Set path of staticlly served files (css/javascript/images)

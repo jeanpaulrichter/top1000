@@ -13,10 +13,10 @@ GNU General Public License for more details.
 import axios from "./lib/redaxios.min.js";
 
 /**
- * Make server request
+ * Make login request
  * @param email Email string
  * @param password Password string 
- * @returns 
+ * @throws Error string 
  */
 async function loginRequest(email: string, password: string) {
     try {
@@ -25,26 +25,29 @@ async function loginRequest(email: string, password: string) {
             "password": password
         });
         if(ret.status !== 200) {
-            console.error(ret.statusText);
             throw new Error();
         }
     } catch(exc) {
-        const e = exc as any;
-        if(e.status === 400 && typeof e.data === "string") {
-            throw e.data;
+        if(typeof exc === "object" && exc !== null) {
+            const e = exc as { [key: string]: unknown };
+            if(e.status === 400 && typeof e.data === "string" && e.data.length > 0) {
+                throw e.data;
+            } else {
+                throw "Es ist ein Fehler aufgetreten";
+            }
         } else {
-            throw "Failed to connect to server";
+            throw "Verbindung zum Server nicht möglich";
         }
     }
 }
 
 /**
- * Try to login
+ * Try to login...
  */
 async function login() {
-    const el_message = document.getElementById("errorMessage") as HTMLDivElement;
-    const el_email = document.getElementById("inputEmail") as HTMLInputElement;
-    const el_password = document.getElementById("inputPassword") as HTMLInputElement;
+    const el_error = document.getElementById("error") as HTMLDivElement;
+    const el_email = document.getElementById("email") as HTMLInputElement;
+    const el_password = document.getElementById("password") as HTMLInputElement;
     const password = el_password.value;
     const email = el_email.value;
 
@@ -53,10 +56,8 @@ async function login() {
             await loginRequest(email, password);
             window.location.href = "/vote";
         } catch(exc) {
-            if(typeof exc === "string") {
-                el_message.innerHTML = exc;
-                el_message.classList.remove("hidden");
-            }
+            el_error.innerHTML = (typeof exc === "string") ? exc : "Unbekannter Fehler";
+            el_error.classList.remove("hidden");
         }
     } else {
         if(password.length == 0) {
@@ -66,6 +67,13 @@ async function login() {
             el_email.classList.add("invalid");
         }
     }
+}
+
+/**
+ * Click event handler for submit button
+ */
+function onClickSubmit() {
+    login();
 }
  
 /**
@@ -87,11 +95,11 @@ function onKeyUp(e: KeyboardEvent) {
  * Setup event listener
  */
 window.addEventListener('load', () => {
-     const el_email = document.getElementById("inputEmail") as HTMLInputElement;
-     const el_password = document.getElementById("inputPassword") as HTMLInputElement;
+     const el_email = document.getElementById("email") as HTMLInputElement;
+     const el_password = document.getElementById("password") as HTMLInputElement;
      const el_btn = document.getElementById("btnSubmit") as HTMLButtonElement;
  
-     el_btn.addEventListener("click", login);
+     el_btn.addEventListener("click", onClickSubmit);
      el_password.addEventListener("keyup", onKeyUp);    
      el_email.addEventListener("keyup", onKeyUp);
      el_email.focus();

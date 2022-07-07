@@ -10,15 +10,18 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU General Public License for more details.
 */
 
-import { createHash, scryptSync } from "crypto";
+import { createHash, scryptSync, randomBytes } from "crypto";
 import MongoStore from "connect-mongo";
 import { Store as SessionStore } from "express-session";
 import { Logger } from "winston";
 import { MongoClient, ReadPreference, Collection, MongoClientOptions, ObjectId, Document, TransactionOptions } from "mongodb";
-import { Gender, VoteGame, VoterGroup, User, UserInfo } from "./types";
+import { Gender, VoteGame, VoterGroup, User, UserInfo, ClientAction } from "./types";
 import { InputError, LoggedError } from "./exceptions";
-import { getMobygamesInfo, getMobyIDFromURL } from "./help";
+import { getMobygamesInfo, getMobyIDFromURL, sendEmail } from "./help";
 import config from "./config";
+
+/* ------------------------------------------------------------------------------------------------------------------------------------------ */
+// Constants
 
 /**
  * Determines the weight of each vote. A linear distribution is assumed from 1 for the last place (=VOTES_PER_USER) to MAX_SCORE for the first.
@@ -30,6 +33,52 @@ const MAX_SCORE = 10;
 const LINEAR_M = (1 - MAX_SCORE) / (VOTES_PER_USER - 1);
 // y-intercept
 const LINEAR_N = (VOTES_PER_USER * MAX_SCORE - 1) / (VOTES_PER_USER - 1);
+
+// Size of salt used for key generation
+const SALT_BYTES = 32;
+// Length of password key in bytes
+const KEY_LENGTH = 64;
+// Token length (for user validation) in bytes
+const TOKEN_LENGTH = 32;
+
+// Length of ip block for various actions in tries/minutes
+const ipblock_length = {
+    "login": {
+        "max": 10,
+        "minutes": 15
+    },
+    "register": {
+        "max": 1,
+        "minutes": 30
+    },
+    "reset": {
+        "max": 3,
+        "minutes": 120
+    },
+    "data": {
+        "max": 10,
+        "minutes": 15
+    },
+    "addgame": {
+        "max": 5,
+        "minutes": 10
+    }
+}
+
+const emails = {
+    "reset": {
+        "subject": "Wasted Top1000 Passwortzurücksetzung",
+        "text": "Um dein Passwort für die Wasted Top1000 zurückzusetzen folge bitte diesem Link: ${url}",
+        "html": "Hi,<br><br>um dein Passwort für die Wasted Top1000 zurückzusetzen, klicke bitte auf folgenden <a href=\"${url}\">Link</a>.<br><br>Schöne Grüße!"
+    },
+    "register": {
+        "subject": "Wasted Top1000 Accountverifizierung",
+        "text": "Um deinen Account bei Wasted Top1000 freizuschalten, klicke bitte auf folgenden Link: ${url}",
+        "html": "Hi,<br><br>um deinen Account bei Wasted Top1000 freizuschalten, klicke bitte auf folgenden <a href=\"${url}\">Link</a>.<br><br>Schöne Grüße!"
+    }
+}
+
+/* ------------------------------------------------------------------------------------------------------------------------------------------ */
 
 /**
  * MongoDB interface class
@@ -109,22 +158,30 @@ export class MongoDB
         }
     }
 
+    /* ------------------------------------------------------------------------------------------------------------------------------------------ */
+
     /**
-     * Get User by email adress
+     * Get validated user by email and password
      * 
-     * @param email - Email to query
-     * @return Userdata
+     * @param ip Client IP address
+     * @param email - User email
+     * @param password - User password
+     * @return UserInfo
      * @throws InputError, LoggedError
      */
-    public async getUser(ip: string, email: string): Promise<User> {
+    public async getUser(ip: string, email: string, password: string): Promise<UserInfo> {
         try {
             if(this.users === undefined || this.ipblock === undefined) {
                 throw new Error("No database connection");
             }
-            await this.ipBlockCheck(ip, "login", 10, 15);
+            // Limit access
+            await this.ipBlockCheck(ip, ClientAction.login);
 
-            const email_hash = createHash("sha256").update(email).digest("hex");
+            // Hash email
+            const email_lower = email.toLocaleLowerCase("de-DE");
+            const email_hash = createHash("sha256").update(email_lower).digest("hex");
 
+            // Get user data
             const ret = await this.users.findOne<User>({
                 "email": email_hash,
                 "token": { "$exists": false }
@@ -138,7 +195,20 @@ export class MongoDB
             if(ret === null) {
                 throw new InputError("User not found");
             }
-            return ret;
+
+            // Check password
+            const salt = Buffer.from(ret.salt, "hex");
+            const derivedKey = scryptSync(password, salt, KEY_LENGTH);
+            if(derivedKey.toString("hex") !== ret.key) {
+                throw new InputError("Invalid password");
+            }
+
+            return {
+                "id": ret.id,
+                "age": ret.age,
+                "gender": ret.gender,
+                "groups": ret.groups
+            };
         } catch(exc) {
             if(exc instanceof InputError) {
                 throw exc;
@@ -149,35 +219,50 @@ export class MongoDB
     }
 
     /**
-     * Add new user to database
-     * @param ip Client IP
+     * Add new user
+     * 
+     * @param ip Client IP adress
      * @param email Email address of new user
-     * @param key Hex string of key
-     * @param salt Hex string of salt
-     * @param token Token string
-     * @returns User id
+     * @param password User password
      * @throws InputError, LoggedError
      */
-    public async addUser(ip: string, email: string, key: string, salt: string, token: string): Promise<string> {
+     public async addUser(ip: string, email: string, password: string): Promise<void> {
         try {
-            if(this.users === undefined || this.ipblock === undefined) {
+            if(this.users === undefined) {
                 throw new Error("No database connection");
             }
-            await this.ipBlockCheck(ip, "register", 1, 30);
+            // Limit access
+            await this.ipBlockCheck(ip, ClientAction.register);
 
-            const email_hash = createHash("sha256").update(email).digest("hex");
+            const email_lower = email.toLocaleLowerCase("de-DE");
+            const email_hash = createHash("sha256").update(email_lower).digest("hex");
 
+            // Check if email exists already
             const check = await this.users.findOne({
                 "email": email_hash
+            }, {
+                "projection": {
+                    "_id": 1
+                }
             });
             if(check !== null) {
                 throw new InputError("Email already exits.")
             }
 
+            // Create salt, key and token
+            const salt = randomBytes(SALT_BYTES);
+            const key = scryptSync(password, salt, KEY_LENGTH);
+            const token = randomBytes(TOKEN_LENGTH);
+
+            const salt_str = salt.toString("hex");
+            const key_str = key.toString("hex");
+            const token_str = token.toString("hex");
+
+            // Insert into database
             const ret = await this.users.insertOne({
                 "email": email_hash,
-                "key": key,
-                "salt": salt,
+                "key": key_str,
+                "salt": salt_str,
                 "gender": "",
                 "age": 0,
                 "groups": {
@@ -188,12 +273,25 @@ export class MongoDB
                     "wasted": false
                 },
                 "creation_date": new Date(),
-                "token": token
+                "token": token_str
             });
             if(!ret.acknowledged) {
                 throw new Error("Failed to insert new user into database");
             }
-            return ret.insertedId.toHexString();
+            try {
+                // Try to send validation email
+                const url = config.base_url + "/validate?token=" + token_str;
+                await sendEmail({
+                    "to": email_lower,
+                    "subject": emails.register.subject,
+                    "text": emails.register.text.replace("${url}", url),
+                    "html": emails.register.html.replace("${url}", url)
+                });
+            } catch(err) {
+                // Delete user if sendEmail failed
+                await this.deleteUser(ret.insertedId);
+                throw err;
+            }
         } catch(exc) {
             if(exc instanceof InputError || exc instanceof LoggedError) {
                 throw exc;
@@ -204,37 +302,12 @@ export class MongoDB
     }
 
     /**
-     * Delete user from database
-     * @param id User id
-     * @throws LoggedError
-     */
-    public async deleteUser(id: string): Promise<void> {
-        try {
-            if(this.users === undefined || this.votes === undefined) {
-                throw new Error("No database connection");
-            }
-            const user_id = ObjectId.createFromHexString(id);
-            const ret = await this.users.deleteOne({
-                "_id": user_id
-            });
-            if(ret.deletedCount !== 1) {
-                throw new Error("Failed to delete user");
-            }
-            await this.votes.deleteMany({
-                "user": user_id
-            });
-        } catch(exc) {
-            this.log.error(exc);
-            throw new LoggedError();
-        }
-    }
-
-    /**
      * Validate new user
+     * 
      * @param token Token string
      * @throws LoggedError
      */
-    public async validateUser(token: string): Promise<void> {
+     public async validateUser(token: string): Promise<void> {
         try {
             if(this.users === undefined) {
                 throw new Error("No database connection");
@@ -253,42 +326,61 @@ export class MongoDB
     }
 
     /**
-     * Add game to database
-     * @param ip Client IP
-     * @param moby_url Mobygames game URL
+     * Reset user for password change
+     * 
+     * @param ip Client IP address
+     * @param email - User email
      * @throws InputError, LoggedError
      */
-    public async addGame(ip: string, moby_url: string): Promise<void> {
+     public async resetUser(ip: string, email: string): Promise<void> {
         try {
-            if(this.games === undefined) {
+            if(this.users === undefined) {
                 throw new Error("No database connection");
             }
-            // Check if user has added too many games already
-            await this.ipBlockCheck(ip, "addgame", 5, 10);
 
-            const moby_id = await getMobyIDFromURL(moby_url);
+            // Limit access
+            await this.ipBlockCheck(ip, ClientAction.reset);
 
-            // Check if game is already in database
-            const test = await this.games.findOne({
-                "moby_id": moby_id
+            const email_lower = email.toLocaleLowerCase("de-DE");
+            const email_hash = createHash("sha256").update(email_lower).digest("hex");
+            const token = randomBytes(TOKEN_LENGTH).toString("hex");
+
+            // Update user with new token
+            const ret = await this.users.updateOne({
+                "email": email_hash,
+                "token": { "$exists": false }
             }, {
-                "projection": { "_id": 1 }
+                "$set": {
+                    "token": token
+                }
             });
-            if(test !== null) {
-                throw new InputError("Game already in database");
+            if(ret.matchedCount !== 1) {
+                throw new InputError("User not found");
             }
-
-            // Get data from mobygames.com
-            const game = await getMobygamesInfo(moby_id);
-
-            // Insert game into database
-            const ret = await this.games.insertOne(game);
-            if(!ret.acknowledged) {
-                throw new Error("Failed to insert game into database");
+            
+            try {
+                // Try to send password reset email
+                const url = config.base_url + "/password?token=" + token;
+                await sendEmail({
+                    "to": email_lower,
+                    "subject": emails.reset.subject,
+                    "text": emails.reset.text.replace("${url}", url),
+                    "html": emails.reset.html.replace("${url}", url)
+                });
+            } catch(err) {
+                // Delete token if sendEmail failed
+                await this.users.updateOne({
+                    "email": email_hash,
+                    "token": token
+                }, {
+                    "$unset": {
+                        "token": ""
+                    }
+                });
+                throw err;
             }
-            this.log.info("Added game \"" + game.title + "\" with moby_id " + game.moby_id + ".");
         } catch(exc) {
-            if(exc instanceof InputError || exc instanceof LoggedError) {
+            if(exc instanceof InputError) {
                 throw exc;
             }
             this.log.error(exc);
@@ -297,103 +389,85 @@ export class MongoDB
     }
 
     /**
-     * Update vote of user
-     * @param user UserInfo
-     * @param position Game rank/position
-     * @param game_id Game ID in database
-     * @throws LoggedError
+     * Set new user password
+     * 
+     * @param token - Token string
+     * @param password - New password
+     * @throws InputError, LoggedError
      */
-    public async updateVote(user: UserInfo, position: number, game_id: string): Promise<void> {
+     public async setUserPassword(token: string, password: string): Promise<void> {
         try {
-            if(this.votes === undefined || this.games === undefined) {
+            if(this.users === undefined) {
                 throw new Error("No database connection");
             }
-            if(user.id.length !== 24) {
-                throw new Error("Invalid user id");
-            }
-            if(game_id.length !== 24) {
-                throw new Error("Invalid game id");
-            }
-            if(!(Number.isInteger(position) && position > 0 && position <= 100)) {
-                throw new Error("Invalid position");
-            }
-            const game_object_id = ObjectId.createFromHexString(game_id);
-            const game = await this.games.findOne({
-                "_id": game_object_id
+
+            // Create salt and key
+            const salt = randomBytes(SALT_BYTES);
+            const key = scryptSync(password, salt, KEY_LENGTH);
+            const salt_str = salt.toString("hex");
+            const key_str = key.toString("hex");
+
+            // Update database
+            const ret = await this.users.updateOne({
+                "token": token
             }, {
-                "projection": {
-                    "title": 1,
-                    "moby_id": 1,
-                    "year": 1
+                "$set": {
+                    "key": key_str,
+                    "salt": salt_str
+                },
+                "$unset": {
+                    "token": ""
                 }
             });
-            if(game === null) {
-                throw new InputError("Game not found");
-            }
-            const ret = await this.votes.updateOne({
-                "user_id": ObjectId.createFromHexString(user.id),
-                "position": position,
-                "age": user.age,
-                "gender": user.gender,
-                "groups": user.groups
-            }, { "$set": {
-                "game_id": game_object_id,
-                "game_title": game.title,
-                "game_year": game.year,
-                "game_moby_id": game.moby_id
-            } }, {
-                "upsert": true
-            });
-
-            if(ret.modifiedCount !== 1 && ret.upsertedCount !== 1) {
-                throw new Error("Failed to update database");
+            if(ret.matchedCount !== 1) {
+                throw new InputError("User not found");
+            } else if(ret.modifiedCount !== 1) {
+                throw new Error("Failed to update user");
             }
         } catch(exc) {
+            if(exc instanceof InputError) {
+                throw exc;
+            }
             this.log.error(exc);
             throw new LoggedError();
         }
     }
 
     /**
-     * Update comment for game by user
-     * @param user_id UserID
-     * @param position Position/rank of game
-     * @param comment Comment string
+     * Delete user from database
+     * 
+     * @param id User ObjectId
      * @throws LoggedError
      */
-    public async updateComment(user_id: string, position: number, comment: string): Promise<void> {
+    private async deleteUser(id: ObjectId): Promise<void> {
         try {
-            if(this.votes === undefined) {
+            if(this.users === undefined || this.votes === undefined) {
                 throw new Error("No database connection");
             }
-            if(user_id.length !== 24) {
-                throw new Error("Invalid user id");
+            const ret = await this.users.deleteOne({
+                "_id": id
+            });
+            if(ret.deletedCount !== 1) {
+                throw new Error("Failed to delete user");
             }
-            if(!(Number.isInteger(position) && position > 0 && position <= 100)) {
-                throw new Error("Invalid position");
-            }
-            const ret = await this.votes.updateOne({
-                "user_id": ObjectId.createFromHexString(user_id),
-                "position": position
-            }, { "$set": {
-                "comment": comment
-            } });
-
-            if(!(ret.acknowledged && ret.matchedCount === 1)) {
-                throw new Error("Failed to update database");
-            }
+            await this.votes.deleteMany({
+                "user": id
+            });
         } catch(exc) {
             this.log.error(exc);
             throw new LoggedError();
         }
     }
+
+    /* ------------------------------------------------------------------------------------------------------------------------------------------ */
 
     /**
      * Update user information
+     * 
      * @param user UserInfo
      * @throws LoggedError
      */
-    public async updateUser(user: UserInfo): Promise<void> {
+     public async updateUser(user: UserInfo): Promise<void> {
         try {
             if(this.votes === undefined || this.users === undefined || this.client === undefined) {
                 throw new Error("No database connection");
@@ -403,6 +477,7 @@ export class MongoDB
             }
             const user_id = ObjectId.createFromHexString(user.id);
 
+            // Create MongoDB session
             const session = this.client.startSession();
             const transactionOptions: TransactionOptions = {
                 "readPreference": ReadPreference.primaryPreferred,    
@@ -451,7 +526,114 @@ export class MongoDB
     }
 
     /**
-     * Get votes of user
+     * Update user vote
+     * 
+     * @param user UserInfo
+     * @param position Game rank/position
+     * @param game_id Game ID in database
+     * @throws LoggedError
+     */
+    public async updateVote(user: UserInfo, position: number, game_id: string): Promise<void> {
+        try {
+            if(this.votes === undefined || this.games === undefined) {
+                throw new Error("No database connection");
+            }
+
+            // Validate input
+            if(user.id.length !== 24) {
+                throw new Error("Invalid user id");
+            }
+            if(game_id.length !== 24) {
+                throw new Error("Invalid game id");
+            }
+            if(!(Number.isInteger(position) && position > 0 && position <= 100)) {
+                throw new Error("Invalid position");
+            }
+
+            // Find game
+            const game_object_id = ObjectId.createFromHexString(game_id);
+            const game = await this.games.findOne({
+                "_id": game_object_id
+            }, {
+                "projection": {
+                    "title": 1,
+                    "moby_id": 1,
+                    "year": 1
+                }
+            });
+            if(game === null) {
+                throw new InputError("Game not found");
+            }
+
+            // Update vote
+            const ret = await this.votes.updateOne({
+                "user_id": ObjectId.createFromHexString(user.id),
+                "position": position,
+                "age": user.age,
+                "gender": user.gender,
+                "groups": user.groups
+            }, { "$set": {
+                "game_id": game_object_id,
+                "game_title": game.title,
+                "game_year": game.year,
+                "game_moby_id": game.moby_id
+            } }, {
+                "upsert": true
+            });
+
+            if(ret.modifiedCount !== 1 && ret.upsertedCount !== 1) {
+                throw new Error("Failed to update database");
+            }
+        } catch(exc) {
+            this.log.error(exc);
+            throw new LoggedError();
+        }
+    }
+
+    /**
+     * Update comment
+     * 
+     * @param user_id User id
+     * @param position Position/rank of game
+     * @param comment Comment string
+     * @throws LoggedError
+     */
+    public async updateComment(user_id: string, position: number, comment: string): Promise<void> {
+        try {
+            if(this.votes === undefined) {
+                throw new Error("No database connection");
+            }
+
+            // Validate input
+            if(user_id.length !== 24) {
+                throw new Error("Invalid user id");
+            }
+            if(!(Number.isInteger(position) && position > 0 && position <= 100)) {
+                throw new Error("Invalid position");
+            }
+
+            // Update comment
+            const ret = await this.votes.updateOne({
+                "user_id": ObjectId.createFromHexString(user_id),
+                "position": position
+            }, { "$set": {
+                "comment": comment
+            } });
+
+            if(!(ret.acknowledged && ret.matchedCount === 1)) {
+                throw new Error("Failed to update database");
+            }
+        } catch(exc) {
+            this.log.error(exc);
+            throw new LoggedError();
+        }
+    }
+
+    /* ------------------------------------------------------------------------------------------------------------------------------------------ */
+
+    /**
+     * Get all votes of user
+     * 
      * @param user_id User id
      * @returns Array of vote info
      * @throws LoggedError
@@ -476,14 +658,14 @@ export class MongoDB
                     "as": "info"
                 } },
                 { "$project": {
-                    _id: 0,
-                    position: "$position",
-                    comment: "$comment",
-                    id: { "$toString" : "$game_id" },
-                    title: { "$arrayElemAt": [ "$info.title", 0 ] },
-                    year: { "$arrayElemAt": [ "$info.year", 0 ] },
-                    platforms: { "$arrayElemAt": [ "$info.platforms", 0 ] },
-                    icon: { "$arrayElemAt": [ "$info.icon", 0 ] },
+                    "_id": 0,
+                    "position": "$position",
+                    "comment": "$comment",
+                    "id": { "$toString" : "$game_id" },
+                    "title": { "$arrayElemAt": [ "$info.title", 0 ] },
+                    "year": { "$arrayElemAt": [ "$info.year", 0 ] },
+                    "platforms": { "$arrayElemAt": [ "$info.platforms", 0 ] },
+                    "icon": { "$arrayElemAt": [ "$info.icon", 0 ] },
                 } }
             ]).toArray();
             return ret as VoteGame[];
@@ -494,7 +676,8 @@ export class MongoDB
     }
 
     /**
-     * Get the whole votes collection
+     * Get complete vote data
+     * 
      * @returns Array of votes
      * @throws InputError, LoggedError
      */
@@ -503,9 +686,13 @@ export class MongoDB
             if(this.votes === undefined || this.users === undefined) {
                 throw new Error("No database connection");
             }
-            await this.ipBlockCheck(ip, "data", 10, 15);
 
-            const email_hash = createHash("sha256").update(email).digest("hex");
+            // Limit access
+            await this.ipBlockCheck(ip, ClientAction.data);
+
+            // Find user
+            const email_lower = email.toLocaleLowerCase("de-DE");
+            const email_hash = createHash("sha256").update(email_lower).digest("hex");
             const user = await this.users.findOne({
                 "email": email_hash,
                 "token": { "$exists": false }
@@ -519,12 +706,15 @@ export class MongoDB
             if(user === null) {
                 throw new InputError("User not found");
             }
+
+            // Check password
             const salt = Buffer.from(user.salt, "hex");
-            const test = scryptSync(password, salt, 64).toString("hex");
+            const test = scryptSync(password, salt, KEY_LENGTH).toString("hex");
             if(test !== user.key) {
                 throw new InputError("Invalid password");
             }
 
+            // Get data
             const ret = await this.votes.find({}, {
                 "projection": {
                     "_id": 0,
@@ -553,22 +743,31 @@ export class MongoDB
     }
 
     /**
-     * Get top1000 list data
+     * Get page of top1000 list
+     * 
      * @param page Page offset [1-99999]
+     * @param limit Number of games per page
      * @param gender Gender (optional)
      * @param age Age group (optional)
      * @param group Voter group (optional)
      * @returns List data
      * @throws InputError, LoggedError
      */
-    public async getList(page: number, gender?: Gender, age?: number, group?: VoterGroup) {
+    public async getList(page: number, limit: number, gender?: Gender, age?: number, group?: VoterGroup) {
         try {
             if(this.votes === undefined) {
                 throw new Error("No database connection");
             }
+
+            // Validate input
             if(!(Number.isInteger(page) && page > 0 && page < 99999)) {
                 throw new InputError("Invalid page");
             }
+            if(!(Number.isInteger(limit) && limit >= 5 && limit <= 100)) {
+                throw new InputError("Invalid limit");
+            }
+
+            // Construct query object
             const query: Document = {};
             if(gender !== undefined) {
                 query.gender = gender.toString();
@@ -579,6 +778,8 @@ export class MongoDB
             if(group !== undefined) {
                 query["groups." + group.toString()] = true;
             }
+
+            // Get data
             const ret = await this.votes.aggregate([
                 { "$match": query },
                 { "$group": {
@@ -593,8 +794,8 @@ export class MongoDB
                         { "$sort": {
                             "score": -1
                         }},
-                        { "$skip": (page - 1) * 20 },
-                        { "$limit": 20 },
+                        { "$skip": (page - 1) * limit },
+                        { "$limit": limit },
                         { "$lookup": {
                             "from": "games",
                             "localField": "_id",
@@ -610,7 +811,6 @@ export class MongoDB
                     ]
                 } }
             ]).next();
-
             if(ret === null) {
                 throw new Error("Failed to get list");
             }
@@ -621,7 +821,7 @@ export class MongoDB
             return {
                 "data": ret.data,
                 "pages": Math.ceil(count / 20),
-                "limit": 20
+                "limit": limit
             };
         } catch(exc) {
             if(exc instanceof InputError) {
@@ -633,7 +833,8 @@ export class MongoDB
     }
 
     /**
-     * Search games database (Used for autocomplete)
+     * Search games database (for autocomplete)
+     * 
      * @param input Search term (game title)
      * @param page integer page offset (optional)
      * @returns Search results
@@ -675,11 +876,12 @@ export class MongoDB
                 } }
             ]).next();
 
+            // Return data in form select2 understands
             if(res !== null && res.data.length > 0) {
                 return {
                     "results": res.data,
                     "pagination": {
-                        "more": res.metadata[0].total > offset + 10
+                        "more": (res.metadata[0].total > offset + 10)
                     }
                 }
             } else {
@@ -697,23 +899,75 @@ export class MongoDB
     }
 
     /**
-     * Check if client is allowed to do something
+     * Add game to database
+     * 
      * @param ip Client IP
-     * @param action Action string (login|register|addgame)
-     * @param max Maximum tries
-     * @param minutes in x minutes
+     * @param moby_url Mobygames game URL
      * @throws InputError, LoggedError
      */
-    private async ipBlockCheck(ip: string, action: string, max: number, minutes: number) {
+     public async addGame(ip: string, moby_url: string): Promise<void> {
+        try {
+            if(this.games === undefined) {
+                throw new Error("No database connection");
+            }
+
+            // Limit access
+            await this.ipBlockCheck(ip, ClientAction.addgame);
+
+            // Scrape mobygames.com game id from url
+            const moby_id = await getMobyIDFromURL(moby_url);
+
+            // Check if game is already in database
+            const test = await this.games.findOne({
+                "moby_id": moby_id
+            }, {
+                "projection": { "_id": 1 }
+            });
+            if(test !== null) {
+                throw new InputError("Game already in database");
+            }
+
+            // Get data from mobygames.com
+            const game = await getMobygamesInfo(moby_id);
+
+            // Insert game into database
+            const ret = await this.games.insertOne(game);
+            if(!ret.acknowledged) {
+                throw new Error("Failed to insert game into database");
+            }
+            this.log.info("Added game \"" + game.title + "\" with moby_id " + game.moby_id + ".");
+        } catch(exc) {
+            if(exc instanceof InputError || exc instanceof LoggedError) {
+                throw exc;
+            }
+            this.log.error(exc);
+            throw new LoggedError();
+        }
+    }
+
+    /* ------------------------------------------------------------------------------------------------------------------------------------------ */
+
+    /**
+     * Check if client is allowed to do something
+     * 
+     * @param ip Client IP address
+     * @param action Client action
+     * @throws InputError, LoggedError
+     */
+    private async ipBlockCheck(ip: string, action: ClientAction) {
         try {
             if(this.ipblock === undefined) {
                 throw new Error("No database connection");
             }
-            // Discard old enough records
+
+            const minutes = ipblock_length[action].minutes;
+            const max = ipblock_length[action].max;
+
+            // Delete old records
             await this.ipblock.deleteMany({
                 "action": action,
                 "timestamp": {
-                    $lte: new Date(Date.now() - 1000 * 60 * minutes)
+                    $lte: new Date(Date.now() - 60000 * minutes)
                 }
             });
 

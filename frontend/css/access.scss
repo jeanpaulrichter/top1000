@@ -18,28 +18,65 @@ GNU General Public License for more details.
     max-width: 720px !important;
 }
 
+#mask {
+    cursor: wait;
+    opacity: 0;
+    width: 100%;
+    position: absolute;
+    z-index: 10;
+    bottom: 0;
+    top: 0;
+    right: 0;
+    left: 0;
+}
+
+#error {
+    color: red !important;
+    margin-bottom: 2rem;
+    font-size: 1.1rem;
+}
+
+#message {
+    position: relative;
+    font-size: 1.4rem;
+    margin-bottom: 2rem;
+
+    a {
+        color: white;
+        text-decoration: underline;
+    }
+
+    button {
+        border: 0;
+        text-decoration: underline;
+        padding: 0;
+        margin: 0;
+        background: transparent;
+        color: white;
+    }
+}
+
+h1 {
+    text-align: center !important;
+    color: $wasted-color;
+    font-weight: bold;
+    padding-top: 1rem;
+}
+
 #form {
     color: white;
     padding-top: 1rem;
     padding-bottom: 4rem;
 
-    div.login-text {
-        position: relative;
-        font-size: 1.4rem;
-        margin-bottom: 2rem;
-    }
-
-    div.error {
-        color: red;
-        margin-bottom: 2rem;
-        font-size: 1.1rem;
-      }
-
     label {
         position: relative;
     }
 
-    span.register {
+    input.invalid {
+        background-color: lightcoral;
+    }
+
+    .button_link {
         margin-left: 1rem;
         a {
             color: white;
@@ -59,15 +96,4 @@ GNU General Public License for more details.
 }
 @media screen and (min-width: 1600px) {
     #form { padding-left: 8rem; padding-right: 8rem; }
-}
-
-h1 {
-    text-align: center;
-    color: $wasted-color;
-    font-weight: bold;
-    padding-top: 1rem;
-}
-
-.invalid {
-    background-color: lightcoral;
 }

@@ -14,7 +14,7 @@ import { Gender, VoterGroup, GameInfo } from "./types";
 import axios from "axios";
 import sharp from "sharp";
 import { InputError } from "./exceptions";
-import nodemailer from "nodemailer";
+import nodemailer, { SendMailOptions } from "nodemailer";
 import config from "./config";
 
 /**
@@ -182,14 +182,11 @@ export async function getMobygamesInfo(game_id: number): Promise<GameInfo> {
 }
 
 /**
- * Send account verification email to user
- * @param email Email address
- * @param token Token string
+ * Send email
+ * @param options Nodemailer options
  * @throws
  */
-export async function sendVerificationEmail(email: string, token: string) {
-
-    const url = config.base_url + "/validate?token=" + token;
+export async function sendEmail(options: SendMailOptions) {
 
     const transporter = nodemailer.createTransport({
         "host": config.email.server,
@@ -199,15 +196,13 @@ export async function sendVerificationEmail(email: string, token: string) {
             "user": config.email.user,
             "pass": config.email.password,
         },
+        "connectionTimeout": 8000,
+        "greetingTimeout": 8000
     });
+
+    options.from = config.email.address,
   
-    await transporter.sendMail({
-        "from": config.email.address,
-        "to": email,
-        "subject": "Wasted Top1000 Accountverifizierung",
-        "text": "Um deinen Account bei Wasted Top1000 freizuschalten, klicke bitte auf folgenden Link: " + url,
-        "html": "Hi,<br><br>um deinen Account bei Wasted Top1000 freizuschalten, klicke bitte auf folgenden <a href=\"" + url + "\">Link</a>.<br><br>Schöne Grüße!"
-    });
+    await transporter.sendMail(options);
 }
 
 /**

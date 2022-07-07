@@ -77,6 +77,14 @@ export type GameInfo = {
     genres: string[]
 }
 
+export enum ClientAction {
+    login = "login",
+    register = "register",
+    reset = "reset",
+    data = "data",
+    addgame = "addgame"
+}
+
 // Declare session variables for typescript
 declare module "express-session" {
     interface Session {
