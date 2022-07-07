@@ -41,6 +41,9 @@ const KEY_LENGTH = 64;
 // Token length (for user validation) in bytes
 const TOKEN_LENGTH = 32;
 
+// Page length of search results (autocomplete)
+const SEARCH_LIMIT = 20;
+
 // Length of ip block for various actions in tries/minutes
 const ipblock_length = {
     "login": {
@@ -851,7 +854,7 @@ export class MongoDB
             // Get offset
             let offset = 0;
             if(page !== undefined && Number.isInteger(page) && page > 0 && page < 100000) {
-                offset = (page - 1) * 10;
+                offset = (page - 1) * SEARCH_LIMIT;
             }
 
             const res = await this.games.aggregate([
@@ -863,7 +866,7 @@ export class MongoDB
                     "metadata": [ { "$count": "total" } ],
                     "data": [
                         { "$skip": offset },
-                        { "$limit": 20 },
+                        { "$limit": SEARCH_LIMIT },
                         { "$project": {
                             "_id": 0,
                             "id": { "$toString": "$_id" },
@@ -881,7 +884,7 @@ export class MongoDB
                 return {
                     "results": res.data,
                     "pagination": {
-                        "more": (res.metadata[0].total > offset + 10)
+                        "more": (res.metadata[0].total > offset + SEARCH_LIMIT)
                     }
                 }
             } else {
