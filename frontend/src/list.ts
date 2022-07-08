@@ -12,7 +12,7 @@ GNU General Public License for more details.
 
 import { FilterOptions } from "./list/types.js";
 import { setFocus } from "./list/focus.js";
-import { getListData, getFilterOptions, getPlatformString, findGame } from "./list/help.js";
+import { getListData, getFilterOptions, getPlatformString, findGame, htmlEncode } from "./list/help.js";
 
 declare global {
     interface Window {
@@ -70,17 +70,30 @@ async function loadList(page: number, filter: FilterOptions) {
             // Setup body
             const el_body = el_game.querySelector(".game__body") as HTMLElement;
             const el_link = el_body.querySelector("a.game__link") as HTMLLinkElement;
-            const el_screen = el_body.querySelector("img.game__screenshot") as HTMLImageElement;
+            const el_screen = el_body.querySelector("div.game__screenshots") as HTMLDivElement;
             const el_platforms = el_body.querySelector(".game__platforms") as HTMLElement;
             const el_votes = el_body.querySelector(".game__votes") as HTMLElement;
             const el_score = el_body.querySelector(".game__score") as HTMLElement;
             const el_comments = el_body.querySelector(".game__comments") as HTMLElement;
 
+            // Create up to 3 screenshot images
             if(game.screenshots.length > 0) {
-                el_screen.src = game.screenshots[0];
+                for(let ii = 0; ii < game.screenshots.length && ii < 3; ii++) {
+                    const el_img = document.createElement("IMG") as HTMLImageElement;
+                    el_img.src = game.screenshots[ii];
+                    if(ii === 0) {
+                        el_img.className = "img--visible";
+                    }
+                    el_screen.appendChild(el_img);
+                }
             } else {
-                el_screen.src = "images/missing_screenshot.gif";
+                const el_img = document.createElement("IMG") as HTMLImageElement;
+                el_img.src = "images/missing_screenshot.gif";
+                el_img.className = "img--visible";
+                el_screen.appendChild(el_img);
             }
+
+            // Set game information
             el_link.href = game.moby_url;
             el_platforms.innerHTML = getPlatformString(game.platforms);
             el_votes.innerHTML = data[i].votes.toString();
@@ -88,7 +101,7 @@ async function loadList(page: number, filter: FilterOptions) {
             if(Array.isArray(data[i].comments) && data[i].comments.length > 0) {
                 let comments_str = "";
                 for(let ii = 0; ii < data[i].comments.length; ii++) {
-                    comments_str += "<p>&ndash; " + data[i].comments[ii].replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;') + "</p>";
+                    comments_str += "<p>&ndash; " + htmlEncode(data[i].comments[ii]) + "</p>";
                 }
                 el_comments.innerHTML = comments_str;
             }
@@ -158,6 +171,35 @@ function setupPages(pages: number, current: number) {
     }
 }
 
+/**
+ * Change visible game screenshots
+ */
+function changeImages() {
+    // Find game in focus
+    const el_games = document.getElementById("games") as HTMLDivElement;
+    for(let i = 0; i < el_games.children.length; i++) {
+        if(el_games.children[i].classList.contains("game--focus")) {
+            const el_screens = el_games.children[i].querySelector("div.game__screenshots");
+            if(el_screens !== null && el_screens.children.length > 1) {
+                // If more than one screenshot: Set next visible
+                let next = 0;
+                for(let ii = 0; ii < el_screens.children.length; ii++) {
+                    if(el_screens.children[ii].className === "img--visible") {
+                        next = ii + 1;
+                        el_screens.children[ii].className = "";
+                        break;
+                    }
+                }
+                if(next >= el_screens.children.length) {
+                    next = 0;
+                }
+                el_screens.children[next].className = "img--visible";
+            }
+            break;
+        }        
+    }
+}
+
 /* ------------------------------------------------------------------------------------------------------------------------------------------ */
 /* Event handlers */
 
@@ -186,6 +228,9 @@ function onLoad() {
 
     // Load first page of list
     loadList(1, getFilterOptions());
+
+    // Change screenshots every 6 seconds
+    setInterval(changeImages, 6000);
 }
 
 /**

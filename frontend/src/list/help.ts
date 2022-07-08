@@ -14,6 +14,16 @@ import axios from "../lib/redaxios.min.js"
 import { ListQuery, PlatformInfo, FilterOptions } from "./types.js";
 
 /**
+ * Encode string to html
+ * @param str Input string
+ * @returns HTML string
+ */
+export function htmlEncode(str: string) {
+    // ToDo: something a little more robust =)
+    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+/**
  * Find game container element by child element
  * @param e Child element of game
  * @returns Game container

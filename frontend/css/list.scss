@@ -75,6 +75,9 @@ GNU General Public License for more details.
     span {
         color: $wasted-color !important;
     }
+    .game__head {
+        background-image: url("icons/pattern1.svg");
+    }
 }
 
 .game {
@@ -168,6 +171,11 @@ GNU General Public License for more details.
     }
 }
 
+.img--visible {
+    opacity: 100% !important;
+    transition: opacity 2s;
+}
+
 .game__body {
 
     // Game info div
@@ -182,12 +190,21 @@ GNU General Public License for more details.
             order: 1;
             flex-grow: 1;
             flex-shrink: 1;
-            max-width: 50%;
+            aspect-ratio: 16/9;
+            min-height: 8rem;
+            max-height: 20rem;
+            width: 50%;
             text-align: center;
+            position: relative;
 
             img {
+                position: absolute;
+                top: 3%;
+                left: 15%;
                 width: 70%;
                 height: 90%;
+                opacity: 0%;
+                transition: opacity 2s;
             }
         }
 
@@ -196,6 +213,8 @@ GNU General Public License for more details.
             order: 2;
             flex-grow: 1;
             flex-shrink: 1;
+            width: 50%;
+            padding-top: 0.5rem;
         }
     }
 
