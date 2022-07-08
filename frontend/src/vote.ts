@@ -75,7 +75,6 @@ function createSlides() {
         el_slide_text.innerHTML = slide.text;
 
         // Setup slide buttons
-        el_slide_buttons[0].innerHTML = "Zurück";
         el_slide_buttons[0].value = "back";
         el_slide_buttons[0].addEventListener("click", onClickButtonSlide);
 
@@ -83,7 +82,6 @@ function createSlides() {
             const el_parent = el_slide_buttons[1].parentElement as HTMLElement;
             el_parent.removeChild(el_slide_buttons[1]);
         } else {
-            el_slide_buttons[1].innerHTML = "Weiter";
             el_slide_buttons[1].value = "next";        
             el_slide_buttons[1].addEventListener("click", onClickButtonSlide);
         }

@@ -14,9 +14,6 @@ GNU General Public License for more details.
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
     <title>Wasted Top1000</title>
     <link rel="shortcut icon" href="images/favicon.webp">
     <link rel="stylesheet" href="css/lib/bootstrap.min.css">
@@ -39,13 +36,13 @@ GNU General Public License for more details.
         </nav>
       </div>
       <div id="progress"></div>
-      <form action="/" method="post" id="form">
+      <form id="form">
         <div id="slide1" class="slide">
           <span class="slide__step">1/4</span>
           <div class="slide__info">
               <span class="slide__text">
                 Hallo! Willkommen zur Abstimmung über die Wasted Top1000! Gefragt sind deine persönlichen Top-30 Videospiele: 
-                Zunächst aber ein paar (freiwillige) Angaben zu deiner Person. Übrigens: Alle Angaben werden sofort gespeichert und können jeder Zeit geändert werden!
+                Zunächst aber ein paar (freiwillige) Angaben zu deiner Person. Übrigens: Alle Angaben werden <u>sofort gespeichert</u> und können <u>jeder Zeit geändert</u> werden!
               </span>
           </div>
           <div class="row mb-3">
@@ -115,7 +112,7 @@ GNU General Public License for more details.
             </div>
           </div>
           <div class="slide__buttons">
-            <button type="button" class="btn btn-primary" value="next" id="btnSlide1Next">Weiter</button>
+            <button type="button" class="icon-next" value="next" id="btnSlide1Next"></button>
           </div>
           <div class="slide__footer"></div>
         </div>
@@ -141,9 +138,7 @@ GNU General Public License for more details.
               <span class="hidden" id="addGameMsg"></span>
             </form>
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Schließen</button>
-          </div>
+
         </div>
       </div>
     </div>
@@ -158,8 +153,8 @@ GNU General Public License for more details.
         </div>
         <div class="slide__games"></div>
         <div class="slide__buttons">
-          <button type="button" class="btn btn-secondary"></button>
-          <button type="button" class="btn btn-primary"></button>
+          <button type="button" class="icon-prev"></button>
+          <button type="button" class="icon-next"></button>
         </div>
         <div class="slide__footer"></div>
       </div>

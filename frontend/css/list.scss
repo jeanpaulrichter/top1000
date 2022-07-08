@@ -14,12 +14,6 @@ GNU General Public License for more details.
 
 /* ------------------------------------------------------------------------------------------------------------------------------------------ */
 
-// preload icons
-#background::after {
-    position:absolute; width: 0; height: 0; overflow: hidden; z-index: -1;
-    content: url(icons/expand.svg) url(icons/collapse.svg) url(icons/menu.svg) url(icons/menu_open.svg) url(icons/vote.svg);
-}
-
 #mask {
     opacity: 0;
     width: 100%;
