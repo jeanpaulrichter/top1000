@@ -12,7 +12,7 @@ GNU General Public License for more details.
 
 import { FilterOptions } from "./list/types.js";
 import { setFocus } from "./list/focus.js";
-import { getListData, getFilterOptions, getPlatformString, findGame, htmlEncode } from "./list/help.js";
+import { getListData, getFilterOptions, getPlatformString, findGame, htmlEncode, isMobileBrowser } from "./list/help.js";
 
 declare global {
     interface Window {
@@ -78,7 +78,8 @@ async function loadList(page: number, filter: FilterOptions) {
 
             // Create up to 3 screenshot images
             if(game.screenshots.length > 0) {
-                for(let ii = 0; ii < game.screenshots.length && ii < 3; ii++) {
+                const max = isMobileBrowser() ? 1 : game.screenshots.length;
+                for(let ii = 0; ii < max && ii < 3; ii++) {
                     const el_img = document.createElement("IMG") as HTMLImageElement;
                     el_img.src = game.screenshots[ii];
                     if(ii === 0) {

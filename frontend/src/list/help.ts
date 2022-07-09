@@ -13,6 +13,29 @@ GNU General Public License for more details.
 import axios from "../lib/redaxios.min.js"
 import { ListQuery, PlatformInfo, FilterOptions } from "./types.js";
 
+declare global {
+    interface Navigator {
+        userAgentData: {
+            mobile: boolean
+        }
+    }
+}
+
+/**
+ * Not exactly sophisticated way to check if running on mobile device
+ */
+export function isMobileBrowser() {
+    if(navigator.userAgentData !== undefined) {
+        return navigator.userAgentData.mobile;
+    } else {
+        if(navigator.userAgent.toLowerCase().match(/mobile/i) !== null) {
+            return true;
+        } else {
+            return window.matchMedia("only screen and (max-width: 760px)").matches;
+        }
+    }
+}
+
 /**
  * Encode string to html
  * @param str Input string
