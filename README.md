@@ -33,5 +33,4 @@ node ./scripts/build.js
 node ./built/src/index.js
 ```
 
-Unter data/top1000.gz findet sich ein dump der benötigten MongoDB Datenbank.
 Einfachste Entwicklungsumgebung wahrscheinlich vscode (task: watch & nodemon)
