@@ -58,12 +58,12 @@ export function getVoterGroupFromString(s: string): VoterGroup | undefined {
 }
 
 /**
- * Get thumbnail from image url
+ * Download image
  * @param url URL of image
- * @returns String of thumbnail data
+ * @returns Buffer
  * @throws
  */
-async function getImageThumbnail(url: string): Promise<string> {
+async function getImageData(url: string): Promise<Buffer> {
     const ret = await axios({
         "url": url,
         "method": "get",
@@ -75,9 +75,7 @@ async function getImageThumbnail(url: string): Promise<string> {
         throw new Error("Failed to download image");
     }
 
-    const buffer = await sharp(ret.data as Buffer).resize(32, 32).jpeg({ force: true, quality: 90}).toBuffer();
-
-    return "data:image/jpeg;base64," + buffer.toString("base64");
+    return ret.data as Buffer;
 }
 
 /**
@@ -129,6 +127,16 @@ export async function getMobygamesInfo(game_id: number): Promise<GameInfo> {
         }
     }
 
+    // Try to download sample image
+    if(game.screenshots.length > 0) {
+        try {
+            const data = await getImageData(game.screenshots[0]);
+            game.image = await sharp(data).resize(480).webp({"alphaQuality": 0, "lossless": false, "quality": 80}).toBuffer();
+        } catch(err) {
+            //
+        }
+    }
+
     if(Array.isArray(info.genres)) {
         for(const genre of info.genres) {
             if(typeof genre.genre_name === "string" && genre.genre_name.length > 0) {
@@ -171,7 +179,10 @@ export async function getMobygamesInfo(game_id: number): Promise<GameInfo> {
         if(typeof thumb_url === "string" && thumb_url.length > 0) {
             game.thumbnail_url = thumb_url;
             try {
-                game.icon = await getImageThumbnail(thumb_url);
+                // Try to create icon
+                const data = await getImageData(thumb_url);
+                const buffer = await sharp(data).resize(32, 32).webp({"alphaQuality": 0, "lossless": false, "quality": 80}).toBuffer();
+                game.icon = buffer.toString("base64");
             } catch(err) {
                 //
             }
@@ -212,7 +223,7 @@ export async function sendEmail(options: SendMailOptions) {
  * @throws InputError, Error
  */
 export async function getMobyIDFromURL(url: string): Promise<number> {
-    const test_url = url.match(/^(https:\/\/)?www.mobygames.com\/game\/(([a-z]+\/)?[a-z0-9\-_]+)$/);
+    const test_url = url.match(/^(https:\/\/)?www.mobygames.com\/game\/(([a-z0-9\-_]+\/)?[a-z0-9\-_]+)$/);
     if(test_url === null) {
         throw new InputError("Invalid mobygames url");
     }

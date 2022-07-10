@@ -74,7 +74,8 @@ export type GameInfo = {
     icon?: string,
     platforms: PlatformInfo[],
     screenshots: string[],
-    genres: string[]
+    genres: string[],
+    image?: Buffer
 }
 
 export enum ClientAction {

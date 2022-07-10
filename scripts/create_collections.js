@@ -196,7 +196,11 @@ db.createCollection("games", {
       properties: {
         icon: {
           bsonType: 'string',
-          description: 'game icon data'
+          description: '32x32 game icon in webp format encoded in base64'
+        },
+        image: {
+          bsonType: 'binData',
+          description: 'Small example screenshot in webp format'
         },
         genres: {
           bsonType: [

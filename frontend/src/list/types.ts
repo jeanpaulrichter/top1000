@@ -22,6 +22,7 @@ export type PlatformInfo = {
  * Information about game
  */
 export type GameInfo = {
+    id: string,
     title: string,
     moby_id: number,
     moby_url: string,

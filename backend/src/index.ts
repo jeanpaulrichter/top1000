@@ -56,8 +56,21 @@ router.get("/password", (req: express.Request, res: express.Response) => {
     res.type("html").sendFile(joinPath(__dirname, "../html/password.html"));
 });
 
-router.get("/reset", (req: express.Request, res: express.Response) => {
-    res.type("html").sendFile(joinPath(__dirname, "../html/reset.html"));
+router.get("/image/:id", async(req: express.Request, res: express.Response, next: express.NextFunction) => {
+    try {
+        if(typeof req.params.id !== "string" || req.params.id.length !== 24) {
+            throw new InputError("Invalid id");
+        }
+        const buf = await db.getImage(req.params.id);
+        if(buf.byteLength > 0) {
+            res.set("Content-Type", "image/webp");
+            res.end(buf, 'binary');
+        } else {
+            res.type("image/gif").sendFile(joinPath(__dirname, "../www/images/missing_screenshot.gif"));
+        }
+    } catch(exc) {
+        next(exc);
+    }
 });
 
 /* ------------------------------------------------------------------------------------------------------------------------------------------ */

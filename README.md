@@ -33,4 +33,8 @@ node ./scripts/build.js
 node ./built/src/index.js
 ```
 
+.json dumps aller Spiele in der Datenbank finden sich [hier](<https://drive.google.com/drive/folders/1mNS8w1SPIStiqyNAL3ri0cd8MfjdUAHJ?usp=sharing> "Google Drive") : (Mit und ohne icon/image Daten).
+
+Über /data/email=useremail&password=userpw lassen sich die aktuellen Stimmen als csv-Datei herunterladen.
+
 Einfachste Entwicklungsumgebung wahrscheinlich vscode (task: watch & nodemon)

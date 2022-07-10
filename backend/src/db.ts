@@ -656,8 +656,19 @@ export class MongoDB
                 } },
                 { "$lookup": {
                     "from": "games",
-                    "localField": "game_id",
-                    "foreignField": "_id",
+                    "let": { "game_id": "$game_id" },
+                    "pipeline": [
+                        { "$match": { 
+                            "$expr": { "$eq": ["$_id","$$game_id"] }
+                        } },
+                        { "$project": {
+                            "_id": 0,
+                            "title": 1,
+                            "platforms": 1,
+                            "year": 1,
+                            "icon": 1
+                        } }
+                    ],
                     "as": "info"
                 } },
                 { "$project": {
@@ -801,11 +812,30 @@ export class MongoDB
                         { "$limit": limit },
                         { "$lookup": {
                             "from": "games",
-                            "localField": "_id",
-                            "foreignField": "_id",
+                            "let": { "game_id": "$_id" },
+                            "pipeline": [
+                                { "$match": { 
+                                    "$expr": { "$eq": ["$_id","$$game_id"] }
+                                } },
+                                { "$project": {
+                                    "_id": 0,
+                                    "id": { "$toString" : "$_id" },
+                                    "title": 1,
+                                    "moby_id": 1,
+                                    "description": 1,
+                                    "genres": 1,
+                                    "screenshots": 1,
+                                    "platforms": 1,
+                                    "year": 1,
+                                    "cover_url": 1,
+                                    "thumbnail_url": 1,
+                                    "icon": 1
+                                } }
+                            ],
                             "as": "game"
                         } },
                         { "$project": {
+                            "_id": 0,
                             "score": "$score",
                             "votes": "$votes",
                             "game": { "$arrayElemAt": [ "$game", 0 ] },
@@ -826,6 +856,40 @@ export class MongoDB
                 "pages": Math.ceil(count / 20),
                 "limit": limit
             };
+        } catch(exc) {
+            if(exc instanceof InputError) {
+                throw exc;
+            }
+            this.log.error(exc);
+            throw new LoggedError();
+        }
+    }
+
+    /**
+     * Get sample screenshot data for game
+     * @param gameid ObjectId of game
+     * @returns Buffer
+     * @throws InputError, LoggedError
+     */
+    public async getImage(gameid: string): Promise<Buffer> {
+        try {
+            if(this.games === undefined) {
+                throw new Error("No database connection");
+            }
+            const game = await this.games.findOne({
+                "_id": ObjectId.createFromHexString(gameid)
+            },
+            { "projection": {
+                "image": 1
+            }});
+            if(game === null) {
+                throw new InputError("Not found");
+            }
+            if(game.image !== undefined && game.image.buffer instanceof Buffer) {
+                return game.image.buffer as Buffer;
+            } else {
+                return Buffer.from("");
+            }
         } catch(exc) {
             if(exc instanceof InputError) {
                 throw exc;

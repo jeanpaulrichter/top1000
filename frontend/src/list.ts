@@ -44,6 +44,9 @@ async function loadList(page: number, filter: FilterOptions) {
         const ret = await getListData(page, filter);
         const data = ret.data;
 
+        // Is this script running on mobile browser?
+        const isMobile = isMobileBrowser();
+
         // Create new list entries and save them in array
         const game_elements = [];
         for(let i = 0; i < data.length; i++) {
@@ -60,7 +63,7 @@ async function loadList(page: number, filter: FilterOptions) {
             
             el_rank.innerHTML = `${game_number}.`;
             if(game.icon !== undefined && game.icon.length > 0) {                
-                el_icon.src = game.icon;
+                el_icon.src = "data:image/webp;base64," + game.icon;
             } else {
                 el_icon.src = "images/icon_missing.png";
             }
@@ -76,10 +79,19 @@ async function loadList(page: number, filter: FilterOptions) {
             const el_score = el_body.querySelector(".game__score") as HTMLElement;
             const el_comments = el_body.querySelector(".game__comments") as HTMLElement;
 
-            // Create up to 3 screenshot images
-            if(game.screenshots.length > 0) {
-                const max = isMobileBrowser() ? 1 : game.screenshots.length;
-                for(let ii = 0; ii < max && ii < 3; ii++) {
+
+
+            if(isMobile || game.screenshots.length === 0) {
+                // Limit download size: Only one image from own database
+
+                const el_img = document.createElement("IMG") as HTMLImageElement;
+                el_img.src = "image/" + game.id;
+                el_img.className = "img--visible";
+                el_screen.appendChild(el_img);
+            } else {
+                // Download size not an issue: Up to three screenshots from mobygames.com
+
+                for(let ii = 0; ii < game.screenshots.length && ii < 3; ii++) {
                     const el_img = document.createElement("IMG") as HTMLImageElement;
                     el_img.src = game.screenshots[ii];
                     if(ii === 0) {
@@ -87,11 +99,6 @@ async function loadList(page: number, filter: FilterOptions) {
                     }
                     el_screen.appendChild(el_img);
                 }
-            } else {
-                const el_img = document.createElement("IMG") as HTMLImageElement;
-                el_img.src = "images/missing_screenshot.gif";
-                el_img.className = "img--visible";
-                el_screen.appendChild(el_img);
             }
 
             // Set game information

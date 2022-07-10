@@ -72,7 +72,7 @@ function select2_template(data: GameInfo | Select2.LoadingData) {
     if((data as Select2.LoadingData).loading === undefined) {
         const item = data as GameInfo;
         const label = getLabel(item);
-        const icon = (typeof item.icon === "string" && item.icon.length > 0) ? item.icon : "images/icon_missing.png";
+        const icon = (typeof item.icon === "string" && item.icon.length > 0) ? "data:image/webp;base64," + item.icon : "images/icon_missing.png";
 
         return $("<div class=\"select2__suggestion\"><img src=\"" + icon + "\"/><span>" + label + "</span></div>");
     } else {
