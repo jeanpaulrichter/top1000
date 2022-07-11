@@ -56,6 +56,10 @@ router.get("/password", (req: express.Request, res: express.Response) => {
     res.type("html").sendFile(joinPath(__dirname, "../html/password.html"));
 });
 
+router.get("/reset", (req: express.Request, res: express.Response) => {
+    res.type("html").sendFile(joinPath(__dirname, "../html/reset.html"));
+});
+
 router.get("/image/:id", async(req: express.Request, res: express.Response, next: express.NextFunction) => {
     try {
         if(typeof req.params.id !== "string" || req.params.id.length !== 24) {
