@@ -913,8 +913,6 @@ export class MongoDB
                 throw new Error("No database connection");
             }
 
-            const regex_escape = /[.*+?^${}()|[\]\\]/g;
-
             // Get offset
             let offset = 0;
             if(page !== undefined && Number.isInteger(page) && page > 0 && page < 100000) {
@@ -923,7 +921,7 @@ export class MongoDB
 
             const res = await this.games.aggregate([
                 { "$match": {
-                    "title": new RegExp(input.replace(regex_escape, "\\$&"),"gi")
+                    "title": this.getSearchRegex(input)
                 } },
                 { "$sort": { "title": 1 } },
                 { "$facet": {
@@ -1065,5 +1063,41 @@ export class MongoDB
             this.log.error(exc);
             throw new LoggedError();
         }
+    }
+
+    /**
+     * Get search regex from string
+     * @param s Search term string
+     * @returns RegExp
+     */
+    private getSearchRegex(s: string): RegExp {
+        const map: {[key:string]: string} = {
+            "a": "[aáàâ]",
+            "e": "[eéèê]",
+            "i": "[iíìî]",
+            "o": "[oóòô]",
+            "u": "[uúùû]",
+            ":": "",
+            ".": "\\.",
+            "*": "\\*",
+            "+": "\\+",
+            "?": "\\?",
+            "^": "\\^",
+            "$": "\\$",
+            "{": "\\{",
+            "}": "\\}",
+            "(": "\\(",
+            ")": "\\)",
+            "|": "\\|",
+            "[": "\\[",
+            "]": "\\]",
+            "\\": ""
+        };
+        const regex_map = /[aeiou:.*+?^${}()|[\]\\]/g;
+        const regex_words = /[ ]+/g;
+        const str = s.toLowerCase().replace(regex_map, m => { 
+            return map[m];
+        }).replace(regex_words, ".*");
+        return new RegExp(str, "gi");
     }
 }
