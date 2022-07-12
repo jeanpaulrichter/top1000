@@ -807,7 +807,7 @@ export class MongoDB
                     "data": [
                         { "$sort": {
                             "score": -1,
-                            "title": 1
+                            "_id": 1
                         }},
                         { "$skip": (page - 1) * limit },
                         { "$limit": limit },
