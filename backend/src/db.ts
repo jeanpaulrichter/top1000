@@ -806,7 +806,8 @@ export class MongoDB
                     "meta": [ { "$count": "total" } ],
                     "data": [
                         { "$sort": {
-                            "score": -1
+                            "score": -1,
+                            "title": 1
                         }},
                         { "$skip": (page - 1) * limit },
                         { "$limit": limit },

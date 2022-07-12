@@ -14,6 +14,7 @@ import { FilterOptions } from "./list/types.js";
 import { setFocus } from "./list/focus.js";
 import { getListData, getFilterOptions, getPlatformString, findGame, htmlEncode, isMobileBrowser } from "./list/help.js";
 
+// tell typescript of bootstrap :)
 declare global {
     interface Window {
         bootstrap: {
