@@ -11,7 +11,7 @@ GNU General Public License for more details.
 */
 
 import { setupSelect2, setSelect2Value, updateProgress } from "./vote/select2.js";
-import { findGame, findSlide } from "./vote/help.js";
+import { findGame, findSlide, addGameRequest } from "./vote/help.js";
 import { setFocus } from "./vote/focus.js";
 import { SlideOptions, UserInfo, VoteInfo } from "./vote/types.js";
 import axios from "./lib/redaxios.min.js";
@@ -321,14 +321,12 @@ function onClickAddGame(e: Event) {
     el_msg.className = "hidden";
 
     // Try to add game to database...
-    axios.post("/api/addgame", {
-        "moby_url": el_input.value
-    }).then(() => {
+    addGameRequest(el_input.value).then(() => {
         el_msg.className = "help-dialog__msg help-dialog__msg--success";
         el_msg.innerHTML = "Spiel hinzugefügt."; 
     }).catch(err => {
         el_msg.className = "help-dialog__msg help-dialog__msg--error";
-        el_msg.innerHTML = "Einfügen des Spieles fehlgeschlagen."; 
+        el_msg.innerHTML = err; 
         console.error(err);
     }).finally(() => {
         el_btn.disabled = false;

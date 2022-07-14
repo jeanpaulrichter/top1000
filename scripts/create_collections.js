@@ -88,15 +88,21 @@ db.createCollection("votes", {
       bsonType: 'object',
       required: [
         '_id',
+        'position',
         'user_id',
+        'user_age',
+        'user_gender',
+        'user_groups',
         'game_id',
         'game_title',
         'game_year',
         'game_moby_id',
-        'age',
-        'gender',
-        'groups',
-        'position'
+        'game_genres',
+        'game_gameplay',
+        'game_perspectives',
+        'game_settings',
+        'game_topics',
+        'game_platforms'
       ],
       additionalProperties: false,
       properties: {
@@ -104,37 +110,31 @@ db.createCollection("votes", {
           bsonType: 'objectId',
           description: '_id is the unique objectId key'
         },
+        position: {
+          bsonType: 'int',
+          description: 'position of game on user list',
+          minimum: 0,
+          maximum: 100
+        },
+        comment: {
+          bsonType: 'string',
+          description: 'user comment about game'
+        },
         user_id: {
           bsonType: 'objectId',
           description: 'objectId key of user'
         },
-        game_id: {
-          bsonType: 'objectId',
-          description: 'objectId key of game'
-        },
-        game_title: {
-          bsonType: 'string',
-          description: 'game title string'
-        },
-        game_year: {
-          bsonType: 'int',
-          description: 'game release year'
-        },
-        game_moby_id: {
-          bsonType: 'int',
-          description: 'game mobygames id'
-        },
-        age: {
+        user_age: {
           bsonType: 'int',
           description: 'user age',
           minimum: 0,
           maximum: 10
         },
-        gender: {
+        user_gender: {
           bsonType: 'string',
           description: 'user gender'
         },
-        groups: {
+        user_groups: {
           bsonType: 'object',
           description: 'groups of user',
           required: [
@@ -163,15 +163,69 @@ db.createCollection("votes", {
             }
           }
         },
-        position: {
-          bsonType: 'int',
-          description: 'position of game on user list',
-          minimum: 0,
-          maximum: 100
+        game_id: {
+          bsonType: 'objectId',
+          description: 'objectId key of game'
         },
-        comment: {
+        game_title: {
           bsonType: 'string',
-          description: 'user comment about game'
+          description: 'game title string'
+        },
+        game_year: {
+          bsonType: 'int',
+          description: 'game release year'
+        },
+        game_moby_id: {
+          bsonType: 'int',
+          description: 'game mobygames id'
+        },
+        game_genres: {
+          bsonType: 'array',
+          description: 'game genres',
+          items: {
+            bsonType: 'string',
+            description: 'unique genre string'
+          }
+        },
+        game_gameplay: {
+          bsonType: 'array',
+          description: 'game gameplay',
+          items: {
+            bsonType: 'string',
+            description: 'unique gameplay string'
+          }
+        },
+        game_perspectives: {
+          bsonType: 'array',
+          description: 'game perspectives',
+          items: {
+            bsonType: 'string',
+            description: 'unique perspective string'
+          }
+        },
+        game_settings: {
+          bsonType: 'array',
+          description: 'game settings',
+          items: {
+            bsonType: 'string',
+            description: 'unique setting string'
+          }
+        },
+        game_topics: {
+          bsonType: 'array',
+          description: 'game topics',
+          items: {
+            bsonType: 'string',
+            description: 'unique topic string'
+          }
+        },
+        game_platforms: {
+          bsonType: 'array',
+          description: 'game platforms',
+          items: {
+            bsonType: 'string',
+            description: 'unique platform string'
+          }
         }
       }
     }
@@ -186,35 +240,41 @@ db.createCollection("games", {
         'title',
         'moby_id',
         'moby_url',
-        'genres',
         'platforms',
         'screenshots',
         'description',
-        'year'
+        'year',
+        'genres',
+        'gameplay',
+        'perspectives',
+        'settings',
+        'topics'
       ],
       additionalProperties: false,
       properties: {
-        icon: {
+        _id: {
+          bsonType: 'objectId',
+          description: '_id is the unique objectId key'
+        },
+        title: {
           bsonType: 'string',
-          description: '32x32 game icon in webp format encoded in base64'
+          description: 'title of game'
         },
-        image: {
-          bsonType: 'binData',
-          description: 'Small example screenshot in webp format'
+        description: {
+          bsonType: 'string',
+          description: 'description of game'
         },
-        genres: {
-          bsonType: [
-            'array'
-          ],
-          description: 'game genres',
-          items: {
-            bsonType: 'string',
-            description: 'genre name'
-          }
+        moby_id: {
+          bsonType: 'int',
+          description: 'mobygames.com game id'
         },
         moby_url: {
-          description: 'mobygames.com game url',
-          bsonType: 'string'
+          bsonType: 'string',
+          description: 'mobygames.com game url'
+        },
+        year: {
+          bsonType: 'int',
+          description: 'release year of game'
         },
         cover_url: {
           bsonType: 'string',
@@ -224,13 +284,13 @@ db.createCollection("games", {
           bsonType: 'string',
           description: 'url of cover thumbnail'
         },
-        moby_id: {
-          bsonType: 'int',
-          description: 'mobygames.com game id'
+        icon: {
+          bsonType: 'string',
+          description: '32x32 game icon in webp format encoded in base64'
         },
-        year: {
-          bsonType: 'int',
-          description: 'release year of game'
+        image: {
+          bsonType: 'binData',
+          description: 'Small example screenshot in webp format'
         },
         screenshots: {
           bsonType: [
@@ -246,8 +306,14 @@ db.createCollection("games", {
           bsonType: [
             'array'
           ],
-          description: 'game genres',
+          description: 'game platforms',
           items: {
+            bsonType: 'object',
+            required: [
+              'name',
+              'year'
+            ],
+            additionalProperties: false,
             properties: {
               name: {
                 bsonType: 'string',
@@ -257,62 +323,58 @@ db.createCollection("games", {
                 bsonType: 'int',
                 description: 'release year on platform'
               }
-            },
-            bsonType: 'object',
-            required: [
-              'name',
-              'year'
-            ],
-            additionalProperties: false
+            }
           }
         },
-        _id: {
-          description: '_id is the unique objectId key',
-          bsonType: 'objectId'
+        genres: {
+          bsonType: [
+            'array'
+          ],
+          description: 'game genres',
+          items: {
+            bsonType: 'string',
+            description: 'unique genre name'
+          }
         },
-        title: {
-          bsonType: 'string',
-          description: 'title of game'
+        gameplay: {
+          bsonType: [
+            'array'
+          ],
+          description: 'game gameplay',
+          items: {
+            bsonType: 'string',
+            description: 'unique gameplay name'
+          }
         },
-        description: {
-          bsonType: 'string',
-          description: 'description of game'
-        }
-      }
-    }
-  }
-});
-db.createCollection("ipblock", {
-  validator: {
-    $jsonSchema: {
-      bsonType: 'object',
-      required: [
-        '_id',
-        'ip',
-        'timestamp',
-        'action'
-      ],
-      additionalProperties: false,
-      properties: {
-        count: {
-          bsonType: 'int',
-          description: 'client action count'
+        perspectives: {
+          bsonType: [
+            'array'
+          ],
+          description: 'game perspectives',
+          items: {
+            bsonType: 'string',
+            description: 'unique perspective name'
+          }
         },
-        _id: {
-          bsonType: 'objectId',
-          description: '_id is the unique objectId key'
+        settings: {
+          bsonType: [
+            'array'
+          ],
+          description: 'game settings',
+          items: {
+            bsonType: 'string',
+            description: 'unique setting name'
+          }
         },
-        ip: {
-          bsonType: 'string',
-          description: 'client ip'
-        },
-        timestamp: {
-          bsonType: 'date',
-          description: 'last timestamp'
-        },
-        action: {
-          bsonType: 'string',
-          description: 'client action (login,register)'
+        topics: {
+          bsonType: [
+            'array'
+          ],
+          description: 'game topics',
+          items: {
+            bsonType: 'string',
+            description: 'unique topic name'
+          }
         }
       }
     }

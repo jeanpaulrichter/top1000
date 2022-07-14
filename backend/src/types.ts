@@ -70,11 +70,15 @@ export type GameInfo = {
     description: string,
     year: number,
     cover_url?: string,
-    thumbnail_url?: string,
-    icon?: string,
+    thumbnail_url?: string,    
     platforms: PlatformInfo[],
     screenshots: string[],
     genres: string[],
+    gameplay: string[],
+    perspectives: string[],
+    settings: string[],
+    topics: string[],
+    icon?: string,
     image?: Buffer
 }
 
@@ -85,6 +89,26 @@ export enum ClientAction {
     data = "data",
     addgame = "addgame"
 }
+
+export type VotesGameGroup = {
+    name: string,
+    count: number
+};
+
+export type VotesStatistics = {
+    genre: VotesGameGroup[],
+    gameplay: VotesGameGroup[],
+    perspective: VotesGameGroup[],
+    setting: VotesGameGroup[],
+    topic: VotesGameGroup[],
+    platforms: VotesGameGroup[]
+};
+
+export type FilterOptions = {
+    gender?: Gender,
+    age?: number,
+    group?: VoterGroup
+};
 
 // Declare session variables for typescript
 declare module "express-session" {

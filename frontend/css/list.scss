@@ -55,6 +55,15 @@ GNU General Public License for more details.
     height: 2rem;
 }
 
+.chart-dialog {
+    background-color: $background-color;
+    color: white;
+}
+
+.chart-dialog-close {
+    filter:  brightness(0) invert(1);
+}
+
 /* ------------------------------------------------------------------------------------------------------------------------------------------ */
 
 .page--current {

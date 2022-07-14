@@ -18,9 +18,9 @@ import create_session from "express-session";
 import { join as joinPath } from "path";
 import { parse as json2csv } from "json2csv";
 import { MongoDB } from "./db";
-import { VoterGroups, Gender, VoterGroup } from "./types";
+import { VoterGroups } from "./types";
 import { AuthError, InputError, LoggedError } from "./exceptions";
-import { getGenderFromString, getVoterGroupFromString } from "./help";
+import { getGenderFromString, getFilterParams } from "./help";
 import config from "./config";
 
 /* ------------------------------------------------------------------------------------------------------------------------------------------ */
@@ -405,34 +405,24 @@ router.get("/api/list", async(req: express.Request, res: express.Response, next:
             throw new InputError("Invalid page");
         }
 
-        // Validate gender
-        let gender: Gender | undefined = undefined;
-        if(typeof req.query.gender === "string") {
-            gender = getGenderFromString(req.query.gender);
-            if(gender === undefined) {
-                throw new InputError("Invalid gender");
-            }
-        }
+        const options = getFilterParams(req.query.gender, req.query.age, req.query.group);
+        const data = await db.getList(page, 20, options);
+        res.send(data);
+    } catch(exc) {
+        next(exc);
+    }
+});
 
-        // Validate age
-        let age: number | undefined = undefined;
-        if(typeof req.query.age === "string") {
-            age = parseInt(req.query.age);
-            if(Number.isNaN(age) || age < 1 || age > 9) {
-                throw new InputError("Invalid age");
-            }
-        }
-
-        // Validate group
-        let group: VoterGroup | undefined = undefined;
-        if(typeof req.query.group === "string") {
-            group = getVoterGroupFromString(req.query.group);
-            if(group === undefined) {
-                throw new InputError("Invalid group");
-            }
-        }
-
-        const data = await db.getList(page, 20, gender, age, group);
+/**
+ * Get statistics about all votes
+ *  gender: "female" | "male" | "other" (optional)
+ *  age: [0-9] (optional)
+ *  group: "gamer" | "journalist" | "scientist" | "critic" | "wasted" (optional)
+ */
+router.get("/api/statistics", async(req: express.Request, res: express.Response, next: express.NextFunction) => {
+    try {
+        const options = getFilterParams(req.query.gender, req.query.age, req.query.group);
+        const data = await db.getVoteStatistics(options);
         res.send(data);
     } catch(exc) {
         next(exc);
@@ -498,7 +488,7 @@ router.get("/api/data", async(req: express.Request, res: express.Response, next:
         res.send(json2csv(data, {
             "header": true,
             "eol": "\n",
-            "fields": ["user", "age", "gender", "wasted", "gamer", "journalist", "critic", "scientist", "game", "year", "moby_id", "position"]
+            "fields": ["user", "age", "gender", "wasted", "gamer", "journalist", "critic", "scientist", "position", "game", "year", "moby_id", "genres", "gameplay", "perspectives", "settings", "topics", "platforms"]
         }));
 
     } catch(exc) {

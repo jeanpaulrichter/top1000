@@ -11,7 +11,7 @@ GNU General Public License for more details.
 */
 
 import axios from "../lib/redaxios.min.js"
-import { ListQuery, PlatformInfo, FilterOptions } from "./types.js";
+import { ListQuery, PlatformInfo, FilterOptions, Statistics } from "./types.js";
 
 declare global {
     interface Navigator {
@@ -136,6 +136,31 @@ export async function getListData(page: number, filter: FilterOptions): Promise<
     const ret = await axios.get(url);
     if(ret.status === 200) {
         return ret.data as ListQuery;
+    } else {
+        throw new Error(ret.statusText);
+    }
+}
+
+/**
+ * Query server for statistics
+ * @param filter Filter options
+ * @returns 
+ */
+export async function getChartData(filter: FilterOptions): Promise<Statistics> {
+    let url = "/api/statistics?";
+    if(filter.group !== undefined) {
+        url += "&group=" + filter.group;
+    }
+    if(filter.gender !== undefined) {
+        url += "&gender=" + filter.gender;
+    }
+    if(filter.age !== undefined) {
+        url += "&age=" + filter.age;
+    }
+
+    const ret = await axios.get(url);
+    if(ret.status === 200) {
+        return ret.data as Statistics;
     } else {
         throw new Error(ret.statusText);
     }

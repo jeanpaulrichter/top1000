@@ -15,7 +15,7 @@ import MongoStore from "connect-mongo";
 import { Store as SessionStore } from "express-session";
 import { Logger } from "winston";
 import { MongoClient, ReadPreference, Collection, MongoClientOptions, ObjectId, Document, TransactionOptions } from "mongodb";
-import { Gender, VoteGame, VoterGroup, User, UserInfo, ClientAction } from "./types";
+import { VoteGame, User, UserInfo, ClientAction, VotesStatistics, FilterOptions } from "./types";
 import { InputError, LoggedError } from "./exceptions";
 import { getMobygamesInfo, getMobyIDFromURL, sendEmail } from "./help";
 import config from "./config";
@@ -454,7 +454,7 @@ export class MongoDB
                 throw new Error("Failed to delete user");
             }
             await this.votes.deleteMany({
-                "user": id
+                "user_id": id
             });
         } catch(exc) {
             this.log.error(exc);
@@ -494,9 +494,9 @@ export class MongoDB
                 let ret = await this.votes.updateMany({
                     "user_id": user_id,
                 }, { "$set": {
-                    "age": user.age,
-                    "gender": user.gender,
-                    "groups": user.groups
+                    "user_age": user.age,
+                    "user_gender": user.gender,
+                    "user_groups": user.groups
                 } }, {
                     "session": session
                 });
@@ -561,7 +561,13 @@ export class MongoDB
                 "projection": {
                     "title": 1,
                     "moby_id": 1,
-                    "year": 1
+                    "year": 1,
+                    "platforms": "$platforms.name",
+                    "genres": 1,
+                    "gameplay": 1,
+                    "perspectives": 1,
+                    "settings": 1,
+                    "topics": 1
                 }
             });
             if(game === null) {
@@ -572,14 +578,20 @@ export class MongoDB
             const ret = await this.votes.updateOne({
                 "user_id": ObjectId.createFromHexString(user.id),
                 "position": position,
-                "age": user.age,
-                "gender": user.gender,
-                "groups": user.groups
+                "user_age": user.age,
+                "user_gender": user.gender,
+                "user_groups": user.groups
             }, { "$set": {
                 "game_id": game_object_id,
                 "game_title": game.title,
                 "game_year": game.year,
-                "game_moby_id": game.moby_id
+                "game_moby_id": game.moby_id,
+                "game_genres": game.genres,
+                "game_gameplay": game.gameplay,
+                "game_perspectives": game.perspectives,
+                "game_settings": game.settings,
+                "game_topics": game.topics,
+                "game_platforms": game.platforms
             } }, {
                 "upsert": true
             });
@@ -695,7 +707,7 @@ export class MongoDB
      * @returns Array of votes
      * @throws InputError, LoggedError
      */
-     public async getData(ip: string, email: string, password: string) {
+    public async getData(ip: string, email: string, password: string) {
         try {
             if(this.votes === undefined || this.users === undefined) {
                 throw new Error("No database connection");
@@ -733,19 +745,156 @@ export class MongoDB
                 "projection": {
                     "_id": 0,
                     "user": { "$toString": "$user_id" },
-                    "age": 1,
-                    "gender": 1,
-                    "wasted": "$groups.wasted",
-                    "gamer": "$groups.gamer",
-                    "journalist": "$groups.journalist",
-                    "critic": "$groups.critic",
-                    "scientist": "$groups.scientist",
+                    "age": "$user_age",
+                    "gender": "$user_gender",
+                    "wasted": "$user_groups.wasted",
+                    "gamer": "$user_groups.gamer",
+                    "journalist": "$user_groups.journalist",
+                    "critic": "$user_groups.critic",
+                    "scientist": "$user_groups.scientist",
+                    "position": 1,
                     "game": "$game_title",
                     "year": "$game_year",
                     "moby_id": "$game_moby_id",
-                    "position": 1
+                    "genres": "$game_genres",
+                    "gameplay": "$game_gameplay",
+                    "perspectives": "$game_perspectives",
+                    "settings": "$game_settings",
+                    "topics": "$game_topics",
+                    "platforms": "$game_platforms"
                 }
             }).toArray();
+            return ret;
+        } catch(exc) {
+            if(exc instanceof InputError) {
+                throw exc;
+            }
+            this.log.error(exc);
+            throw new LoggedError();
+        }
+    }
+
+    /**
+     * Get information about votes collection
+     * @returns Statistics about current votes
+     */
+    public async getVoteStatistics(options: FilterOptions): Promise<VotesStatistics> {
+        try {
+            if(this.votes === undefined) {
+                throw new Error("No database connection");
+            }
+
+            // Construct query object
+            const query: Document = {};
+            if(options.gender !== undefined) {
+                query.user_gender = options.gender.toString();
+            }
+            if(options.age !== undefined) {
+                query.user_age = options.age;
+            }
+            if(options.group !== undefined) {
+                query["user_groups." + options.group.toString()] = true;
+            }
+
+            const ret = await this.votes.aggregate<VotesStatistics>([
+                { "$match": query },
+                { "$facet": {
+                    "genres": [
+                        { "$replaceWith": { "genre": "$game_genres" } },
+                        { "$unwind": {
+                            "path": "$genre"
+                        } },
+                        { "$group": {
+                            "_id": "$genre",
+                            "count": { "$sum": 1 }
+                        } },
+                        { "$project": {
+                            "name": "$_id",
+                            "count": 1,
+                            "_id": 0
+                        } }
+                    ],
+                    "gameplay": [
+                        { "$replaceWith": { "gameplay": "$game_gameplay" } },
+                        { "$unwind": {
+                            "path": "$gameplay"
+                        } },
+                        { "$group": {
+                            "_id": "$gameplay",
+                            "count": { "$sum": 1 }
+                        } },
+                        { "$project": {
+                            "name": "$_id",
+                            "count": 1,
+                            "_id": 0
+                        } }
+                    ],
+                    "perspectives": [
+                        { "$replaceWith": { "perspective": "$game_perspectives" } },
+                        { "$unwind": {
+                            "path": "$perspective"
+                        } },
+                        { "$group": {
+                            "_id": "$perspective",
+                            "count": { "$sum": 1 }
+                        } },
+                        { "$project": {
+                            "name": "$_id",
+                            "count": 1,
+                            "_id": 0
+                        } }
+                    ],
+                    "settings": [
+                        { "$replaceWith": { "setting": "$game_settings" } },
+                        { "$unwind": {
+                            "path": "$setting"
+                        } },
+                        { "$group": {
+                            "_id": "$setting",
+                            "count": { "$sum": 1 }
+                        } },
+                        { "$project": {
+                            "name": "$_id",
+                            "count": 1,
+                            "_id": 0
+                        } }
+                    ],
+                    "topics": [
+                        { "$replaceWith": { "topic": "$game_topics" } },
+                        { "$unwind": {
+                            "path": "$topic"
+                        } },
+                        { "$group": {
+                            "_id": "$topic",
+                            "count": { "$sum": 1 }
+                        } },
+                        { "$project": {
+                            "name": "$_id",
+                            "count": 1,
+                            "_id": 0
+                        } }
+                    ],
+                    "platforms": [
+                        { "$replaceWith": { "platforms": "$game_platforms" } },
+                        { "$unwind": {
+                            "path": "$platforms"
+                        } },
+                        { "$group": {
+                            "_id": "$platforms",
+                            "count": { "$sum": 1 }
+                        } },
+                        { "$project": {
+                            "name": "$_id",
+                            "count": 1,
+                            "_id": 0
+                        } }
+                    ],
+                } }
+            ]).next();
+
+            if(ret === null) {
+                throw new Error("Failed to get vote statistics");
+            }
             return ret;
         } catch(exc) {
             if(exc instanceof InputError) {
@@ -767,7 +916,7 @@ export class MongoDB
      * @returns List data
      * @throws InputError, LoggedError
      */
-    public async getList(page: number, limit: number, gender?: Gender, age?: number, group?: VoterGroup) {
+    public async getList(page: number, limit: number, options: FilterOptions) {
         try {
             if(this.votes === undefined) {
                 throw new Error("No database connection");
@@ -783,14 +932,14 @@ export class MongoDB
 
             // Construct query object
             const query: Document = {};
-            if(gender !== undefined) {
-                query.gender = gender.toString();
+            if(options.gender !== undefined) {
+                query.user_gender = options.gender.toString();
             }
-            if(age !== undefined) {
-                query.age = age;
+            if(options.age !== undefined) {
+                query.user_age = options.age;
             }
-            if(group !== undefined) {
-                query["groups." + group.toString()] = true;
+            if(options.group !== undefined) {
+                query["user_groups." + options.group.toString()] = true;
             }
 
             // Get data
@@ -823,6 +972,7 @@ export class MongoDB
                                     "id": { "$toString" : "$_id" },
                                     "title": 1,
                                     "moby_id": 1,
+                                    "moby_url": 1,
                                     "description": 1,
                                     "genres": 1,
                                     "screenshots": 1,

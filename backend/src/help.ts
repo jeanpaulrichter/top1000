@@ -10,7 +10,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU General Public License for more details.
 */
 
-import { Gender, VoterGroup, GameInfo } from "./types";
+import { Gender, VoterGroup, GameInfo, FilterOptions } from "./types";
 import axios from "axios";
 import sharp from "sharp";
 import { InputError } from "./exceptions";
@@ -82,7 +82,7 @@ async function getImageData(url: string): Promise<Buffer> {
  * Get information about game from mobygames.com
  * @param game_id Mobygames.com game id
  * @returns GameInfo
- * @throws
+ * @throws InputError, Error
  */
 export async function getMobygamesInfo(game_id: number): Promise<GameInfo> {
     const ret = await axios({
@@ -114,6 +114,10 @@ export async function getMobygamesInfo(game_id: number): Promise<GameInfo> {
         "moby_url": info.moby_url,
         "description": (typeof info.description === "string") ? info.description : "",
         "genres": [],
+        "gameplay": [],
+        "perspectives": [],
+        "topics": [],
+        "settings": [],
         "platforms": [],
         "screenshots": [],
         "year": 0
@@ -139,8 +143,30 @@ export async function getMobygamesInfo(game_id: number): Promise<GameInfo> {
 
     if(Array.isArray(info.genres)) {
         for(const genre of info.genres) {
-            if(typeof genre.genre_name === "string" && genre.genre_name.length > 0) {
-                game.genres.push(genre.genre_name);
+            if(typeof genre.genre_category_id === "number" && typeof genre.genre_name === "string") {
+                switch(genre.genre_category_id) {
+                    case 1: {
+                        if(genre.genre_id === 62) {
+                            throw new InputError("No DLCs/Addons");
+                        } else if(genre.genre_id === 76) {
+                            throw new InputError("No Compilations");
+                        }
+                        game.genres.push(genre.genre_name);
+                        break;
+                    }
+                    case 2:
+                        game.perspectives.push(genre.genre_name);
+                        break;
+                    case 4:
+                        game.gameplay.push(genre.genre_name);
+                        break;
+                    case 8:
+                        game.topics.push(genre.genre_name);
+                        break;
+                    case 10:
+                        game.settings.push(genre.genre_name);
+                        break;
+                }
             }
         }
     }
@@ -256,4 +282,34 @@ export async function getMobyIDFromURL(url: string): Promise<number> {
         throw new Error("Failed to parse game id.");
     }
     return gameid;
+}
+
+export function getFilterParams(gender: unknown, age: unknown, group: unknown): FilterOptions {
+    const options: FilterOptions = {};
+
+    // Validate gender
+    if(typeof gender === "string") {
+        options.gender = getGenderFromString(gender);
+        if(options.gender === undefined) {
+            throw new InputError("Invalid gender");
+        }
+    }
+
+    // Validate age
+    if(typeof age === "string") {
+        options.age = parseInt(age);
+        if(Number.isNaN(options.age) || options.age < 1 || options.age > 9) {
+            throw new InputError("Invalid age");
+        }
+    }
+
+    // Validate group
+    if(typeof group === "string") {
+        options.group = getVoterGroupFromString(group);
+        if(options.group === undefined) {
+            throw new InputError("Invalid group");
+        }
+    }
+
+    return options;
 }

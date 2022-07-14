@@ -10,6 +10,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU General Public License for more details.
 */
 
+import axios from "../lib/redaxios.min.js";
 import { GameInfo } from "./types.js";
 
 /**
@@ -86,4 +87,31 @@ export function getLabel(item: GameInfo): string {
         }
     }
 
+}
+
+/**
+ * Try to add new mobygames game to database
+ * @param moby_url Mobygames.com url
+ * @throws Error string 
+ */
+export async function addGameRequest(moby_url: string) {
+    try {
+        const ret = await axios.post("/api/addgame", {
+            "moby_url": moby_url
+        });
+        if(ret.status !== 200) {
+            throw new Error();
+        }
+    } catch(exc) {
+        if(typeof exc === "object" && exc !== null) {
+            const e = exc as { [key: string]: unknown };
+            if(e.status === 400 && typeof e.data === "string" && e.data.length > 0) {
+                throw e.data;
+            } else {
+                throw "Es ist ein Fehler aufgetreten";
+            }
+        } else {
+            throw "Verbindung zum Server nicht möglich";
+        }
+    }
 }

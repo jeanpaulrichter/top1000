@@ -17,12 +17,14 @@ GNU General Public License for more details.
     <title>Wasted Top1000</title>
     <link rel="shortcut icon" href="images/favicon.webp">
     <link rel="preload" as="image" href="css/icons/vote.svg">
+    <link rel="preload" as="image" href="css/icons/pie_chart.svg">
     <link rel="preload" as="image" href="css/icons/menu.svg">
     <link rel="preload" as="image" href="css/icons/menu_open.svg">
     <link rel="preload" as="image" href="css/icons/pattern1.svg">
     <link rel="stylesheet" href="css/lib/bootstrap.min.css">
     <link rel="stylesheet" href="css/list.css">
     <script src="javascript/lib/bootstrap.min.js"></script>
+    <script src="javascript/lib/chart.min.js"></script>
     <script src="javascript/list.js" type="module"></script>
   </head>
   <body>
@@ -32,6 +34,7 @@ GNU General Public License for more details.
       <div id="top">
         <h1>Wasted Top1000</h1>
         <nav id="menu">
+          <button class="icon-chart" data-bs-toggle="modal" data-bs-target="#dlgChart" data-bs-placement="bottom" title="Statistik" id="btnStatistics"></button>
           <a href="/vote"><button class="icon-vote" data-bs-placement="bottom" title="Abstimmen"></button></a>
           <button id="filterToggle" class="icon-menu"></button>
         </nav>
@@ -99,6 +102,57 @@ GNU General Public License for more details.
       <div id="games"></div>
       <div id="pages"></div>
       <div id="footer"></div>
+    </div>
+
+    <div class="modal fade" id="dlgChart" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content chart-dialog">
+          <div class="modal-header">
+            <h5 class="modal-title">Statistik</h5>
+            <button type="button" class="btn-close chart-dialog-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div id="chartCarousel" class="carousel slide" data-bs-ride="true" data-bs-interval="false">
+              <div class="carousel-indicators">
+                <button type="button" data-bs-target="#chartCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+                <button type="button" data-bs-target="#chartCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
+                <button type="button" data-bs-target="#chartCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
+                <button type="button" data-bs-target="#chartCarousel" data-bs-slide-to="3" aria-label="Slide 4"></button>
+                <button type="button" data-bs-target="#chartCarousel" data-bs-slide-to="4" aria-label="Slide 5"></button>
+                <button type="button" data-bs-target="#chartCarousel" data-bs-slide-to="5" aria-label="Slide 6"></button>
+              </div>
+              <div class="carousel-inner">
+                <div class="carousel-item active">
+                  <canvas id="chart_genre" class="d-block w-100" width="600" height="600"></canvas>
+                </div>
+                <div class="carousel-item">
+                  <canvas id="chart_gameplay" class="d-block w-100" width="600" height="600"></canvas>
+                </div>
+                <div class="carousel-item">
+                  <canvas id="chart_perspectives" class="d-block w-100" width="600" height="600"></canvas>
+                </div>
+                <div class="carousel-item">
+                  <canvas id="chart_settings" class="d-block w-100" width="600" height="600"></canvas>
+                </div>
+                <div class="carousel-item">
+                  <canvas id="chart_topics" class="d-block w-100" width="600" height="600"></canvas>
+                </div>
+                <div class="carousel-item">
+                  <canvas id="chart_platforms" class="d-block w-100" width="600" height="600"></canvas>
+                </div>
+              </div>
+              <button class="carousel-control-prev" type="button" data-bs-target="#chartCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Previous</span>
+              </button>
+              <button class="carousel-control-next" type="button" data-bs-target="#chartCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Next</span>
+              </button>
+            </div>            
+          </div>
+        </div>
+      </div>
     </div>
 
     <template id="tml_game">

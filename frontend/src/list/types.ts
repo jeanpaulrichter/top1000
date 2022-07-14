@@ -64,3 +64,54 @@ export type FilterOptions = {
     gender?: string,
     age?: number
 }
+
+/**
+ * 
+ */
+export type GameGroup = {
+    name: string,
+    count: number
+};
+
+/**
+ * Statistics returns by API
+ */
+export type Statistics = {
+    genre: GameGroup[],
+    gameplay: GameGroup[],
+    perspective: GameGroup[],
+    setting: GameGroup[],
+    topic: GameGroup[],
+    platforms: GameGroup[],
+    [key: string]: GameGroup[]
+};
+
+/**
+ * Stump chartjs data object
+ */
+export type ChartData = {
+    labels: string[],
+    datasets: {
+        data: number[],
+        backgroundColor: string[],
+    }[]
+};
+
+/**
+ * Stump chartjs instance
+ */
+export type Chart = {
+    destroy(): void
+};
+
+/**
+ * Definition of statistics chart
+ */
+export type ChartInfo = {
+    canvas: HTMLCanvasElement,
+    obj: Chart | undefined,
+    type: string,
+    name: string,
+    options: { [key: string]: unknown }
+    filter?: string[]
+}

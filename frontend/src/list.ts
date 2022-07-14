@@ -13,15 +13,19 @@ GNU General Public License for more details.
 import { FilterOptions } from "./list/types.js";
 import { setFocus } from "./list/focus.js";
 import { getListData, getFilterOptions, getPlatformString, findGame, htmlEncode, isMobileBrowser } from "./list/help.js";
+import { loadCharts } from "./list/charts.js";
 
 // tell typescript of bootstrap :)
 declare global {
     interface Window {
         bootstrap: {
             Tooltip: new(el: Element) => unknown;
-        }
+        },
+        Chart: new(el: Element, options: unknown) => { destroy(): void }
     }
 }
+
+/* ------------------------------------------------------------------------------------------------------------------------------------------ */
 
 /**
  * Load a page of the list from the server and display it
@@ -80,8 +84,6 @@ async function loadList(page: number, filter: FilterOptions) {
             const el_score = el_body.querySelector(".game__score") as HTMLElement;
             const el_comments = el_body.querySelector(".game__comments") as HTMLElement;
 
-
-
             if(isMobile || game.screenshots.length === 0) {
                 // Limit download size: Only one image from own database
 
@@ -122,12 +124,15 @@ async function loadList(page: number, filter: FilterOptions) {
         el_games.className = "";
         el_games.replaceChildren(...game_elements);
         
-        // Set message (in)visible 
+        // Set message (in)visible
+        const el_btn_statistic = document.getElementById("btnStatistics") as HTMLButtonElement;
         if(data.length > 0) {
             el_message.className = "hidden";
+            el_btn_statistic.disabled = false;
         } else {
             el_message.className = "";
             el_message.innerHTML = "Keine Spiele gefunden :(";
+            el_btn_statistic.disabled = true;            
         }
 
         // Create new page buttons
@@ -235,8 +240,13 @@ function onLoad() {
         new window.bootstrap.Tooltip(el_tooltip);
     }
 
+    const filter = getFilterOptions();
+
     // Load first page of list
-    loadList(1, getFilterOptions());
+    loadList(1, filter);
+
+    // Load statistics charts
+    loadCharts(filter);
 
     // Change screenshots every 6 seconds
     setInterval(changeImages, 6000);
@@ -288,9 +298,12 @@ function onClickFilterToggle(this: HTMLButtonElement) {
  * OnChange handler for filter control elements
  */
 function onChangeFilter() {
-    loadList(1, getFilterOptions());
+    const filter = getFilterOptions();
+    loadList(1, filter);
+    loadCharts(filter);
 }
 
 /* ------------------------------------------------------------------------------------------------------------------------------------------ */
 
 window.addEventListener("load", onLoad);
+
