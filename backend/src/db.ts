@@ -912,9 +912,9 @@ export class MongoDB
                             "_id": 0,
                             "name": { 
                                 "$concat": [
-                                    { "$toString": { "$add": ["$_id", -10] } },
+                                    { "$toString": "$_id" },
                                     " - ",
-                                    { "$toString": { "$add":  ["$_id", -1] } }
+                                    { "$toString": { "$add":  ["$_id", 9] } }
                                 ] 
                             },
                             "count": 1

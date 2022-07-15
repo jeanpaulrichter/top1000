@@ -109,8 +109,8 @@ const charts: ChartInfo[] = [
     {
         "canvas": document.getElementById("chart_years") as HTMLCanvasElement,
         "obj": undefined,
-        "options": getPieChartOptions("Jahrzehnte"),
-        "type": "doughnut",
+        "options": getBarChartOptions("Jahrzehnte"),
+        "type": "bar",
         "name": "years"
     },
 ]
