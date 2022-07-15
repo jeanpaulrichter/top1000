@@ -889,6 +889,37 @@ export class MongoDB
                             "_id": 0
                         } }
                     ],
+                    "years": [
+                        { "$bucket": {
+                            "groupBy": "$game_year",
+                            "boundaries": [
+                                1960,
+                                1970,
+                                1980,
+                                1990,
+                                2000,
+                                2010,
+                                2020,
+                                2030
+                            ],
+                            "output": {
+                                "count": {
+                                    $sum: 1
+                                }
+                            }
+                        } },
+                        { "$project": {
+                            "_id": 0,
+                            "name": { 
+                                "$concat": [
+                                    { "$toString": { "$add": ["$_id", -10] } },
+                                    " - ",
+                                    { "$toString": { "$add":  ["$_id", -1] } }
+                                ] 
+                            },
+                            "count": 1
+                        } }
+                    ]
                 } }
             ]).next();
 

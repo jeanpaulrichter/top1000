@@ -105,7 +105,14 @@ const charts: ChartInfo[] = [
         "type": "bar",
         "name": "platforms",
         "filter": main_platforms
-    }
+    },
+    {
+        "canvas": document.getElementById("chart_years") as HTMLCanvasElement,
+        "obj": undefined,
+        "options": getPieChartOptions("Jahrzehnte"),
+        "type": "doughnut",
+        "name": "years"
+    },
 ]
 
 /* ------------------------------------------------------------------------------------------------------------------------------------------ */
