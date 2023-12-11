@@ -16,7 +16,7 @@ import log from "./log";
 import create_express from "express";
 import create_session from "express-session";
 import { join as joinPath } from "path";
-import { parse as json2csv } from "json2csv";
+import { Parser as Json2Csv } from '@json2csv/plainjs';
 import { MongoDB } from "./db";
 import { VoterGroups } from "./types";
 import { AuthError, InputError, LoggedError } from "./exceptions";
@@ -95,6 +95,9 @@ router.post("/login", async(req: express.Request, res: express.Response, next: e
         if(typeof password !== "string" || password.length == 0 || password.length > 128) {
             throw new InputError("Invalid password");
         }
+        if(typeof req.ip !== "string" || req.ip.length == 0) {
+            throw new InputError("Invalid ip");
+        }
         
         // Get user info
         req.session.user = await db.getUser(req.ip, email, password);
@@ -143,6 +146,9 @@ router.post("/register", async(req: express.Request, res: express.Response, next
         if(typeof password !== "string" || password.length < 8 || password.length > 128) {
             throw new InputError("Invalid password");
         }
+        if(typeof req.ip !== "string" || req.ip.length == 0) {
+            throw new InputError("Invalid ip");
+        }
 
         // Create new user
         await db.addUser(req.ip, email, password);
@@ -163,6 +169,9 @@ router.post("/reset", async(req: express.Request, res: express.Response, next: e
         const email = req.body.email;
         if(typeof email !== "string" || email.length == 0 || email.length > 128 || !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(email)) {
             throw new InputError("Invalid email");
+        }
+        if(typeof req.ip !== "string" || req.ip.length == 0) {
+            throw new InputError("Invalid ip");
         }
 
         // Reset user
@@ -215,6 +224,9 @@ router.post("/api/addgame", async(req: express.Request, res: express.Response, n
         // Validate moby_url
         if(typeof req.body.moby_url !== "string" || req.body.moby_url.length === 0) {
             throw new InputError("Missing game_url");
+        }
+        if(typeof req.ip !== "string" || req.ip.length == 0) {
+            throw new InputError("Invalid ip");
         }
 
         await db.addGame(req.ip, req.body.moby_url);
@@ -479,17 +491,24 @@ router.get("/api/data", async(req: express.Request, res: express.Response, next:
         if(typeof password !== "string" || password.length == 0 || password.length > 128) {
             throw new InputError("Invalid password");
         }
+        if(typeof req.ip !== "string" || req.ip.length == 0) {
+            throw new InputError("Invalid ip");
+        }
 
         // Get data
         const data = await db.getData(req.ip, email, password);
 
-        // Send as csv
-        res.set("Content-Type", "text/csv; charset=utf-8");
-        res.send(json2csv(data, {
+        // Convert to csv
+        const parser = new Json2Csv({
             "header": true,
             "eol": "\n",
             "fields": ["user", "age", "gender", "wasted", "gamer", "journalist", "critic", "scientist", "position", "game", "year", "moby_id", "genres", "gameplay", "perspectives", "settings", "topics", "platforms"]
-        }));
+        });
+        const csv = parser.parse(data);
+
+        // Send as csv
+        res.set("Content-Type", "text/csv; charset=utf-8");
+        res.send(csv);
 
     } catch(exc) {
         next(exc);

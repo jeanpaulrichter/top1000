@@ -106,7 +106,6 @@ export class MongoDB
     public async connect(): Promise<void> {
         try {
             this.client = await MongoClient.connect(config.mongodb, {
-                "useUnifiedTopology": true,
                 "appname": "Top1000",
                 "readPreference": ReadPreference.PRIMARY_PREFERRED,
                 "connectTimeoutMS": 2000

@@ -14,7 +14,7 @@ const path = require("path");
 const fs = require("fs");
 const uglifycss = require("uglifycss");
 const rollup = require("rollup");
-const terser = require("rollup-plugin-terser");
+const terser = require("@rollup/plugin-terser");
 const typescript = require("@rollup/plugin-typescript");
 const sass = require("sass");
 const htmlminify = require('html-minifier').minify;
@@ -161,7 +161,7 @@ async function processFrontend() {
             await bundle.write({
                 "file": tFile,
                 "format": "iife",
-                "plugins": [terser.terser({
+                "plugins": [terser.default({
                     "format": {
                         "comments": false
                     }
@@ -185,12 +185,12 @@ async function processBackend() {
             "module": "esnext",
             "sourceMap": false
         })],
-        "external": ["mongodb", "connect-mongo", "json2csv", "nodemailer", "sharp", "path", "fs", "fs/promises", "file-type", "image-size", "http", "express", "express-session", "winston", "crypto", "axios"]
+        "external": ["mongodb", "connect-mongo", "@json2csv/plainjs", "nodemailer", "sharp", "path", "fs", "fs/promises", "file-type", "image-size", "http", "express", "express-session", "winston", "crypto", "axios"]
     });
     await bundle.write({
         "file": tFile,
         "format": "cjs",
-        "plugins": [terser.terser({
+        "plugins": [terser.default({
             "format": {
                 "comments": false
             }
