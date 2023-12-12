@@ -18,9 +18,9 @@ import create_session from "express-session";
 import { join as joinPath } from "path";
 import { Parser as Json2Csv } from '@json2csv/plainjs';
 import { MongoDB } from "./db";
-import { VoterGroups } from "./types";
+import { VoterGroups, StringValidation } from "./types";
 import { AuthError, InputError, LoggedError } from "./exceptions";
-import { getGenderFromString, getFilterParams } from "./help";
+import { validateFilterParams, validateString, validateInteger, validateGender } from "./validation";
 import config from "./config";
 
 /* ------------------------------------------------------------------------------------------------------------------------------------------ */
@@ -86,21 +86,13 @@ router.post("/login", async(req: express.Request, res: express.Response, next: e
             throw new InputError("Already logged in");
         }
 
-        // Validate POST params
-        const email = req.body.email;
-        const password = req.body.password;
-        if(typeof email !== "string" || email.length == 0 || email.length > 128) {
-            throw new InputError("Invalid email");
-        }
-        if(typeof password !== "string" || password.length == 0 || password.length > 128) {
-            throw new InputError("Invalid password");
-        }
-        if(typeof req.ip !== "string" || req.ip.length == 0) {
-            throw new InputError("Invalid ip");
-        }
+        // Validate input
+        const email = validateString(req.body.email, "Invalid email", 1, 128, StringValidation.Email);
+        const password = validateString(req.body.password, "Invalid password", 1, 128);
+        const ip = validateString(req.ip, "Failed to read client IP", 7, 64);
         
         // Get user info
-        req.session.user = await db.getUser(req.ip, email, password);
+        req.session.user = await db.getUser(ip, email, password);
 
         res.send({ "error": false });
     } catch(exc) {
@@ -116,11 +108,8 @@ router.get("/logout", (req: express.Request, res: express.Response) => {
 
 router.get("/validate", async(req: express.Request, res: express.Response, next: express.NextFunction) => {
     try {
-        // Validate query
-        const token = req.query.token;
-        if(typeof token !== "string" || token.length === 0 || token.length > 128) {
-            throw new InputError("Invalid token");
-        }
+        // Validate input
+        const token = validateString(req.query.token, "Invalid token", 8, 128);
 
         // Validate user
         await db.validateUser(token);
@@ -137,21 +126,13 @@ router.post("/register", async(req: express.Request, res: express.Response, next
             throw new InputError("Already logged in");
         }
 
-        // Validate POST params
-        const email = req.body.email;
-        const password = req.body.password;
-        if(typeof email !== "string" || email.length === 0 || email.length > 128 || !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(email)) {
-            throw new InputError("Invalid email");
-        }
-        if(typeof password !== "string" || password.length < 8 || password.length > 128) {
-            throw new InputError("Invalid password");
-        }
-        if(typeof req.ip !== "string" || req.ip.length == 0) {
-            throw new InputError("Invalid ip");
-        }
+        // Validate input
+        const email = validateString(req.body.email, "Invalid email", 1, 128, StringValidation.Email);
+        const password = validateString(req.body.password, "Invalid password", 1, 128);
+        const ip = validateString(req.ip, "Failed to read client IP", 7, 64);
 
         // Create new user
-        await db.addUser(req.ip, email, password);
+        await db.addUser(ip, email, password);
 
         res.send({ "error": false });
     } catch(exc) {
@@ -165,17 +146,12 @@ router.post("/reset", async(req: express.Request, res: express.Response, next: e
             throw new InputError("Already logged in");
         }
 
-        // Validate POST param
-        const email = req.body.email;
-        if(typeof email !== "string" || email.length == 0 || email.length > 128 || !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(email)) {
-            throw new InputError("Invalid email");
-        }
-        if(typeof req.ip !== "string" || req.ip.length == 0) {
-            throw new InputError("Invalid ip");
-        }
+        // Validate input
+        const email = validateString(req.body.email, "Invalid email", 1, 128, StringValidation.Email);
+        const ip = validateString(req.ip, "Failed to read client IP", 7, 64);
 
         // Reset user
-        await db.resetUser(req.ip, email);
+        await db.resetUser(ip, email);
 
         res.send({ "error": false });
     } catch(exc) {
@@ -189,15 +165,9 @@ router.post("/password", async(req: express.Request, res: express.Response, next
             throw new InputError("Already logged in");
         }
 
-        // Validate POST param
-        const password = req.body.password;
-        const token = req.body.token;
-        if(typeof password !== "string" || password.length < 8 || password.length > 128) {
-            throw new InputError("Invalid password");
-        }
-        if(typeof token !== "string" || token.length === 0 || token.length > 100) {
-            throw new InputError("Invalid token");
-        }
+        // Validate input
+        const token = validateString(req.query.token, "Invalid token", 8, 128);
+        const password = validateString(req.body.password, "Invalid password", 1, 128);
 
         // Set new password
         await db.setUserPassword(token, password);
@@ -221,15 +191,11 @@ router.post("/api/addgame", async(req: express.Request, res: express.Response, n
             throw new AuthError();
         }
         
-        // Validate moby_url
-        if(typeof req.body.moby_url !== "string" || req.body.moby_url.length === 0) {
-            throw new InputError("Missing game_url");
-        }
-        if(typeof req.ip !== "string" || req.ip.length == 0) {
-            throw new InputError("Invalid ip");
-        }
+        // Validate input
+        const moby_url = validateString(req.body.moby_url, "Invalid game url", 1, 256);
+        const ip = validateString(req.ip, "Failed to read client IP", 7, 64);
 
-        await db.addGame(req.ip, req.body.moby_url);
+        await db.addGame(ip, req.body.moby_url);
 
         res.send({
             "error": false
@@ -250,20 +216,12 @@ router.post("/api/vote", async(req: express.Request, res: express.Response, next
             throw new AuthError();
         }
         
-        // Validate game id (MongoDB ID as 24 byte string)
-        if(typeof req.body.game !== "string" || req.body.game.length !== 24) {
-            throw new InputError("Invalid game");
-        }
-        // Validate position
-        if(typeof req.body.position !== "string" || req.body.position.length === 0) {
-            throw new InputError("Missing position");
-        }
-        const position = parseInt(req.body.position);
-        if(Number.isNaN(position) || position < 1 || position > 100) {
-            throw new InputError("Invalid position");
-        }
+        // Validate input (MongoDB ID as 24 byte string, position 1-100)
+        const game_id = validateString(req.body.game, "Invalid game id", 24, 24);
+        const position = validateInteger(req.body.position, "Invalid position", 1, 100);
 
-        await db.updateVote(req.session.user, position, req.body.game);
+        // Update database
+        await db.updateVote(req.session.user, position, game_id);
 
         res.send({
             "error": false
@@ -283,20 +241,9 @@ router.post("/api/user", async(req: express.Request, res: express.Response, next
             throw new AuthError();
         }
 
-        // Validate gender        
-        if(typeof req.body.gender !== "string") {
-            throw new InputError("Missing gender");
-        }
-        const gender = getGenderFromString(req.body.gender);
-
-        // Validate age
-        if(typeof req.body.age !== "string") {
-            throw new InputError("Missing age");
-        }
-        const age = parseInt(req.body.age);
-        if(Number.isNaN(age) || age < 0 || age > 9) {
-            throw new InputError("Invalid age");
-        }
+        // Validate input        
+        const gender = validateGender(req.body.gender, "Invalid gender");
+        const age = validateInteger(req.body.age, "Invalid age", 0, 9);
 
         // User groups
         const groups: VoterGroups = {
@@ -335,20 +282,10 @@ router.post("/api/comment", async(req: express.Request, res: express.Response, n
         if(req.session.user === undefined) {
             throw new AuthError();
         }
-        // Validate comment
-        if(typeof req.body.comment !== "string" || req.body.comment.length === 0 || req.body.comment.length > 6000) {
-            throw new InputError("Invalid comment");
-        }
-        const comment = req.body.comment;
 
-        // Validate position
-        if(typeof req.body.position !== "string" || req.body.position.length === 0) {
-            throw new InputError("Missing position");
-        }
-        const position = parseInt(req.body.position);
-        if(Number.isNaN(position) || position < 1 || position > 100) {
-            throw new InputError("Invalid position");
-        }
+        // Validate input
+        const comment = validateString(req.body.comment, "Invalid comment", 1, 3000);
+        const position = validateInteger(req.body.position, "Invalid position", 1, 100);
 
         await db.updateComment(req.session.user.id, position, comment);
 
@@ -408,16 +345,10 @@ router.get("/api/votes", async(req: express.Request, res: express.Response, next
 */
 router.get("/api/list", async(req: express.Request, res: express.Response, next: express.NextFunction) => {
     try {
-        // Validate page
-        if(typeof req.query.page !== "string") {
-            throw new InputError("Missing page");
-        }
-        const page = parseInt(req.query.page);
-        if(Number.isNaN(page) || page < 1 || page > 99999) {
-            throw new InputError("Invalid page");
-        }
+        // Validate input
+        const page = validateInteger(req.query.page, "Invalid page", 1, 99999);
+        const options = validateFilterParams(req.query.gender, req.query.age, req.query.group);
 
-        const options = getFilterParams(req.query.gender, req.query.age, req.query.group);
         const data = await db.getList(page, 20, options);
         res.send(data);
     } catch(exc) {
@@ -433,7 +364,9 @@ router.get("/api/list", async(req: express.Request, res: express.Response, next:
  */
 router.get("/api/statistics", async(req: express.Request, res: express.Response, next: express.NextFunction) => {
     try {
-        const options = getFilterParams(req.query.gender, req.query.age, req.query.group);
+        // Validate input
+        const options = validateFilterParams(req.query.gender, req.query.age, req.query.group);
+
         const data = await db.getVoteStatistics(options);
         res.send(data);
     } catch(exc) {
@@ -452,23 +385,20 @@ router.get("/api/search", async(req: express.Request, res: express.Response, nex
         if(req.session.user === undefined) {
             throw new AuthError();
         }
-        // Validate page
-        let page = 1;
-        if(typeof req.query.page === "string") {
-            const tpage = parseInt(req.query.page);
-            if(!(Number.isNaN(page) || page < 1 || page > 99999)) {
-                page = tpage;
-            }
+
+        // Select2 will query with undefined searchterm first: send empty list
+        if(req.query.search === undefined) {
+            res.send([]);
         }
 
-        // Validate searchterm
-        const term = (typeof req.query.search === "string") ? req.query.search : "";
-        if(term.length === 0 ) {
-            res.send([]);
-        } else {
-            const result = await db.search(term, page);
-            res.send(result);
-        }
+        // Validate input
+        const page = validateInteger(req.query.page, "Invalid page", 1, 99999);
+        const search = validateString(req.query.search, "Invalid search term", 1, 256);
+
+        // Fetch and send result
+        const result = await db.search(search, page);
+        res.send(result);
+
     } catch(exc) {
         next(exc);
     }
@@ -482,21 +412,13 @@ router.get("/api/search", async(req: express.Request, res: express.Response, nex
  */
 router.get("/api/data", async(req: express.Request, res: express.Response, next: express.NextFunction) => {
     try {
-        // Validate params
-        const email = req.query.email;
-        const password = req.query.password;
-        if(typeof email !== "string" || email.length == 0 || email.length > 128) {
-            throw new InputError("Invalid email");
-        }
-        if(typeof password !== "string" || password.length == 0 || password.length > 128) {
-            throw new InputError("Invalid password");
-        }
-        if(typeof req.ip !== "string" || req.ip.length == 0) {
-            throw new InputError("Invalid ip");
-        }
+        // Validate input
+        const email = validateString(req.body.email, "Invalid email", 1, 128, StringValidation.Email);
+        const password = validateString(req.body.password, "Invalid password", 1, 128);
+        const ip = validateString(req.ip, "Failed to read client IP", 7, 64);
 
         // Get data
-        const data = await db.getData(req.ip, email, password);
+        const data = await db.getData(ip, email, password);
 
         // Convert to csv
         const parser = new Json2Csv({

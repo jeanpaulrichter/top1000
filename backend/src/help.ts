@@ -10,52 +10,12 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU General Public License for more details.
 */
 
-import { Gender, VoterGroup, GameInfo, FilterOptions } from "./types";
+import { Gender, VoterGroup, GameInfo, FilterOptions, StringValidation } from "./types";
 import axios from "axios";
 import sharp from "sharp";
 import { InputError } from "./exceptions";
 import nodemailer, { SendMailOptions } from "nodemailer";
 import config from "./config";
-
-/**
- * Get Gender enum from string
- * @param s Input string
- * @returns Gender enum or undefined
- */
-export function getGenderFromString(s: string): Gender | undefined {
-    switch(s) {
-        case "female":
-            return Gender.Female;
-        case "male":
-            return Gender.Male;
-        case "other":
-            return Gender.Other;
-        default:
-            return undefined;
-    }
-}
-
-/**
- * Get VoterGroup enum from string
- * @param s Input string
- * @returns VoterGroup enum or undefined
- */
-export function getVoterGroupFromString(s: string): VoterGroup | undefined {
-    switch(s) {
-        case "gamer":
-            return VoterGroup.Gamer;
-        case "journalist":
-            return VoterGroup.Journalist;
-        case "scientist":
-            return VoterGroup.Scientist;
-        case "critic":
-            return VoterGroup.Critic;
-        case "wasted":
-            return VoterGroup.Wasted;
-        default:
-            return undefined;
-    }
-}
 
 /**
  * Download image
@@ -282,34 +242,4 @@ export async function getMobyIDFromURL(url: string): Promise<number> {
         throw new Error("Failed to parse game id.");
     }
     return gameid;
-}
-
-export function getFilterParams(gender: unknown, age: unknown, group: unknown): FilterOptions {
-    const options: FilterOptions = {};
-
-    // Validate gender
-    if(typeof gender === "string") {
-        options.gender = getGenderFromString(gender);
-        if(options.gender === undefined) {
-            throw new InputError("Invalid gender");
-        }
-    }
-
-    // Validate age
-    if(typeof age === "string") {
-        options.age = parseInt(age);
-        if(Number.isNaN(options.age) || options.age < 1 || options.age > 9) {
-            throw new InputError("Invalid age");
-        }
-    }
-
-    // Validate group
-    if(typeof group === "string") {
-        options.group = getVoterGroupFromString(group);
-        if(options.group === undefined) {
-            throw new InputError("Invalid group");
-        }
-    }
-
-    return options;
 }

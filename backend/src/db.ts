@@ -1209,6 +1209,8 @@ export class MongoDB
             const minutes = ipblock_length[action].minutes;
             const max = ipblock_length[action].max;
 
+            const ip_hash = createHash("BLAKE2s256").update(ip).digest("hex");
+
             // Delete old records
             await this.ipblock.deleteMany({
                 "action": action,
@@ -1219,7 +1221,7 @@ export class MongoDB
 
             // Check if client is blocked
             const ip_check = await this.ipblock.findOne({
-                "ip": ip,
+                "ip": ip_hash,
                 "action": action,
                 "count": { "$gte": max }
             });
@@ -1229,7 +1231,7 @@ export class MongoDB
 
             // Update record
             await this.ipblock.updateOne({
-                "ip": ip,
+                "ip": ip_hash,
                 "action": action
             }, {
                 "$set": { "timestamp": new Date() },
