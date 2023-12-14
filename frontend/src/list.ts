@@ -14,16 +14,7 @@ import { FilterOptions } from "./list/types.js";
 import { setFocus } from "./list/focus.js";
 import { getListData, getFilterOptions, getPlatformString, findGame, htmlEncode, isMobileBrowser } from "./list/help.js";
 import { loadCharts } from "./list/charts.js";
-
-// tell typescript of bootstrap :)
-declare global {
-    interface Window {
-        bootstrap: {
-            Tooltip: new(el: Element) => unknown;
-        },
-        Chart: new(el: Element, options: unknown) => { destroy(): void }
-    }
-}
+import { Tooltip } from "bootstrap";
 
 /* ------------------------------------------------------------------------------------------------------------------------------------------ */
 
@@ -218,41 +209,6 @@ function changeImages() {
 /* Event handlers */
 
 /**
- * Window load event
- */
-function onLoad() {
-    // Setup event listener
-    const el_btn_filter = document.getElementById("filterToggle") as HTMLButtonElement;
-    const el_select_gender = document.getElementById("filterGender") as HTMLSelectElement;
-    const el_select_age = document.getElementById("filterAge") as HTMLSelectElement;
-    const el_groups = document.querySelectorAll<HTMLInputElement>("#filterGroups input");
-
-    el_btn_filter.addEventListener("click", onClickFilterToggle);
-    el_select_gender.addEventListener("change", onChangeFilter);    
-    el_select_age.addEventListener("change", onChangeFilter);
-    for(const el_radio of el_groups) {
-        el_radio.addEventListener("change", onChangeFilter);
-    }
-
-    // Setup tooltips
-    const el_menu = document.getElementById("menu") as HTMLElement;
-    for(const el_tooltip of el_menu.querySelectorAll("button")) {
-        new window.bootstrap.Tooltip(el_tooltip);
-    }
-
-    const filter = getFilterOptions();
-
-    // Load first page of list
-    loadList(1, filter);
-
-    // Load statistics charts
-    loadCharts(filter);
-
-    // Change screenshots every 6 seconds
-    setInterval(changeImages, 6000);
-}
-
-/**
  * Click event handler for heads of list entries
  * @param e Event
  */
@@ -303,7 +259,41 @@ function onChangeFilter() {
     loadCharts(filter);
 }
 
+/**
+ * OnLoad handler for window
+ */
+function onLoad() {
+    // Setup event listener
+    const el_btn_filter = document.getElementById("filterToggle") as HTMLButtonElement;
+    const el_select_gender = document.getElementById("filterGender") as HTMLSelectElement;
+    const el_select_age = document.getElementById("filterAge") as HTMLSelectElement;
+    const el_groups = document.querySelectorAll<HTMLInputElement>("#filterGroups input");
+
+    el_btn_filter.addEventListener("click", onClickFilterToggle);
+    el_select_gender.addEventListener("change", onChangeFilter);    
+    el_select_age.addEventListener("change", onChangeFilter);
+    for(const el_radio of el_groups) {
+        el_radio.addEventListener("change", onChangeFilter);
+    }
+
+    // Setup tooltips
+    const el_menu = document.getElementById("menu") as HTMLElement;
+    for(const el_tooltip of el_menu.querySelectorAll("button")) {
+        new Tooltip(el_tooltip);
+    }
+
+    const filter = getFilterOptions();
+
+    // Load first page of list
+    loadList(1, filter);
+
+    // Load statistics charts
+    loadCharts(filter);
+
+    // Change screenshots every 6 seconds
+    setInterval(changeImages, 6000);
+}
+
 /* ------------------------------------------------------------------------------------------------------------------------------------------ */
 
 window.addEventListener("load", onLoad);
-

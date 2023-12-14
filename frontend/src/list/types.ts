@@ -10,6 +10,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU General Public License for more details.
 */
 
+import { ChartTypeRegistry } from "chart.js"
+
 /**
  * Information about platform of game
  */
@@ -110,7 +112,7 @@ export type Chart = {
 export type ChartInfo = {
     canvas: HTMLCanvasElement,
     obj: Chart | undefined,
-    type: string,
+    type: keyof ChartTypeRegistry,
     name: string,
     options: { [key: string]: unknown }
     filter?: string[]

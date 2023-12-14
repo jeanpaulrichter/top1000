@@ -10,7 +10,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU General Public License for more details.
 */
 
-import axios from "./lib/redaxios.min.js";
+import axios from "redaxios";
 
 /**
  * Make ajax reset request
@@ -89,4 +89,4 @@ function onLoad() {
     el_email.focus();
 }
 
-window.addEventListener('load', onLoad);
+window.addEventListener("load", onLoad);

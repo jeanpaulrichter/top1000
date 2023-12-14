@@ -10,7 +10,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU General Public License for more details.
 */
 
-import axios from "./lib/redaxios.min.js";
+import axios from "redaxios";
 
 let resettoken: string | null = null;
 
@@ -92,7 +92,7 @@ function onClickSubmit() {
 }
 
 /**
- * Load event handler of window
+ * Initialize password page
  */
 function onLoad() {
     const el_password1 = document.getElementById("password1") as HTMLInputElement;
@@ -122,4 +122,4 @@ function onLoad() {
     }
 }
 
-window.addEventListener('load', onLoad);
+window.addEventListener("load", onLoad);

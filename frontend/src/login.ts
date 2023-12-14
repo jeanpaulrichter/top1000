@@ -10,7 +10,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU General Public License for more details.
 */
 
-import axios from "./lib/redaxios.min.js";
+import axios from "redaxios";
 
 /**
  * Make login request
@@ -92,9 +92,9 @@ function onKeyUp(e: KeyboardEvent) {
 }
 
 /**
- * Setup event listener
+ * Window onload
  */
-window.addEventListener('load', () => {
+function onLoad() {
      const el_email = document.getElementById("email") as HTMLInputElement;
      const el_password = document.getElementById("password") as HTMLInputElement;
      const el_btn = document.getElementById("btnSubmit") as HTMLButtonElement;
@@ -103,4 +103,6 @@ window.addEventListener('load', () => {
      el_password.addEventListener("keyup", onKeyUp);    
      el_email.addEventListener("keyup", onKeyUp);
      el_email.focus();
- });
+ };
+
+window.addEventListener("load", onLoad);

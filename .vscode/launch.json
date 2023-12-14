@@ -17,6 +17,25 @@
             ],
             "type": "pwa-node",
             "args": ["--watch", "${workspaceFolder}/debug/src"]
-        }
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "script",
+            "skipFiles": [
+              "<node_internals>/**", "node_modules/**"
+            ],
+            "cwd": "${workspaceRoot}",
+            "internalConsoleOptions": "openOnSessionStart",
+            "args": [
+              "node_modules/ts-node/dist/bin.js",
+              "-r",
+              "${workspaceRoot}/scripts/watch.ts",
+            ],
+            "runtimeArgs": [
+              "--unhandled-rejections=strict",
+              "--nolazy",
+            ],
+          }
     ]
 }

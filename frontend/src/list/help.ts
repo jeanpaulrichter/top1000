@@ -10,7 +10,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU General Public License for more details.
 */
 
-import axios from "../lib/redaxios.min.js"
+import axios from "redaxios";
 import { ListQuery, PlatformInfo, FilterOptions, Statistics } from "./types.js";
 
 declare global {

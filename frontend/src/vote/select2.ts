@@ -13,7 +13,8 @@ GNU General Public License for more details.
 import { SearchResult, GameInfo } from "./types.js";
 import { findGame, getLabel } from "./help.js";
 import { setFocus } from "./focus.js";
-import axios from "../lib/redaxios.min.js";
+import axios from "redaxios";
+import "select2";
 
 // Array to save all currently selected game ids
 const game_ids: string[] = [];

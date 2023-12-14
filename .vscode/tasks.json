@@ -19,20 +19,46 @@
         {
             "label": "watch_frontend_ts",
             "type": "shell",
-            "command": "npx tsc -b frontend --watch",
+            "command": "npx rollup --config ./rollup.config.ts --configPlugin typescript --watch",
             "group": "test",
             "presentation": {
                 "reveal": "always",
                 "panel": "shared"
             },
-            "problemMatcher": [
-                "$tsc-watch"
-            ]
+            "options": {
+                "cwd": "${workspaceFolder}/frontend"
+            },
+            "problemMatcher": {
+                "owner": "typescript",
+                "source": "ts",
+                "applyTo": "closedDocuments",
+                "fileLocation": [
+                  "relative",
+                  "${cwd}"
+                ],
+                "pattern": {
+                    "regexp": "^\\(!\\) Plugin typescript: @rollup\\/plugin-typescript TS(?<errorCode>\\d+): (?<message>.+)\\r?\\n(?<file>.*?):\\s*\\((?<line>\\d+):(?<column>\\d+)\\)$",
+                    "file": 3,
+                    "line": 4,
+                    "column": 5,
+                    "code": 1,
+                    "message": 2
+                  },
+                "background": {
+                  "activeOnStart": true,
+                  "beginsPattern": {
+                    "regexp": "^rollup v\\d+\\.\\d+\\.\\d+$"
+                  },
+                  "endsPattern": {
+                    "regexp": "^\\[[:-\\s\\d]+\\] waiting for changes\\.\\.\\.$"
+                  }
+                }
+            }
         },
         {
             "label": "watch_css",
             "type": "shell",
-            "command": "npx sass --watch ./frontend/css:./debug/www/css",
+            "command": "npx sass --watch ./frontend/css:./debug/www/css --embed-sources --embed-source-map",
             "group": "test",
             "presentation": {
                 "reveal": "always",
@@ -45,7 +71,7 @@
         {
             "label": "watch_frontend",
             "type": "shell",
-            "command": "node ./scripts/watch.js",
+            "command": "npx ts-node ./scripts/debug_watch.ts",
             "group": "test",
             "presentation": {
                 "reveal": "always",

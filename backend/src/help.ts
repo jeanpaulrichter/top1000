@@ -10,7 +10,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU General Public License for more details.
 */
 
-import { Gender, VoterGroup, GameInfo, FilterOptions, StringValidation } from "./types";
+import { GameInfo } from "./types";
 import axios from "axios";
 import sharp from "sharp";
 import { InputError } from "./exceptions";

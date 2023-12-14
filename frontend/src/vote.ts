@@ -14,15 +14,8 @@ import { setupSelect2, setSelect2Value, updateProgress } from "./vote/select2.js
 import { findGame, findSlide, addGameRequest } from "./vote/help.js";
 import { setFocus } from "./vote/focus.js";
 import { SlideOptions, UserInfo, VoteInfo } from "./vote/types.js";
-import axios from "./lib/redaxios.min.js";
-
-declare global {
-    interface Window {
-        bootstrap: {
-            Tooltip: new(el: Element) => unknown;
-        }
-    }
-}
+import { Tooltip } from "bootstrap";
+import axios from "redaxios";
 
 /**
  * Slides with dropdown controls for game selection are dynamiclly created according to this object
@@ -130,85 +123,6 @@ function createSlides() {
 
 /* ------------------------------------------------------------------------------------------------------------------------------------------ */
 /* Event handlers */
-
-/**
- * Setup page eventhandlers etc
- */
- function onLoad() {
-    // Create slides
-    createSlides();
-
-    // Next button of slide1
-    const el_btn = document.getElementById("btnSlide1Next") as HTMLButtonElement;
-    el_btn.addEventListener("click", onClickButtonSlide);
-
-    const el_btn_addgame = document.getElementById("btnAddGame") as HTMLButtonElement;
-    el_btn_addgame.addEventListener("click", onClickAddGame);
-
-    const el_help_dlg = document.getElementById("dlgHelp") as HTMLElement;
-    el_help_dlg.addEventListener("hidden.bs.modal", onCloseHelpDialog);
-    
-
-    // Userinfo controls
-    // Get relevant DOM nodes
-    const el_gender = document.getElementById("genderSelect") as HTMLSelectElement;
-    const el_age = document.getElementById("ageSelect") as HTMLSelectElement;
-    const el_group_hobby = document.getElementById("checkGroupHobby") as HTMLInputElement;
-    const el_group_journalist = document.getElementById("checkGroupJournalist") as HTMLInputElement;
-    const el_group_scientist = document.getElementById("checkGroupScientist") as HTMLInputElement;
-    const el_group_critic = document.getElementById("checkGroupCritic") as HTMLInputElement;
-    const el_check_wasted = document.getElementById("radioWasted") as HTMLInputElement;
-    const el_check_not_wasted = document.getElementById("radioNotWasted") as HTMLInputElement;
-    el_gender.addEventListener("change", onChangeUserInfo);
-    el_age.addEventListener("change", onChangeUserInfo);
-    el_group_hobby.addEventListener("change", onChangeUserInfo);
-    el_group_journalist.addEventListener("change", onChangeUserInfo);
-    el_group_scientist.addEventListener("change", onChangeUserInfo);
-    el_group_critic.addEventListener("change", onChangeUserInfo);
-    el_check_wasted.addEventListener("change", onChangeUserInfo);
-    el_check_not_wasted.addEventListener("change", onChangeUserInfo);
-
-    // Setup tooltips
-    const el_menu = document.getElementById("menu") as HTMLElement;
-    for(const el_tooltip of el_menu.querySelectorAll("button")) {
-        new window.bootstrap.Tooltip(el_tooltip);
-    }
-
-    // Get initial user info from server
-    axios.get("api/user").then(ret => {
-        const user = ret.data as UserInfo;
-        if(user !== undefined && !Array.isArray(user)) {
-            el_gender.value = user.gender;
-            el_age.value = user.age.toString();
-            el_group_hobby.checked = user.gamer;
-            el_group_journalist.checked = user.journalist;
-            el_group_scientist.checked = user.scientist;
-            el_group_critic.checked = user.critic;
-            el_check_wasted.checked = user.wasted;
-            el_check_not_wasted.checked = !user.wasted;
-        }
-    }).catch(err => {
-        console.error(err);
-    });
-
-    // Get current votes from server
-    axios.get("api/votes").then(ret => {
-        const votes = ret.data as VoteInfo[];
-        if(Array.isArray(votes)) {
-            for(const vote of votes) {
-                const el_select = document.getElementById("game" + vote.position) as HTMLSelectElement;
-                setSelect2Value(el_select, vote);
-                if(typeof vote.comment === "string" && vote.comment.length > 0) {
-                    const el_text = document.getElementById(`game${vote.position}_comment`) as HTMLTextAreaElement;
-                    el_text.value = vote.comment;
-                }
-            }
-        }
-        updateProgress();
-    }).catch(err => {
-        console.error(err);
-    });
-}
 
 /**
  * Click event handler for expand/collapse button of game selectors
@@ -343,5 +257,84 @@ function onCloseHelpDialog() {
 }
 
 /* ------------------------------------------------------------------------------------------------------------------------------------------ */
+
+/**
+ * Initialize vote page
+ */
+function onLoad() {
+    // Create slides
+    createSlides();
+
+    // Next button of slide1
+    const el_btn = document.getElementById("btnSlide1Next") as HTMLButtonElement;
+    el_btn.addEventListener("click", onClickButtonSlide);
+
+    const el_btn_addgame = document.getElementById("btnAddGame") as HTMLButtonElement;
+    el_btn_addgame.addEventListener("click", onClickAddGame);
+
+    const el_help_dlg = document.getElementById("dlgHelp") as HTMLElement;
+    el_help_dlg.addEventListener("hidden.bs.modal", onCloseHelpDialog);
+    
+
+    // Userinfo controls
+    // Get relevant DOM nodes
+    const el_gender = document.getElementById("genderSelect") as HTMLSelectElement;
+    const el_age = document.getElementById("ageSelect") as HTMLSelectElement;
+    const el_group_hobby = document.getElementById("checkGroupHobby") as HTMLInputElement;
+    const el_group_journalist = document.getElementById("checkGroupJournalist") as HTMLInputElement;
+    const el_group_scientist = document.getElementById("checkGroupScientist") as HTMLInputElement;
+    const el_group_critic = document.getElementById("checkGroupCritic") as HTMLInputElement;
+    const el_check_wasted = document.getElementById("radioWasted") as HTMLInputElement;
+    const el_check_not_wasted = document.getElementById("radioNotWasted") as HTMLInputElement;
+    el_gender.addEventListener("change", onChangeUserInfo);
+    el_age.addEventListener("change", onChangeUserInfo);
+    el_group_hobby.addEventListener("change", onChangeUserInfo);
+    el_group_journalist.addEventListener("change", onChangeUserInfo);
+    el_group_scientist.addEventListener("change", onChangeUserInfo);
+    el_group_critic.addEventListener("change", onChangeUserInfo);
+    el_check_wasted.addEventListener("change", onChangeUserInfo);
+    el_check_not_wasted.addEventListener("change", onChangeUserInfo);
+
+    // Setup tooltips
+    const el_menu = document.getElementById("menu") as HTMLElement;
+    for(const el_tooltip of el_menu.querySelectorAll("button")) {
+        new Tooltip(el_tooltip);
+    }
+
+    // Get initial user info from server
+    axios.get("api/user").then(ret => {
+        const user = ret.data as UserInfo;
+        if(user !== undefined && !Array.isArray(user)) {
+            el_gender.value = user.gender;
+            el_age.value = user.age.toString();
+            el_group_hobby.checked = user.gamer;
+            el_group_journalist.checked = user.journalist;
+            el_group_scientist.checked = user.scientist;
+            el_group_critic.checked = user.critic;
+            el_check_wasted.checked = user.wasted;
+            el_check_not_wasted.checked = !user.wasted;
+        }
+    }).catch(err => {
+        console.error(err);
+    });
+
+    // Get current votes from server
+    axios.get("api/votes").then(ret => {
+        const votes = ret.data as VoteInfo[];
+        if(Array.isArray(votes)) {
+            for(const vote of votes) {
+                const el_select = document.getElementById("game" + vote.position) as HTMLSelectElement;
+                setSelect2Value(el_select, vote);
+                if(typeof vote.comment === "string" && vote.comment.length > 0) {
+                    const el_text = document.getElementById(`game${vote.position}_comment`) as HTMLTextAreaElement;
+                    el_text.value = vote.comment;
+                }
+            }
+        }
+        updateProgress();
+    }).catch(err => {
+        console.error(err);
+    });
+}
 
 window.addEventListener("load", onLoad);

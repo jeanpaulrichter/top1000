@@ -12,6 +12,17 @@ GNU General Public License for more details.
 
 import { getChartData } from "./help.js";
 import { ChartData, ChartInfo, FilterOptions, GameGroup } from "./types.js";
+import { Chart, BarController, BarElement, CategoryScale, LinearScale, DoughnutController, ArcElement, PieController, Tooltip, Legend } from "chart.js";
+
+Chart.register(CategoryScale);
+Chart.register(LinearScale);
+Chart.register(BarController);
+Chart.register(BarElement);
+Chart.register(DoughnutController);
+Chart.register(ArcElement);
+Chart.register(PieController);
+Chart.register(Tooltip);
+Chart.register(Legend);
 
 /**
  * Possible chart colors
@@ -259,8 +270,8 @@ export function loadCharts(filter: FilterOptions) {
             if(chart.obj !== undefined) {
                 chart.obj.destroy();
             }
-            chart.obj = new window.Chart(chart.canvas, {
-                "type": chart.type,
+            chart.obj = new Chart(chart.canvas, {
+                type: chart.type,
                 "data": getDataObj(data[chart.name], chart.filter),
                 "options": chart.options
             });
