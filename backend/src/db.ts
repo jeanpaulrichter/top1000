@@ -233,6 +233,8 @@ export class MongoDB
                         "wasted": false
                     },
                     "token": token_str
+                }, {
+                    "session": session
                 });
                 if(!ret.acknowledged) {
                     throw new Error("Failed to insert new user into database");
@@ -333,6 +335,8 @@ export class MongoDB
                     "$set": {
                         "token": token
                     }
+                }, {
+                    "session": session
                 });
                 if(ret.modifiedCount !== 1) {
                     throw new Error("Failed to update user");
@@ -421,12 +425,16 @@ export class MongoDB
 
                 const ret = await users.deleteOne({
                     "_id": oid
+                }, {
+                    "session": session
                 });
                 if(ret.deletedCount !== 1) {
                     throw new Error("Failed to delete user");
                 }
                 await votes.deleteMany({
                     "user_id": oid
+                }, {
+                    "session": session
                 });
 
                 await session.commitTransaction();
@@ -556,7 +564,10 @@ export class MongoDB
             const user_oid = ObjectId.createFromHexString(user.id);
             const ret = await votes.updateOne({
                 "user_id": user_oid,
-                "position": position
+                "position": position,
+                "user_age": user.age,
+                "user_gender": user.gender,
+                "user_groups": user.groups
             }, { "$set": {
                 "game_id": game_oid,
                 "game_title": game.title,
