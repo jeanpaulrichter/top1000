@@ -3,4 +3,4 @@ node_modules
 debug
 built
 dist
-backend/src/config.ts
+config.json

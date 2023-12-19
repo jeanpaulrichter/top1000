@@ -240,7 +240,9 @@ function onClickAddGame(e: Event) {
         el_msg.innerHTML = "Spiel hinzugefügt."; 
     }).catch(err => {
         el_msg.className = "help-dialog__msg help-dialog__msg--error";
-        el_msg.innerHTML = err; 
+        if(typeof err === "string") {
+            el_msg.innerHTML = err; 
+        }        
         console.error(err);
     }).finally(() => {
         el_btn.disabled = false;

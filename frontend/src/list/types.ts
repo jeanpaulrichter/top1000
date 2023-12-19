@@ -27,15 +27,14 @@ export type GameInfo = {
     id: string,
     title: string,
     moby_id: number,
-    moby_url: string,
     description: string,
     genres: string[],
     screenshots: string[],
     platforms: PlatformInfo[],
     year: number,
-    cover_url: string,
-    thumbnail_url: string,
-    icon?: string
+    cover: string,
+    screenshot: string,
+    icon: string
 }
 
 /**

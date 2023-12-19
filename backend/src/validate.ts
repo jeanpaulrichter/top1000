@@ -14,10 +14,12 @@ GNU General Public License for more details.
     Various functions to validate client data
 */
 
-import { Gender, VoterGroup, FilterOptions, StringValidation } from "./types";
-import { InputError } from "./exceptions";
+import { Gender, VoterGroup, FilterOptions, StringValidation } from "./types.js";
+import { InputError } from "./exceptions.js";
 
-const email_regex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
+const regex_email = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
+const regex_digit = /\d+/;
+const regex_special =/[^a-zA-Z0-9]/;
 
 /**
  * Get valid string
@@ -35,9 +37,16 @@ export function validateString(s: unknown, error_msg: string, min_length = 0, ma
     }
     switch(check) {
         case StringValidation.Email: {
-            if(!email_regex.test(s)) {
+            if(!regex_email.test(s)) {
                 throw new InputError(error_msg);
             }
+            break;
+        }
+        case StringValidation.Password: {
+            if(!(regex_digit.test(s) && regex_special.test(s))) {
+                throw new InputError(error_msg);
+            }
+            break;
         }
     }
     return s;
@@ -119,7 +128,6 @@ function validateVoterGroup(s: unknown, error_msg: string): VoterGroup {
  * @param gender Gender (expected: male, female or other)
  * @param age Age (expected: 1-9)
  * @param group Group
- * @param error_msg Message of thrown exception
  * @returns FilterOptions
  * @throws InputError
  */
@@ -143,4 +151,3 @@ export function validateFilterParams(gender: unknown, age: unknown, group: unkno
     
     return options;
 }
-

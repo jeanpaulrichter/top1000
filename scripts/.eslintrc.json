@@ -1,0 +1,4 @@
+{
+    "parserOptions": { "project": ["scripts/tsconfig.json"] },
+    "ignorePatterns": ["collections.js"]
+}

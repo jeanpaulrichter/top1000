@@ -27,7 +27,7 @@ async function register() {
     if(password !== undefined && email !== undefined) {
         try {
             el_mask.classList.remove("hidden");
-            const ret = await axios.post("/register", {
+            const ret = await axios.post("/user/register", {
                 "email": email,
                 "password": password
             });

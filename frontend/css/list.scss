@@ -72,7 +72,7 @@ GNU General Public License for more details.
 }
 
 .game--focus {
-    .game__ifocus {
+    .game__expand {
         filter: brightness(0) saturate(100%) invert(30%) sepia(63%) saturate(5260%) hue-rotate(319deg) brightness(96%) contrast(100%) !important;
     }
     span {
@@ -98,20 +98,19 @@ GNU General Public License for more details.
 
     &:hover {
         color: $wasted-color !important;
-        .game__ifocus {
+        .game__expand {
             filter: brightness(0) saturate(100%) invert(30%) sepia(63%) saturate(5260%) hue-rotate(319deg) brightness(96%) contrast(100%) !important;
         }
     }
 
-    // Number in list
-    >div:first-of-type {
+    .game__rank {
         order: 1;
         flex-grow: 0;
         flex-shrink: 0;
         width: 3rem;
         display: table;
 
-        span.game__rank {
+        span {
             font-size: 1.4rem;
             font-weight: bolder;
             display: table-cell;
@@ -120,8 +119,7 @@ GNU General Public License for more details.
         }
     }
 
-    // Icon
-    >div:nth-of-type(2) {
+    .game__icon {
         order: 2;
         flex-grow: 0;
         flex-shrink: 0;
@@ -134,8 +132,7 @@ GNU General Public License for more details.
         }
     }
 
-    // Title
-    >div:nth-of-type(3) {
+    .game__title {
         order: 3;
         flex-grow: 5;
         flex-shrink: 5;
@@ -143,7 +140,7 @@ GNU General Public License for more details.
 
         display: table;
 
-        span.game__title {
+        span {
             font-size: 1.1rem;
             font-weight: bolder;
             display: table-cell;
@@ -153,14 +150,13 @@ GNU General Public License for more details.
         }
     }
 
-    // Expand/Collapse icon
-    >div:last-of-type {
+    .game__expand {
         order: 4;
         flex-grow: 0;
         flex-shrink: 0;
         width: 2.5rem;
 
-        span.game__ifocus {
+        span {
             width: 100%;
             height: 100%;
             margin-left: 2px;
@@ -174,55 +170,16 @@ GNU General Public License for more details.
     }
 }
 
-.img--visible {
-    opacity: 100% !important;
-    transition: opacity 2s;
-}
-
 .game__body {
 
-    // Game info div
-    >div:first-of-type {
+    .game__info {
         width: 100%;
         display: flex;
         flex-flow: row nowrap;
         padding-top: 0.5rem;
-
-        // Left: Screenshot
-        >div:first-of-type {
-            order: 1;
-            flex-grow: 1;
-            flex-shrink: 1;
-            aspect-ratio: 16/9;
-            min-height: 8rem;
-            max-height: 20rem;
-            width: 50%;
-            text-align: center;
-            position: relative;
-
-            img {
-                position: absolute;
-                top: 3%;
-                left: 15%;
-                width: 70%;
-                height: 90%;
-                opacity: 0%;
-                transition: opacity 2s;
-            }
-        }
-
-        // Right: Infos...
-        >div:last-of-type {
-            order: 2;
-            flex-grow: 1;
-            flex-shrink: 1;
-            width: 50%;
-            padding-top: 0.5rem;
-        }
     }
 
-    // Comments
-    >div:last-of-type {
+    .game__comments {
         padding-left: 3rem;
         padding-right: 2.5rem;
         padding-bottom: 1rem;
@@ -231,6 +188,45 @@ GNU General Public License for more details.
             font-size: 1.2rem;
             font-style: italic;
             margin: 0.3rem;
+        }
+    }
+
+    .game__cover {
+        order: 1;
+        flex-grow: 1;
+        flex-shrink: 1;
+        aspect-ratio: 200/240;
+        min-height: 8rem;
+        max-height: 20rem;
+        text-align: center;
+        position: relative;
+        padding: 1rem;
+
+        img {
+            max-height: 100%;
+            max-width: 100%;
+        }
+    }
+
+    .game__table {
+        order: 2;
+        flex-grow: 1;
+        flex-shrink: 1;
+        width: 50%;
+        padding-top: 0.5rem;
+    }
+
+    .game__lastline {
+        margin-top: 0.5rem;
+
+        @media screen and (orientation:portrait) { display: none; }
+    }
+
+    .game__screenshot {
+        aspect-ratio: 2/1;
+
+        img {
+            max-width: 100%;
         }
     }
 }

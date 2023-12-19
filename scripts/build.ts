@@ -10,48 +10,75 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU General Public License for more details.
 */
 
-import { join, extname, basename } from "path";
-import { readFileSync, existsSync, rmSync } from "fs";
-import { mkdir, readdir,  writeFile, copyFile } from "fs/promises";
-import { processString as uglifycss } from "uglifycss";
-import { compileString as sass } from "sass";
-import { minify as htmlminify } from "html-minifier";
-import { rollup, Plugin, ModuleFormat } from "rollup";
-import { default as terser } from "@rollup/plugin-terser";
-import { default as typescript } from "@rollup/plugin-typescript";
-import { nodeResolve } from "@rollup/plugin-node-resolve";
-import { copyFiles } from "./copy_files";
-import { constants } from "./constants";
-
-type BuildFolder = {
-    "src": string,
-    "dest": string,
-    "extensions": string[],
-    "dest_extension"?: string,
-    "transform"?: (s: string) => string;
-}
-
-type CompileOptions = {
-    src: string,
-    dest: string,
-    filenames: string[],
-    format: ModuleFormat,
-    plugins?: Plugin[],
-    external?: string[]
-}
+import { fileURLToPath } from "url"
+import { join, extname, basename } from "path"
+import { readFileSync, existsSync, rmSync } from "fs"
+import { mkdir, readdir, writeFile, copyFile } from "fs/promises"
+import { processString as uglifycss } from "uglifycss"
+import { compileString as sass } from "sass"
+import { minify as htmlminify } from "html-minifier"
+import { rollup } from "rollup"
+import { default as terser } from "@rollup/plugin-terser"
+import { default as typescript } from "@rollup/plugin-typescript"
+import { nodeResolve } from "@rollup/plugin-node-resolve"
+import { copyFiles } from "./copy.js"
+import { BuildDirectory, BundleOptions } from "./types.js"
 
 /**
- * Release folders
+ * Root directory
  */
-const folders: BuildFolder[] = [
+const rootDir = fileURLToPath(new URL('..', import.meta.url));
+
+/**
+ * Files to copy to dist folder
+ */
+const copy_files = [
+    {
+        "src": "config.json",
+        "dest": "config.json"
+    },
+    {
+        "src": "node_modules/jquery/dist/jquery.min.js",
+        "dest": "www/javascript/jquery.js",
+    },
+    {
+        "src": "node_modules/select2/dist/js/select2.min.js",
+        "dest": "www/javascript/select2.js"
+    },
+    {
+        "src": "node_modules/bootstrap/dist/css/bootstrap.min.css",
+        "dest": "www/css/bootstrap.css",
+        "replace": [
+            {
+                "from": "/*# sourceMappingURL=bootstrap.min.css.map */",
+                "to": ""
+            }
+        ]
+    },
+    {
+        "src": "node_modules/select2/dist/css/select2.min.css",
+        "dest": "www/css/select2.css"
+    }
+];
+
+/**
+ * Directories that need processing
+ */
+const directories: BuildDirectory[] = [
     {
         "src": "frontend/css",
         "dest": "www/css",
         "extensions": [".scss"],
         "dest_extension": ".css",
         "transform": (s) => {
-            return uglifycss(sass(s, {"sourceMap": false, "style": "compressed", "loadPaths": ["frontend/css"]}).css);
-        }
+            return uglifycss(
+                sass(s, {
+                    "sourceMap": false,
+                    "style": "compressed",
+                    "loadPaths": ["frontend/css"],
+                }).css
+            )
+        },
     },
     {
         "src": "frontend/html",
@@ -60,95 +87,121 @@ const folders: BuildFolder[] = [
         "transform": (s) => {
             return htmlminify(s, {
                 "removeComments": true,
-                "collapseWhitespace": true
-            });
-        }
+                "collapseWhitespace": true,
+            })
+        },
     },
     {
         "src": "frontend/icons",
         "dest": "www/css/icons",
-        "extensions": [".svg", ".png"]
+        "extensions": [".svg", ".png"],
     },
     {
         "src": "frontend/images",
         "dest": "www/images",
-        "extensions": [".png", ".jpg", ".webp", ".gif"]
-    }
-];
+        "extensions": [".png", ".jpg", ".webp", ".gif"],
+    },
+]
 
 /**
- * Typescript compile/bundle options
+ * Typescript bundle options
  */
-const compile_options: CompileOptions[] = [
+const bundle_options: BundleOptions[] = [
     {
         "src": "frontend/src",
         "dest": "www/javascript",
-        "filenames": ["list.ts", "login.ts", "password.ts", "register.ts", "reset.ts", "vote.ts"],
-        "format": "es",
+        "filenames": [
+            "list.ts",
+            "login.ts",
+            "password.ts",
+            "register.ts",
+            "reset.ts",
+            "vote.ts",
+        ],
+        "format": "esm",
         "plugins": [
             typescript({
-                "tsconfig": join(constants.rootFolder, "frontend/tsconfig.json"),
+                "tsconfig": join(rootDir, "frontend/tsconfig.json"),
                 "sourceMap": false,
                 "inlineSourceMap": false,
-                "inlineSources": false
+                "inlineSources": false,
             }),
             nodeResolve({
-                browser: true
-            })]
+                "browser": true,
+            })
+        ],
     },
     {
         "src": "backend/src",
-        "dest": "src",
-        "filenames": ["index.ts"],
-        "format": "cjs",
-        "external": ["mongodb", "connect-mongo", "@json2csv/plainjs", "nodemailer", "sharp", "path", "fs", "fs/promises", "file-type", "image-size", "http", "express", "express-session", "winston", "crypto", "axios"],
+        "dest": "",
+        "filenames": ["server.ts"],
+        "format": "esm",
+        "external": [
+            "mongodb",
+            "connect-mongo",
+            "@json2csv/plainjs",
+            "emailjs",
+            "sharp",
+            "path",
+            "url",
+            "fs",
+            "fs/promises",
+            "image-size",
+            "image-type",
+            "http",
+            "express",
+            "express-session",
+            "winston",
+            "crypto",
+            "axios",
+        ],
         "plugins": [
             typescript({
-                "tsconfig": join(constants.rootFolder, "backend/tsconfig.json"),
-                "module": "esnext",
+                "tsconfig": join(rootDir, "backend/tsconfig.json"),
                 "outDir": undefined,
                 "sourceMap": false,
                 "inlineSourceMap": false,
                 "inlineSources": false
-            })]
-    }
-];
+            }),
+        ],
+    },
+]
 
 /**
  * Create minified release folder
- * @param builddir Build folder name
- * @param folder 
+ * 
+ * @param dir BuildDirectory options
  */
-async function processFolder(builddir: string, folder: BuildFolder) {
-    const destFolder = join(constants.rootFolder, builddir, folder.dest);
-    await mkdir(destFolder, { recursive: true });
+async function processDirectory(targetDir: string, dir: BuildDirectory) {
+    const destDir = join(rootDir, targetDir, dir.dest);
+    await mkdir(destDir, { recursive: true });
 
-    const srcFolder = join(constants.rootFolder, folder.src);
-    const srcFiles = await readdir(srcFolder, { withFileTypes: true });
+    const srcDir = join(rootDir, dir.src);
+    const srcFiles = await readdir(srcDir, { withFileTypes: true });
 
     const promises: Promise<void>[] = [];
     const destFiles: string[] = [];
 
     for(const file of srcFiles) {
         const srcExtension = extname(file.name);
-        if(!file.isFile() || (folder.extensions.length > 0 && !folder.extensions.includes(srcExtension))) {
-            console.log("Unexpected item: \"" + file.name + "\" in " + folder.src);
+        if(!file.isFile() || (dir.extensions.length > 0 && !dir.extensions.includes(srcExtension))) {
+            console.log('Unexpected item: "' + file.name + '" in ' + dir.src);
             continue;
         }
 
-        const srcFile = join(srcFolder, file.name);
-        const destFilename = folder.dest_extension ? basename(file.name, srcExtension) + folder.dest_extension : file.name;
-        const destFile = join(destFolder, destFilename);
-        destFiles.push(join(builddir, folder.dest, destFilename));
+        const srcFile = join(srcDir, file.name);
+        const destFilename = dir.dest_extension ? basename(file.name, srcExtension) + dir.dest_extension : file.name;
+        const destFile = join(destDir, destFilename);
+        destFiles.push(join(targetDir, dir.dest, destFilename).replace(/\\/gi, "/"));
 
-        if(folder.transform) {
-            promises.push(writeFile(destFile, folder.transform(readFileSync(srcFile).toString())));
+        if(dir.transform) {
+            promises.push(writeFile(destFile, dir.transform(readFileSync(srcFile).toString())));
         } else {
             promises.push(copyFile(srcFile, destFile));
         }
     }
 
-    await Promise.allSettled(promises).then(results => {
+    await Promise.allSettled(promises).then((results) => {
         for(let i = 0; i < results.length; i++) {
             if(results[i].status === "rejected") {
                 console.log("Failed to create \"" + destFiles[i] + "\"");
@@ -157,85 +210,87 @@ async function processFolder(builddir: string, folder: BuildFolder) {
                 console.log("Created \"" + destFiles[i] + "\"");
             }
         }
-    });
+    })
 }
 
 /**
- * Build & Bundle typescript
- * @param builddir Build folder name
- * @param options Build options
+ * Bundle typescript sources
+ * 
+ * @param options Bundle options
  */
-async function processTypescript(builddir: string, options: CompileOptions) {
-    const destFolder = join(constants.rootFolder, builddir, options.dest);
-    await mkdir(destFolder, {recursive: true});
-    const srcFolder = join(constants.rootFolder, options.src);
+async function processTypescript(targetDir: string, options: BundleOptions) {
+    const destDir = join(rootDir, targetDir, options.dest);
+    await mkdir(destDir, { recursive: true });
+    const srcDir = join(rootDir, options.src);
 
     const bundle = await rollup({
-        "input": options.filenames.map((x) => join(srcFolder, x)),
+        "input": options.filenames.map((x) => join(srcDir, x)),
         "plugins": options.plugins,
         "external": options.external,
-        "output": { "sourcemap": false }
+        "output": {
+            "sourcemap": false
+        },
     });
 
     await bundle.write({
-        "dir": destFolder,
+        "dir": destDir,
         "format": options.format,
-        "plugins": [terser({
-            "format": {
-                "comments": false
-            }
-        })],
-        "sourcemap": false
+        "plugins": [
+            terser({
+                "format": {
+                    "comments": false,
+                },
+            }),
+        ],
+        "sourcemap": false,
     });
 }
 
-/**
- * Build everything in release mode
- * @param folderName Build folder name
- */
-export function build(folderName: string): void {
+// -----------------------------------------------------------------------------------------------------------------------------
+
+export function build(targetDir: string) {
     console.time("time");
 
-    if(constants.safeFolders.includes(folderName)) {
-        console.error("Invalid build folder name: \"" + folderName + "\"");
-        return;
-    }
-
-    const distFolder = join(constants.rootFolder, folderName);
+    const distFolder = join(rootDir, targetDir);
+    
     if(existsSync(distFolder)) {
         rmSync(distFolder, { recursive: true });
-        console.log("Deleted \"" + folderName + "\"");
-    }
-
-    const promises: Promise<void>[] = [];
-
-    for(const folder of folders) {
-        promises.push(processFolder(folderName, folder).catch(() => {
-            console.error("Failed to process folder \"" + folder.src + "\"");
-        }));
+        console.log("Deleted \"" + targetDir + "\"");
     }
     
-    promises.push(copyFiles(folderName, constants.copy_files).catch(() => {
-        console.error("Failed to copy files.");
-    }));
-
-    for(const options of compile_options) {
-        console.log("Starting to build \"" + options.src + "\"...");
-        promises.push(processTypescript(folderName, options).then(() => {
-            console.log("Finished building \"" + options.src + "\".");
-        }).catch(err => {
-            console.error("Failed to build \"" + options.src + "\".");
-            console.error(err);
-        }));
+    const promises: Promise<void>[] = [];
+    
+    for(const dir of directories) {
+        promises.push(
+            processDirectory(targetDir, dir).catch(() => {
+                console.error("Failed to process folder \"" + dir.src + "\"");
+            })
+        );
     }
-
-    Promise.allSettled(promises).then(res => {
+    
+    promises.push(
+        copyFiles(targetDir, copy_files).catch(() => {
+            console.error("Failed to copy files.");
+        })
+    );
+    
+    for(const options of bundle_options) {
+        console.log("Starting to bundle \"" + options.src + "\"...")
+        promises.push(
+            processTypescript(targetDir, options)
+                .then(() => {
+                    console.log("Finished bundling \"" + options.src + "\"");
+                })
+                .catch((err) => {
+                    console.error("Failed to bundle \"" + options.src + "\"");
+                    console.error(err);
+                })
+        );
+    }
+    
+    Promise.allSettled(promises).then(() => {
         console.timeEnd("time");
     });
 }
 
-try {
-    build("dist");
-} catch (err) {
-    console.error(err);
-}
+build("dist");

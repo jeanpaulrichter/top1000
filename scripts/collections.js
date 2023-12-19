@@ -61,10 +61,6 @@ db.createCollection("users", {
         email: {
           bsonType: 'string',
           description: 'user email address'
-        },
-        creation_date: {
-          bsonType: 'date',
-          description: 'date of user creation'
         }
       },
       bsonType: 'object',
@@ -75,8 +71,7 @@ db.createCollection("users", {
         'salt',
         'gender',
         'age',
-        'groups',
-        'creation_date'
+        'groups'
       ],
       additionalProperties: false
     }
@@ -239,9 +234,7 @@ db.createCollection("games", {
         '_id',
         'title',
         'moby_id',
-        'moby_url',
         'platforms',
-        'screenshots',
         'description',
         'year',
         'genres',
@@ -258,55 +251,37 @@ db.createCollection("games", {
         },
         title: {
           bsonType: 'string',
-          description: 'title of game'
+          description: 'Title of game'
         },
         description: {
           bsonType: 'string',
-          description: 'description of game'
+          description: 'Description of game'
         },
         moby_id: {
           bsonType: 'int',
           description: 'mobygames.com game id'
         },
-        moby_url: {
-          bsonType: 'string',
-          description: 'mobygames.com game url'
-        },
         year: {
           bsonType: 'int',
-          description: 'release year of game'
-        },
-        cover_url: {
-          bsonType: 'string',
-          description: 'url of cover image'
-        },
-        thumbnail_url: {
-          bsonType: 'string',
-          description: 'url of cover thumbnail'
+          description: 'Release year of game'
         },
         icon: {
           bsonType: 'string',
           description: '32x32 game icon in webp format encoded in base64'
         },
-        image: {
-          bsonType: 'binData',
-          description: 'Small example screenshot in webp format'
+        screenshot: {
+          bsonType: 'string',
+          description: 'Sample screenshot url'
         },
-        screenshots: {
-          bsonType: [
-            'array'
-          ],
-          description: 'game sample screenshots',
-          items: {
-            bsonType: 'string',
-            description: 'url of screenshot'
-          }
+        cover: {
+          bsonType: 'string',
+          description: 'Game cover url'
         },
         platforms: {
           bsonType: [
             'array'
           ],
-          description: 'game platforms',
+          description: 'Game platforms',
           items: {
             bsonType: 'object',
             required: [
@@ -317,11 +292,11 @@ db.createCollection("games", {
             properties: {
               name: {
                 bsonType: 'string',
-                description: 'platform name'
+                description: 'Platform name'
               },
               year: {
                 bsonType: 'int',
-                description: 'release year on platform'
+                description: 'Release year on platform'
               }
             }
           }
@@ -333,7 +308,7 @@ db.createCollection("games", {
           description: 'game genres',
           items: {
             bsonType: 'string',
-            description: 'unique genre name'
+            description: 'Unique genre name'
           }
         },
         gameplay: {
@@ -343,7 +318,7 @@ db.createCollection("games", {
           description: 'game gameplay',
           items: {
             bsonType: 'string',
-            description: 'unique gameplay name'
+            description: 'Unique gameplay name'
           }
         },
         perspectives: {
@@ -353,7 +328,7 @@ db.createCollection("games", {
           description: 'game perspectives',
           items: {
             bsonType: 'string',
-            description: 'unique perspective name'
+            description: 'Unique perspective name'
           }
         },
         settings: {
@@ -363,7 +338,7 @@ db.createCollection("games", {
           description: 'game settings',
           items: {
             bsonType: 'string',
-            description: 'unique setting name'
+            description: 'Unique setting name'
           }
         },
         topics: {
@@ -373,10 +348,47 @@ db.createCollection("games", {
           description: 'game topics',
           items: {
             bsonType: 'string',
-            description: 'unique topic name'
+            description: 'Unique topic name'
           }
         }
       }
+    }
+  }
+});
+db.createCollection("images", {
+  validator: {
+    $jsonSchema: {
+      properties: {
+        _id: {
+          bsonType: 'objectId',
+          description: '_id is the unique objectId key'
+        },
+        data: {
+          bsonType: 'binData',
+          description: 'Binary image data'
+        },
+        mime: {
+          bsonType: 'string',
+          description: 'Mime type of image'
+        },
+        width: {
+          bsonType: 'int',
+          description: 'Width of image'
+        },
+        height: {
+          bsonType: 'int',
+          description: 'Height of image'
+        }
+      },
+      bsonType: 'object',
+      required: [
+        '_id',
+        'mime',
+        'data',
+        'width',
+        'height'
+      ],
+      additionalProperties: false
     }
   }
 });

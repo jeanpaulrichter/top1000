@@ -4,7 +4,7 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "watch_backend_ts",
+            "label": "debug_backend_ts",
             "type": "shell",
             "command": "npx tsc -b backend --watch",
             "group": "test",
@@ -17,7 +17,7 @@
             ]
         },
         {
-            "label": "watch_frontend_ts",
+            "label": "debug_frontend_ts",
             "type": "shell",
             "command": "npx rollup --config ./rollup.config.ts --configPlugin typescript --watch",
             "group": "test",
@@ -56,7 +56,7 @@
             }
         },
         {
-            "label": "watch_css",
+            "label": "debug_css",
             "type": "shell",
             "command": "npx sass --watch ./frontend/css:./debug/www/css --embed-sources --embed-source-map",
             "group": "test",
@@ -69,9 +69,9 @@
             ]
         },
         {
-            "label": "watch_frontend",
+            "label": "debug_frontend",
             "type": "shell",
-            "command": "npx ts-node ./scripts/debug_watch.ts",
+            "command": "npx tsx --tsconfig ./scripts/tsconfig.json ./scripts/debug.ts",
             "group": "test",
             "presentation": {
                 "reveal": "always",
@@ -80,12 +80,12 @@
             "problemMatcher": []
         },
         {
-            "label": "watch",
+            "label": "debug",
             "dependsOn": [
-                "watch_backend_ts",
-                "watch_frontend_ts",
-                "watch_css",
-                "watch_frontend"
+                "debug_backend_ts",
+                "debug_frontend_ts",
+                "debug_css",
+                "debug_frontend"
             ],
             "problemMatcher": []
         }

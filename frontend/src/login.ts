@@ -20,7 +20,7 @@ import axios from "redaxios";
  */
 async function loginRequest(email: string, password: string) {
     try {
-        const ret = await axios.post("/login", {
+        const ret = await axios.post("/user/login", {
             "email": email,
             "password": password
         });
@@ -103,6 +103,6 @@ function onLoad() {
      el_password.addEventListener("keyup", onKeyUp);    
      el_email.addEventListener("keyup", onKeyUp);
      el_email.focus();
- };
+ }
 
 window.addEventListener("load", onLoad);

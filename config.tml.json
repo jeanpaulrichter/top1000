@@ -1,0 +1,76 @@
+{
+    "port": 5000,
+    "base_url": "http://localhost:5000",
+    "log": {
+        "file": "top1000.log",
+        "maxsize": 1000,
+        "maxfiles": 5
+    },
+    "moby_api_key": "",
+    "mongodb": {
+        "uri": "",
+        "database": ""
+    },
+    "email": {
+        "smtp": {
+            "server": "",
+            "port": 465,
+            "address": "",
+            "user": "",
+            "password": ""
+        },
+        "content": {
+            "reset": {
+                "subject": "Wasted Top1000 Passwortzurücksetzung",
+                "text": "Um dein Passwort für die Wasted Top1000 zurückzusetzen folge bitte diesem Link: ${url}",
+                "html": "Hi,<br><br>um dein Passwort für die Wasted Top1000 zurückzusetzen, klicke bitte auf folgenden <a href=\"${url}\">Link</a>.<br><br>Schöne Grüße!"
+            },
+            "register": {
+                "subject": "Wasted Top1000 Accountverifizierung",
+                "text": "Um deinen Account bei Wasted Top1000 freizuschalten, klicke bitte auf folgenden Link: ${url}",
+                "html": "Hi,<br><br>um deinen Account bei Wasted Top1000 freizuschalten, klicke bitte auf folgenden <a href=\"${url}\">Link</a>.<br><br>Schöne Grüße!"
+            }
+        }
+    },
+    "session": {
+        "secret": "blablablabla",
+        "age": 86400000
+    },
+    "crypto": {
+        "email_hash": "SHA3-384",
+        "ip_hash": "BLAKE2s256",
+        "token_bytes": 32,
+        "salt_bytes": 32,
+        "key_length": 64
+    },
+    "games_per_page": 20,
+    "search_results_max": 20,
+    "vote_weight": {
+        "linear": {
+            "votes_per_user": 30,
+            "max_weight": 10
+        }
+    },
+    "ipblock": {
+        "login": {
+            "max": 10,
+            "minutes": 15
+        },
+        "register": {
+            "max": 5,
+            "minutes": 30
+        },
+        "reset": {
+            "max": 3,
+            "minutes": 120
+        },
+        "data": {
+            "max": 10,
+            "minutes": 15
+        },
+        "addgame": {
+            "max": 5,
+            "minutes": 10
+        }
+    }
+}

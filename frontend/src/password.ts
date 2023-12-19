@@ -21,7 +21,7 @@ let resettoken: string | null = null;
  */
  async function passwordRequest(password: string, token: string) {
     try {
-        const ret = await axios.post("/password", {
+        const ret = await axios.post("/user/password", {
             "password": password,
             "token": token
         });

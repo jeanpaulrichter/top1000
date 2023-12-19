@@ -10,14 +10,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU General Public License for more details.
 */
 
-import { syncFolders } from "./sync_folders";
-import { copyFiles } from "./copy_files";
-import { constants } from "./constants";
+import { SyncManager } from "./sync.js";
 
-/**
- * Folders to mirror into debug folder
- */
-const folders = [
+new SyncManager("debug").sync([
     {
         "src": "frontend/icons",
         "dest": "www/css/icons"
@@ -30,21 +25,30 @@ const folders = [
         "src": "frontend/images",
         "dest": "www/images"
     },
-];
-
-/**
- * Copy some files and sync some folders to debug folder 
- * @param folderName Debug folder name
- * @returns 
- */
-export function debug_watch(folderName: string) {
-    if(constants.safeFolders.includes(folderName)) {
-        console.error("Invalid debug folder name: \"" + folderName + "\"");
-        return;
+    {
+        "src": "config.json",
+        "dest": "config.json"
+    },
+    {
+        "src": "node_modules/jquery/dist/jquery.min.js",
+        "dest": "www/javascript/jquery.js",
+    },
+    {
+        "src": "node_modules/select2/dist/js/select2.min.js",
+        "dest": "www/javascript/select2.js"
+    },
+    {
+        "src": "node_modules/bootstrap/dist/css/bootstrap.min.css",
+        "dest": "www/css/bootstrap.css",
+        "replace": [
+            {
+                "from": "/*# sourceMappingURL=bootstrap.min.css.map */",
+                "to": ""
+            }
+        ]
+    },
+    {
+        "src": "node_modules/select2/dist/css/select2.min.css",
+        "dest": "www/css/select2.css"
     }
-
-    syncFolders(folders.map(s => { s.dest = folderName + "/" + s.dest; return s; }));
-    copyFiles("debug", constants.copy_files);
-}
-
-debug_watch("debug");
+]);

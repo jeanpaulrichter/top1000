@@ -10,11 +10,33 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU General Public License for more details.
 */
 
-export enum StringValidation {
-    None,
-    Email
+// ----------------------------------
+// Types returned by database request
+// ----------------------------------
+
+/**
+ * Number of games per subgroup (genre, settings etc). Needed for VoteStatistics
+ */
+export type VoteGameGroup = {
+    name: string,
+    count: number
 };
 
+/**
+ * Statistics about games in different genres, settings etc.
+ */
+export type VoteStatistics = {
+    genre: VoteGameGroup[],
+    gameplay: VoteGameGroup[],
+    perspective: VoteGameGroup[],
+    setting: VoteGameGroup[],
+    topic: VoteGameGroup[],
+    platforms: VoteGameGroup[]
+};
+
+/**
+ * Possible group membership of users
+ */
 export type VoterGroups = {
     gamer: boolean,
     journalist: boolean,
@@ -23,6 +45,21 @@ export type VoterGroups = {
     wasted: boolean
 };
 
+/**
+ * User data
+ */
+export type User = {
+    id: string,
+    salt: string,
+    key: string,
+    age: number,
+    gender: string | undefined,
+    groups: VoterGroups
+};
+
+/**
+ * Information about one users vote for one game
+ */
 export type VoteGame = {
     id: string,
     position: number,
@@ -33,12 +70,13 @@ export type VoteGame = {
     icon?: string
 };
 
-export enum Gender {
-    Female = "female",
-    Male = "male",
-    Other = "other"
-}
+// ----------------------------------
+// Types used by client requests
+// ----------------------------------
 
+/**
+ * Enum of possible voter groups (used by FilterOptions)
+ */
 export enum VoterGroup {
     Gamer = "gamer",
     Journalist = "journalist",
@@ -47,15 +85,32 @@ export enum VoterGroup {
     Wasted = "wasted"
 }
 
-export type User = {
-    id: string,
-    salt: string,
-    key: string,
-    age: number,
-    gender: string | undefined,
-    groups: VoterGroups
+/**
+ * Enum of possible gender values (used by FilterOptions)
+ */
+export enum Gender {
+    Female = "female",
+    Male = "male",
+    Other = "other"
+}
+
+/**
+ * Information about how to filter current list
+ */
+export type FilterOptions = {
+    gender?: Gender,
+    age?: number,
+    group?: VoterGroup
 };
 
+// ----------------------------------
+// Internal types
+// ----------------------------------
+
+/**
+ * Information about user without key etc. 
+ * Used as session variable for logged in clients
+ */
 export type UserInfo = {
     id: string,
     age: number,
@@ -63,30 +118,15 @@ export type UserInfo = {
     groups: VoterGroups
 }
 
-export type PlatformInfo = {
-    name: string,
-    year: number
+declare module "express-session" {
+    interface Session {
+        user?: UserInfo
+    }
 }
 
-export type GameInfo = {
-    title: string,
-    moby_id: number,
-    moby_url: string,
-    description: string,
-    year: number,
-    cover_url?: string,
-    thumbnail_url?: string,    
-    platforms: PlatformInfo[],
-    screenshots: string[],
-    genres: string[],
-    gameplay: string[],
-    perspectives: string[],
-    settings: string[],
-    topics: string[],
-    icon?: string,
-    image?: Buffer
-}
-
+/**
+ * Enum of client actions that may be limited
+ */
 export enum ClientAction {
     login = "login",
     register = "register",
@@ -95,29 +135,64 @@ export enum ClientAction {
     addgame = "addgame"
 }
 
-export type VotesGameGroup = {
+/**
+ * Information about release date on specific platform (Used by GameInfo)
+ */
+export type PlatformInfo = {
     name: string,
-    count: number
-};
+    year: number
+}
 
-export type VotesStatistics = {
-    genre: VotesGameGroup[],
-    gameplay: VotesGameGroup[],
-    perspective: VotesGameGroup[],
-    setting: VotesGameGroup[],
-    topic: VotesGameGroup[],
-    platforms: VotesGameGroup[]
-};
+/**
+ * Information about a game parsed from mobygames
+ */
+export type GameInfo = {
+    title: string,
+    moby_id: number,
+    description: string,
+    year: number,
+    icon: string,
+    cover: string,
+    screenshot: string,
+    platforms: PlatformInfo[],    
+    genres: string[],
+    gameplay: string[],
+    perspectives: string[],
+    settings: string[],
+    topics: string[]
+}
 
-export type FilterOptions = {
-    gender?: Gender,
-    age?: number,
-    group?: VoterGroup
-};
+/**
+ * Downloaded image data
+ */
+export type ImageBuffer = {
+    width: number,
+    height: number,
+    mime: string,
+    data: Buffer
+}
 
-// Declare session variables for typescript
-declare module "express-session" {
-    interface Session {
-        user?: UserInfo
-    }
+export type JSONValue =
+    | string
+    | number
+    | boolean
+    | JSONObject
+    | JSONArray;
+
+export interface JSONArray extends Array<JSONValue> {}
+
+/**
+ * Simple JSON type for api request returns
+ */
+export interface JSONObject {
+    [x: string]: JSONValue;
+}
+
+/**
+ * Possible string validation methods
+ */
+export enum StringValidation {
+    None,
+    Email,
+    Password
 }

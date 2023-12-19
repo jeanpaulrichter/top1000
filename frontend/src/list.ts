@@ -40,9 +40,6 @@ async function loadList(page: number, filter: FilterOptions) {
         const ret = await getListData(page, filter);
         const data = ret.data;
 
-        // Is this script running on mobile browser?
-        const isMobile = isMobileBrowser();
-
         // Create new list entries and save them in array
         const game_elements = [];
         for(let i = 0; i < data.length; i++) {
@@ -51,62 +48,66 @@ async function loadList(page: number, filter: FilterOptions) {
             // Clone template
             const el_game = el_template.content.cloneNode(true) as HTMLDivElement;
 
-            // Setup game head
-            const el_head = el_game.querySelector(".game__head") as HTMLElement;
-            const el_rank = el_head.querySelector(".game__rank") as HTMLElement;
-            const el_title = el_head.querySelector(".game__title") as HTMLElement;
-            const el_icon = el_head.querySelector("img") as HTMLImageElement;
-            
+            const el_head = el_game.children[0].children[0];
+            const el_body = el_game.children[0].children[1];
+            const el_table = el_body.children[0].children[1].children[0];
+
+            // Rank
+            const el_rank = el_head.children[0].children[0] as HTMLSpanElement;
             el_rank.innerHTML = `${game_number}.`;
-            if(game.icon !== undefined && game.icon.length > 0) {                
+
+            // Icon 
+            const el_icon = el_head.children[1].children[0] as HTMLImageElement;
+            if(game.icon.length > 0) {                
                 el_icon.src = "data:image/webp;base64," + game.icon;
             } else {
                 el_icon.src = "images/icon_missing.png";
             }
+
+            // Title
+            const el_title = el_head.children[2].children[0] as HTMLSpanElement;
             el_title.innerHTML = game.title;
+
+            // Expand button
             el_head.addEventListener("click", onClickGameHead);
 
-            // Setup body
-            const el_body = el_game.querySelector(".game__body") as HTMLElement;
-            const el_link = el_body.querySelector("a.game__link") as HTMLLinkElement;
-            const el_screen = el_body.querySelector("div.game__screenshots") as HTMLDivElement;
-            const el_platforms = el_body.querySelector(".game__platforms") as HTMLElement;
-            const el_votes = el_body.querySelector(".game__votes") as HTMLElement;
-            const el_score = el_body.querySelector(".game__score") as HTMLElement;
-            const el_comments = el_body.querySelector(".game__comments") as HTMLElement;
+            // Cover
+            const el_cover = el_body.children[0].children[0].children[0] as HTMLImageElement;
+            el_cover.src = game.cover;
 
-            if(isMobile || game.screenshots.length === 0) {
-                // Limit download size: Only one image from own database
-
-                const el_img = document.createElement("IMG") as HTMLImageElement;
-                el_img.src = "image/" + game.id;
-                el_img.className = "img--visible";
-                el_screen.appendChild(el_img);
-            } else {
-                // Download size not an issue: Up to three screenshots from mobygames.com
-
-                for(let ii = 0; ii < game.screenshots.length && ii < 3; ii++) {
-                    const el_img = document.createElement("IMG") as HTMLImageElement;
-                    el_img.src = game.screenshots[ii];
-                    if(ii === 0) {
-                        el_img.className = "img--visible";
-                    }
-                    el_screen.appendChild(el_img);
-                }
-            }
-
-            // Set game information
-            el_link.href = game.moby_url;
+            // Platforms
+            const el_platforms = el_table.children[0].children[1] as HTMLDivElement;
             el_platforms.innerHTML = getPlatformString(game.platforms);
+
+            // Link
+            const el_link = el_table.children[1].children[1].children[0] as HTMLLinkElement;
+            el_link.href = "https://www.mobygames.com/game/" + game.moby_id;
+
+            // Votes
+            const el_votes = el_table.children[2].children[1] as HTMLDivElement;
             el_votes.innerHTML = data[i].votes.toString();
+
+            // Score
+            const el_score = el_table.children[3].children[1] as HTMLDivElement;
             el_score.innerHTML = data[i].score.toFixed(3).toString();
-            if(Array.isArray(data[i].comments) && data[i].comments.length > 0) {
-                let comments_str = "";
-                for(let ii = 0; ii < data[i].comments.length; ii++) {
-                    comments_str += "<p>&ndash; " + htmlEncode(data[i].comments[ii]) + "</p>";
+
+            // Screenshot
+            const el_screenshot = el_table.children[4].children[0].children[0] as HTMLImageElement;
+            el_screenshot.src = game.screenshot;
+
+            // Description
+            const el_description = el_table.children[4].children[1] as HTMLDivElement;
+            el_description.innerHTML = game.description;
+
+            // Comments
+            //if(Array.isArray(data[i].comments) && data[i].comments.length > 0) {
+                const el_comments = el_body.children[1].children[0] as HTMLDivElement;
+                for(const comment of data[i].comments) {
+                    const el_li = document.createElement("LI");
+                    el_li.innerHTML = htmlEncode(comment);
+                    el_comments.append(el_li);
                 }
-                el_comments.innerHTML = comments_str;
-            }
+            //}
 
             game_elements.push(el_game);
         }
@@ -291,7 +292,7 @@ function onLoad() {
     loadCharts(filter);
 
     // Change screenshots every 6 seconds
-    setInterval(changeImages, 6000);
+    //setInterval(changeImages, 6000);
 }
 
 /* ------------------------------------------------------------------------------------------------------------------------------------------ */

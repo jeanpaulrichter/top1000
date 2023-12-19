@@ -19,7 +19,7 @@ import axios from "redaxios";
  */
 async function resetRequest(email: string) {
     try {
-        const ret = await axios.post("/reset", {
+        const ret = await axios.post("/user/reset", {
             "email": email
         });
         if(ret.status !== 200) {

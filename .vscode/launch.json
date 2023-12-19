@@ -8,15 +8,15 @@
             "console": "integratedTerminal",
             "internalConsoleOptions": "neverOpen",
             "name": "nodemon",
-            "program": "${workspaceFolder}/debug/src/index.js",
+            "program": "${workspaceFolder}/debug/server.js",
             "request": "launch",
             "restart": true,
             "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/nodemon",
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "type": "pwa-node",
-            "args": ["--watch", "${workspaceFolder}/debug/src"]
+            "type": "node",
+            "args": ["--watch", "${workspaceFolder}/debug/*.js"]
         },
         {
             "type": "node",
@@ -28,9 +28,9 @@
             "cwd": "${workspaceRoot}",
             "internalConsoleOptions": "openOnSessionStart",
             "args": [
-              "node_modules/ts-node/dist/bin.js",
+              "node_modules/tsx/dist/cli.cjs",
               "-r",
-              "${workspaceRoot}/scripts/watch.ts",
+              "${workspaceRoot}/scripts/debug.ts",
             ],
             "runtimeArgs": [
               "--unhandled-rejections=strict",

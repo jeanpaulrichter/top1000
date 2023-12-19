@@ -40,7 +40,7 @@ window.addEventListener("click", onWindowClick);
 export function setFocus(el: HTMLElement, focus: boolean) {
     // Find relevant dom nodes
     const el_body = el.querySelector("div.game__body") as HTMLDivElement;
-    const el_icon = el.querySelector("span.game__ifocus") as HTMLSpanElement;
+    const el_icon = el.querySelector("div.game__expand >span") as HTMLSpanElement;
 
     // Remove focus from game
     if(focus === false) {        
@@ -64,7 +64,7 @@ export function setFocus(el: HTMLElement, focus: boolean) {
         if(current !== undefined) {
             // Remove focus from previously focused game
             const el_cur_body = current.querySelector("div.game__body") as HTMLElement;
-            const el_cur_icon = current.querySelector("span.game__ifocus") as HTMLSpanElement;
+            const el_cur_icon = current.querySelector("div.game__expand >span") as HTMLSpanElement;
 
             current.classList.remove("game--focus");
             el_cur_body.classList.add("hidden");

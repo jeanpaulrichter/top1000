@@ -160,36 +160,40 @@ GNU General Public License for more details.
     <template id="tml_game">
       <div class="game">
         <div class="game__head">
-          <div><span class="game__rank"></span></div>
-          <div><img src=""></div>
-          <div><span class="game__title"></span></div>
-          <div><span class="game__ifocus icon-expand"></span></div>
+          <div class="game__rank"><span></span></div>
+          <div class="game__icon"><img src=""></div>
+          <div class="game__title"><span></span></div>
+          <div class="game__expand"><span class="icon-expand"></span></div>
         </div>
         <div class="game__body hidden">
-          <div>
-            <div class="game__screenshots"></div>
-            <div>
+          <div class="game__info">
+            <div class="game__cover"><img src=""></div>
+            <div class="game__table">
               <div class="container">
                 <div class="row justify-content-start">
                   <div class="col-4">Platformen:</div>
-                  <div class="col-8 game__platforms"></div>
+                  <div class="col-8"></div>
                 </div>
                 <div class="row justify-content-start">
                   <div class="col-4">Link:</div>
-                  <div class="col-8"><a href="" class="game__link">Mobygames</a></div>
+                  <div class="col-8"><a href="">Mobygames</a></div>
                 </div>
                 <div class="row justify-content-start">
                   <div class="col-4">Stimmen:</div>
-                  <div class="col-8 game__votes"></div>
+                  <div class="col-8"></div>
                 </div>
                 <div class="row justify-content-start">
                   <div class="col-4">Gewichtet:</div>
-                  <div class="col-8 game__score"></div>
+                  <div class="col-8"></div>
+                </div>
+                <div class="row justify-content-start game__lastline">
+                  <div class="col-4 game__screenshot"><img src=""></div>
+                  <div class="col-8"></div>
                 </div>
               </div>
             </div>
           </div>
-          <div class="game__comments"></div>
+          <div class="game__comments"><ul></ul></div>
         </div>
       </div>
     </template>

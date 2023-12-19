@@ -1,14 +1,14 @@
 {
     "compilerOptions": {
-        "outDir": "../debug/src",
+        "outDir": "../debug",
         "allowJs": false,
         "strict": true,
-        "target": "es2020",
+        "target": "ES2022",
         "sourceMap": true,
         "allowSyntheticDefaultImports": true,
         "esModuleInterop": true,
-        "module": "CommonJS",
-        "moduleResolution": "node",
+        "module": "ES2022",
+        "moduleResolution": "Bundler",
         "noImplicitAny": true,
         "noImplicitThis": true,
         "strictNullChecks": true,

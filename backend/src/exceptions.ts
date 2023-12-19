@@ -11,7 +11,7 @@ GNU General Public License for more details.
 */
 
 /**
- * Error thrown on bad user input
+ * Error thrown on bad client input
 */
 export class InputError extends Error {
     constructor(...params: unknown[]) {
@@ -30,7 +30,7 @@ export class InputError extends Error {
 }
 
 /**
- * Exception thrown on missing authentication
+ * Exception thrown on missing client authentication
 */
 export class AuthError extends Error {
     constructor(...params : unknown[]) {
@@ -49,7 +49,26 @@ export class AuthError extends Error {
 }
 
 /**
- * Exception thrown after error was logged
+ * Exception thrown on parsing error
+*/
+export class ParseError extends Error {
+    constructor(...params : unknown[]) {
+        if(params.length > 0 && typeof params[0] === "string") {
+            super(params[0]);
+        } else {
+            super();
+        }
+  
+        if(Error.captureStackTrace !== undefined) {
+            Error.captureStackTrace(this, ParseError)
+        }
+  
+        this.name = "ParseError"
+    }
+}
+
+/**
+ * Exception thrown when error was already logged by a subsystem
 */
 export class LoggedError extends Error {
     constructor() {
