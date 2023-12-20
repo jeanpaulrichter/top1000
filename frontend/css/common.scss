@@ -21,52 +21,18 @@ html {
     font-size: 10px;
 }
 
-#main {
-    max-width: 1140px !important;
-    background-color: $background-color;
-    position: relative;
-}
-
-#background {
-    position: absolute;
-    width: 100vw;
-    height: 100vh;
-    background-color: white;
-    z-index: -1;
-}
-
-#top {
-    position: relative;
-}
-
-#menu {
-    position: absolute;
-    right: 1rem;
-    top: 1rem;
-
-    button {
-        width: 3rem;
-        height: 3rem;
-        margin: 0;
-        border: none;
-        background-repeat: no-repeat;
-        background-position: 50%;
-        background-color: transparent;
-        background-size: 100%;
-        border-radius: 50%;
-    
-        &:hover {
-            filter: brightness(0) saturate(100%) invert(30%) sepia(63%) saturate(5260%) hue-rotate(319deg) brightness(96%) contrast(100%);
-        }
-    }
-}
-
 h1 {
     text-align: left;
     color: $wasted-color;
     font-weight: bold;
     padding-top: 1rem;
     padding-left: 2rem;
+
+    img {
+        width: 1em;
+        height: 1em;
+        vertical-align: middle;
+    }
 }
 
 @media screen and (min-width: 420px) {
@@ -106,3 +72,7 @@ h1 {
 .icon-next { background-image: url(icons/arrow-right.svg); }
 .icon-prev { background-image: url(icons/arrow-left.svg); }
 .icon-chart { background-image: url(icons/pie_chart.svg); }
+.icon-login { background-image: url(icons/login.svg); }
+.icon-pwreset { background-image: url(icons/pw_reset.svg); }
+.icon-register { background-image: url(icons/register.svg); }
+.icon-save { background-image: url(icons/save.svg); }

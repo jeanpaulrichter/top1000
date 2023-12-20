@@ -188,7 +188,7 @@ export class SyncManager {
                 const destDir_s = destDir.replace(/\\/g, "/");
 
                 unlink(destFile).then(() => {
-                    console.log("Deleted \"" + destDir + "/" + destDir_s + "\"");
+                    console.log("Deleted \"" + filename + "\" from \"" + destDir_s + "\"");
                 }).catch(err => {
                     console.error("Failed to delete \"" + filename + "\" from \"" + destDir_s + "\"");
                     console.error(err);

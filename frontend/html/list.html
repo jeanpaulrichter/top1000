@@ -26,91 +26,91 @@ GNU General Public License for more details.
     <script src="javascript/list.js" type="module"></script>
   </head>
   <body>
-    <div id="background"></div>
-    <div class="container-lg" id="main">
-      <div id="mask" class="hidden"></div>
-      <div id="top">
-        <h1>Wasted Top1000</h1>
-        <nav id="menu">
-          <button class="icon-chart" data-bs-toggle="modal" data-bs-target="#dlgChart" data-bs-placement="bottom" title="Statistik" id="btnStatistics"></button>
-          <a href="/vote"><button class="icon-vote" data-bs-placement="bottom" title="Abstimmen"></button></a>
-          <button id="filterToggle" class="icon-menu"></button>
-        </nav>
-        <div id="filter" class="hidden">
-          <div class="row mb-3">
-            <label class="col-sm-6 col-form-label" for="filterGender">Geschlecht</label>
-            <div class="col-sm-6">
-              <select class="form-select" id="filterGender" name="gender">
-                <option value="" selected>Egal</option>
-                <option value="female">Weiblich</option>
-                <option value="male">Männlich</option>
-                <option value="other">Divers</option>
-              </select>
+    <div id="background">
+      <div class="container-lg" id="main">
+        <div id="mask" class="hidden"></div>
+        <div id="top">
+          <h1>Wasted (<img src="images/angel.svg">) Top1000</h1>
+          <nav id="menu">
+            <button class="icon-chart" data-bs-toggle="modal" data-bs-target="#dlgChart" data-bs-placement="bottom" title="Statistik" id="btnStatistics"></button>
+            <a href="/vote"><button class="icon-vote" data-bs-placement="bottom" title="Abstimmen"></button></a>
+            <button id="filterToggle" class="icon-menu"></button>
+          </nav>
+          <div id="filter" class="hidden">
+            <div class="row mb-3">
+              <label class="col-sm-6 col-form-label" for="filterGender">Geschlecht</label>
+              <div class="col-sm-6">
+                <select class="form-select" id="filterGender" name="gender">
+                  <option value="" selected>Egal</option>
+                  <option value="female">Weiblich</option>
+                  <option value="male">Männlich</option>
+                  <option value="other">Divers</option>
+                </select>
+              </div>
             </div>
-          </div>
-          <div class="row mb-3">
-            <label class="col-sm-6 col-form-label" for="filterAge">Altersgruppe</label>
-            <div class="col-sm-6">
-              <select class="form-select" id="filterAge" name="age">
-                <option value="0" selected>Egal</option>
-                <option value="1">0 - 10 Jahre</option>
-                <option value="2">11 - 20 Jahre</option>
-                <option value="3">21 - 30 Jahre</option>
-                <option value="4">31 - 40 Jahre</option>
-                <option value="5">41 - 50 Jahre</option>
-                <option value="6">51 - 60 Jahre</option>
-                <option value="7">61 - 70 Jahre</option>
-                <option value="8">71 - 80 Jahre</option>
-                <option value="9">81 - 90 Jahre</option>
-              </select>
+            <div class="row mb-3">
+              <label class="col-sm-6 col-form-label" for="filterAge">Altersgruppe</label>
+              <div class="col-sm-6">
+                <select class="form-select" id="filterAge" name="age">
+                  <option value="0" selected>Egal</option>
+                  <option value="1">0 - 10 Jahre</option>
+                  <option value="2">11 - 20 Jahre</option>
+                  <option value="3">21 - 30 Jahre</option>
+                  <option value="4">31 - 40 Jahre</option>
+                  <option value="5">41 - 50 Jahre</option>
+                  <option value="6">51 - 60 Jahre</option>
+                  <option value="7">61 - 70 Jahre</option>
+                  <option value="8">71 - 80 Jahre</option>
+                  <option value="9">81 - 90 Jahre</option>
+                </select>
+              </div>
             </div>
-          </div>
-          <div class="row mb-3">
-            <div class="col-sm-6">Gruppen</div>
-            <div class="col-sm-6" id="filterGroups">
-              <div class="form-check">
-                <input class="form-check-input" type="radio" id="checkGroupAll" name="group" value="" checked>
-                <label class="form-check-label" for="checkGroupAll">Alle</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" id="checkGroupGamer" name="group" value="gamer">
-                <label class="form-check-label" for="checkGroupGamer">Hobbygamer:innen</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" id="checkGroupJournalist" name="group" value="journalist">
-                <label class="form-check-label" for="checkGroupJournalist">Journalist:innen</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" id="checkGroupScientist" name="group" value="scientist">
-                <label class="form-check-label" for="checkGroupScientist">Wissenschaftler:innen</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" id="checkGroupCritic" name="group" value="critic">
-                <label class="form-check-label" for="checkGroupCritic">Spielekritiker:innen</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" id="checkGroupWasted" name="group" value="wasted">
-                <label class="form-check-label" for="checkGroupWasted">Wastedmitglieder:innen</label>
+            <div class="row mb-3">
+              <div class="col-sm-6">Gruppen</div>
+              <div class="col-sm-6" id="filterGroups">
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" id="checkGroupAll" name="group" value="" checked>
+                  <label class="form-check-label" for="checkGroupAll">Alle</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" id="checkGroupGamer" name="group" value="gamer">
+                  <label class="form-check-label" for="checkGroupGamer">Hobbygamer:innen</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" id="checkGroupJournalist" name="group" value="journalist">
+                  <label class="form-check-label" for="checkGroupJournalist">Journalist:innen</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" id="checkGroupScientist" name="group" value="scientist">
+                  <label class="form-check-label" for="checkGroupScientist">Wissenschaftler:innen</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" id="checkGroupCritic" name="group" value="critic">
+                  <label class="form-check-label" for="checkGroupCritic">Spielekritiker:innen</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" id="checkGroupWasted" name="group" value="wasted">
+                  <label class="form-check-label" for="checkGroupWasted">Wastedmitglieder:innen</label>
+                </div>
               </div>
             </div>
           </div>
         </div>
+        <div id="message" class="hidden"></div>
+        <div id="games"></div>
+        <div id="pages"></div>
+        <div id="footer"></div>
       </div>
-      <div id="message" class="hidden"></div>
-      <div id="games"></div>
-      <div id="pages"></div>
-      <div id="footer"></div>
     </div>
-
     <div class="modal fade" id="dlgChart" tabindex="-1">
-      <div class="modal-dialog">
+      <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content chart-dialog">
           <div class="modal-header">
             <h5 class="modal-title">Statistik</h5>
             <button type="button" class="btn-close chart-dialog-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            <div id="chartCarousel" class="carousel slide" data-bs-ride="true" data-bs-interval="false">
+            <div id="chartCarousel" class="carousel slide" data-bs-ride="false" data-bs-interval="false">
               <div class="carousel-indicators">
                 <button type="button" data-bs-target="#chartCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
                 <button type="button" data-bs-target="#chartCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
@@ -156,7 +156,6 @@ GNU General Public License for more details.
         </div>
       </div>
     </div>
-
     <template id="tml_game">
       <div class="game">
         <div class="game__head">

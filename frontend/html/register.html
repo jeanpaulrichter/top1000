@@ -24,44 +24,43 @@ GNU General Public License for more details.
     <script src="javascript/register.js" type="module"></script>
   </head>
   <body>
-    <div id="background"></div>
-    <div id="main" class="container-sm">
-      <div id="mask" class="hidden"></div>
-      <h1>Wasted Top1000</h1>
-      <form action="" method="" id="form">
-        <div id="message">Du willst also einen Account erstellen? Oder einfach nur die <a href="/">Liste</a> anschauen?
-          Ein Hinweis zum <button type="button" data-bs-toggle="modal" data-bs-target="#dlgPrivacy">Datenschutz</button>.
-        </div>
-        <div id="error" class="hidden"></div>
-        <div id="controls">
-          <div class="mb-3">
-            <label for="email" class="form-label">Email</label>
-            <input type="email" class="form-control" id="email">
+    <div id="background">
+      <div id="main" class="container-sm">
+        <div id="mask" class="hidden"></div>
+        <h1>Wasted (<img src="images/angel.svg">) Top1000</h1>
+        <form action="" method="" id="form">
+          <div id="message">Du willst also einen Account erstellen? Oder einfach nur die <a href="/">Liste</a> anschauen?
+            Ein Hinweis zum <button type="button" id="btnPrivacy">Datenschutz</button>.
           </div>
-          <div class="mb-3">
-            <label for="password1" class="form-label">Passwort (Mindestens 8 Zeichen)</label>
-            <input type="password" class="form-control" id="password1">
+          <div id="error" class="hidden"></div>
+          <div id="controls">
+            <div class="mb-3">
+              <label for="email" class="form-label">Email</label>
+              <input type="email" class="form-control" id="email">
+            </div>
+            <div class="mb-3">
+              <label for="password1" class="form-label">Passwort (Mindestens 8 Zeichen)</label>
+              <input type="password" class="form-control" id="password1">
+            </div>
+            <div class="mb-3">
+              <label for="password2" class="form-label">Passwort wiederholen:</label>
+              <input type="password" class="form-control" id="password2">
+            </div>
+            <button type="button" class="btn btn-primary icon-register" id="btnSubmit">Registrieren</button>
           </div>
-          <div class="mb-3">
-            <label for="password2" class="form-label">Passwort wiederholen:</label>
-            <input type="password" class="form-control" id="password2">
-          </div>
-          <button type="button" class="btn btn-primary" id="btnSubmit">Registrieren</button>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
-
     <div class="modal fade" id="dlgPrivacy" tabindex="-1">
-      <div class="modal-dialog">
+      <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">Datenschutzhinweis</h5>
+            <h5 class="modal-title"><b>Datenschutzhinweis</b></h5>
             <button type="button" class="btn-close help-dialog-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            <p>Die Email-Adresse und selbstverständlich das Passwort werden in einer Form gespeichert, die es unmöglich macht auf das Original zurückzuschließen.</p>
+            <p>Sämtliche personenbezogenen Daten (Email-Adresse, Passwort, IP-Adresse) werden nur als Hashwerte gespeichert.</p>
             <p>Das heißt die Abstimmung erfolgt vollständig anonym!</p>
-            <p>Das einzige streng genommen personenbezogene Datum, das gespeichert wird, ist die client IP Adresse zum Schutz z.B. vor brute force login Versuchen. Diese wird jedoch nach spätestens einer Stunde wieder gelöscht.</p>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Schließen</button>

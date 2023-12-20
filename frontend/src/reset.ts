@@ -12,81 +12,120 @@ GNU General Public License for more details.
 
 import axios from "redaxios";
 
-/**
- * Make ajax reset request
- * @param email Email string
- * @throws Error string 
- */
-async function resetRequest(email: string) {
-    try {
-        const ret = await axios.post("/user/reset", {
-            "email": email
-        });
-        if(ret.status !== 200) {
-            throw new Error();
-        }
-    } catch(exc) {
-        if(typeof exc === "object" && exc !== null) {
-            const e = exc as { [key: string]: unknown };
-            if(e.status === 400 && typeof e.data === "string" && e.data.length > 0) {
-                throw e.data;
-            } else {
-                throw "Es ist ein Fehler aufgetreten. :(";
-            }
-        } else {
-            throw "Verbindung zum Server nicht möglich.";
-        }
-    }
+type ResetElements = {
+    "controls": HTMLDivElement,
+    "message": HTMLDivElement,
+    "error": HTMLDivElement,
+    "mask": HTMLDivElement,
+    "email": HTMLInputElement,
+    "button": HTMLButtonElement
 }
 
-/**
- * Click event handler for submit button
- */
-async function onClickSubmit() {
-    const el_controls = document.getElementById("controls") as HTMLElement;
-    const el_message = document.getElementById("message") as HTMLDivElement;
-    const el_error = document.getElementById("error") as HTMLDivElement;
-    const el_mask = document.getElementById("mask") as HTMLDivElement;
+class ResetHandler {
+    private el: ResetElements;
 
-    const email = validateEmail();
+    constructor() {
+        this.el = {
+            "controls": document.getElementById("controls") as HTMLDivElement,
+            "message": document.getElementById("message") as HTMLDivElement,
+            "error": document.getElementById("error") as HTMLDivElement,
+            "mask": document.getElementById("mask") as HTMLDivElement,
+            "email": document.getElementById("email") as HTMLInputElement,
+            "button": document.getElementById("btnSubmit") as HTMLButtonElement
+        }
 
-    if(email !== undefined) {
+        this.el.button.addEventListener("click", this.onClickSubmit);
+        this.el.email.addEventListener("keyup", this.onKeyUpEmail);
+        this.el.email.focus();
+    }
+
+    /**
+     * Make reset request
+     * 
+     * @param email Email string
+     * @throws Error string 
+     */
+    private async resetRequest(email: string) {
         try {
-            el_mask.classList.remove("hidden");
-            await resetRequest(email);
-
-            el_error.classList.add("hidden");
-            el_controls.classList.add("hidden");
-            el_message.innerHTML = "Alles klar. Bitte überprüfe deine Emails für den Rücksetzungslink! Derweilen noch schnell zur <a href=\"/\">Liste</a>?";
+            await axios.post("/user/reset", {
+                "email": email
+            });
         } catch(exc) {
-            el_error.innerHTML = (typeof exc === "string") ? exc : "Unbekannter Fehler";
-            el_error.classList.remove("hidden");            
-        } finally {
-            el_mask.classList.add("hidden");
+            if(typeof exc === "object" && exc !== null) {
+                if("status" in exc && exc.status === 400 && 
+                    "data" in exc && typeof exc.data === "string" && exc.data.length > 0) {
+                    throw exc.data;
+                } else {
+                    throw "Es ist ein Fehler aufgetreten. :(";
+                }
+            } else {
+                throw "Verbindung zum Server nicht möglich.";
+            }
         }
     }
-}
 
-function validateEmail(): string | undefined {
-    const el_email = document.getElementById("email") as HTMLInputElement;
+    /**
+     * Validate current value of email input
+     * 
+     * @returns Valid email or undefined
+     */
+    private validateEmail(): string | undefined {
+        // Very simple but hopefully sufficient email regex
+        if(/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(this.el.email.value)) {
+            this.el.email.classList.remove("invalid");
+            return this.el.email.value;
+        } else {
+            this.el.email.classList.add("invalid");
+            return undefined;
+        }
+    }
 
-    // Very simple but hopefully sufficient email regex
-    if(/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(el_email.value)) {
-        el_email.classList.remove("invalid");
-        return el_email.value;
-    } else {
-        el_email.classList.add("invalid");
-        return undefined;
+    /**
+     * Reset user account
+     */
+    private async reset() {
+        const email = this.validateEmail();
+        
+        if(email !== undefined) {
+            try {
+                this.el.mask.classList.remove("hidden");
+                await this.resetRequest(email);
+                this.el.message.innerHTML = "Alles klar. Bitte überprüfe deine Emails für den Rücksetzungslink! Derweilen noch schnell zur <a href=\"/\">Liste</a>?";
+                this.el.error.classList.add("hidden");
+                this.el.controls.classList.add("hidden");
+            } catch(exc) {
+                this.el.error.innerHTML = (typeof exc === "string") ? exc : "Unbekannter Fehler";
+                this.el.error.classList.remove("hidden");   
+            } finally {
+                this.el.mask.classList.add("hidden");
+            }
+        }
+    }
+
+    /**
+     * "keyup" event handler for email input
+     */
+    private onKeyUpEmail = (e: KeyboardEvent) => {
+        if(e.key === "Enter") {
+            this.reset().catch(err => {
+                console.error(err);
+            });
+        } else {
+            this.el.error.classList.add("hidden");
+            this.validateEmail();
+        }
+    }
+
+    /**
+     * "click" event handler for submit button
+     */
+    private onClickSubmit = () => {
+        this.reset().catch(err => {
+            console.error(err);
+        });
     }
 }
 
-function onLoad() {
-    const el_email = document.getElementById("email") as HTMLInputElement;
-    const el_btn = document.getElementById("btnSubmit") as HTMLButtonElement;
- 
-    el_btn.addEventListener("click", onClickSubmit);
-    el_email.addEventListener("keyup", validateEmail);
-    el_email.focus();
-}
-
-window.addEventListener("load", onLoad);
+window.addEventListener("load", () => {
+    new ResetHandler();
+});

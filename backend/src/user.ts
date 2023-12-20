@@ -110,7 +110,7 @@ export class UserRouter
     
             // Validate input
             const email = validateString(req.body.email, "Invalid email", 1, 128, StringValidation.Email);
-            const password = validateString(req.body.password, "Invalid password", 8, 128);
+            const password = validateString(req.body.password, "Invalid Password", 8, 128);
             const ip = validateString(req.ip, "Failed to read client IP", 7, 64);
     
             // Create new user

@@ -24,24 +24,25 @@ GNU General Public License for more details.
     <script src="javascript/login.js" type="module"></script>
   </head>
   <body>
-    <div id="background"></div>
-    <div id="main" class="container-sm">
-      <h1>Wasted Top1000</h1>
-      <form id="form">
-        <div id="message">Bitte melde dich an. Oder einfach nur <a href="/">Liste</a> anschauen?</div>
-        <div class="hidden" id="error"></div>
-        <div class="mb-3">
-          <label for="email" class="form-label">Email</label>
-          <input type="email" class="form-control" id="email">
-        </div>
-        <div class="mb-3">
-          <label for="password" class="form-label">Passwort</label>
-          <input type="password" class="form-control" id="password">
-        </div>
-        <button type="button" class="btn btn-primary" id="btnSubmit">Login</button>
-        <span class="button_link"><a href="/register">Neuen Account erstellen</a></span>
-        <span class="button_link"><a href="/reset">Password vergessen?</a></span>
-      </form>
+    <div id="background">
+      <div id="main" class="container-sm">
+        <h1>Wasted (<img src="images/angel.svg">) Top1000</h1>
+        <form id="form">
+          <div id="message">Bitte melde dich an. Oder einfach nur <a href="/">Liste</a> anschauen?</div>
+          <div class="hidden" id="error"></div>
+          <div class="mb-3">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" class="form-control" id="email">
+          </div>
+          <div class="mb-3">
+            <label for="password" class="form-label">Passwort</label>
+            <input type="password" class="form-control" id="password">
+          </div>
+          <button type="button" class="btn btn-primary icon-login" id="btnSubmit">Login</button>
+          <span class="button_link"><a href="/register">Neuer Account</a></span>
+          <span class="button_link"><a href="/reset">Password vergessen?</a></span>
+        </form>
+      </div>
     </div>
   </body>
 </html>

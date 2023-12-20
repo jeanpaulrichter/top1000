@@ -14,8 +14,27 @@ GNU General Public License for more details.
 
 /* ------------------------------------------------------------------------------------------------------------------------------------------ */
 
+#background {
+    position: absolute;
+    width: 100vw;
+    height: 100vh;
+    background: $background-color url(icons/pattern1.svg);
+    display: flex;
+    align-items: center;
+}
+
 #main {
-    max-width: 720px !important;
+    background-color: $background-color;
+    max-width: 800px !important;
+    border: 3px solid $wasted-color;
+
+    button {
+        font-weight: bold;
+        background-repeat: no-repeat;
+        background-position: 0.4rem 50%;
+        background-size: 1.4rem 1.4rem;
+        padding-left: 2.1rem;
+    }
 }
 
 #mask {
@@ -63,6 +82,14 @@ h1 {
     padding-top: 1rem;
 }
 
+.title_icon {
+    background-image: url(icons/angel.svg);
+    background-repeat: no-repeat;
+    background-size: auto;
+    height: 100%;
+    width: 2em;
+}
+
 #form {
     color: white;
     padding-top: 1rem;
@@ -96,4 +123,11 @@ h1 {
 }
 @media screen and (min-width: 1600px) {
     #form { padding-left: 8rem; padding-right: 8rem; }
+}
+
+@media screen and (max-width: 650px) {
+    #main {
+        border-left: 0 !important;
+        border-right: 0 !important;
+    }
 }

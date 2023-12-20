@@ -12,114 +12,140 @@ GNU General Public License for more details.
 
 import axios from "redaxios";
 
-let resettoken: string | null = null;
+type ResetPWElements = {
+    controls: HTMLDivElement,
+    message: HTMLDivElement,
+    error: HTMLDivElement,
+    mask: HTMLDivElement,
+    password1: HTMLInputElement,
+    password2: HTMLInputElement,
+    btn_submit: HTMLButtonElement
+}
 
-/**
- * Make ajax reset password request
- * @param password Password string
- * @throws Error string 
- */
- async function passwordRequest(password: string, token: string) {
-    try {
-        const ret = await axios.post("/user/password", {
-            "password": password,
-            "token": token
-        });
-        if(ret.status !== 200) {
-            throw new Error();
+class ResetPWHandler {
+    private el: ResetPWElements;
+    private token: string | null;
+
+    constructor() {
+        this.el = {
+            "controls": document.getElementById("controls") as HTMLDivElement,
+            "message": document.getElementById("message") as HTMLDivElement,
+            "error": document.getElementById("error") as HTMLDivElement,
+            "mask": document.getElementById("mask") as HTMLDivElement,
+            "password1": document.getElementById("password1") as HTMLInputElement,
+            "password2": document.getElementById("password2") as HTMLInputElement,
+            "btn_submit": document.getElementById("btnSubmit") as HTMLButtonElement
         }
-    } catch(exc) {
-        if(typeof exc === "object" && exc !== null) {
-            const e = exc as { [key: string]: unknown };
-            if(e.status === 400 && typeof e.data === "string" && e.data.length > 0) {
-                throw e.data;
-            } else {
-                throw "Es ist ein Fehler aufgetreten. :(";
-            }
+
+        const test = window.location.href.split('?');
+        if(test.length === 2) {
+            const querys = new URLSearchParams(test[1]);
+            this.token = querys.get("token");
         } else {
-            throw "Verbindung zum Server nicht möglich.";
+            this.token = null;
+        }
+    
+        if(this.token !== null) {
+            this.el.btn_submit.addEventListener("click", this.onClickSubmit);
+            this.el.password1.addEventListener("keyup", this.onKeyUpPassword);
+            this.el.password2.addEventListener("keyup", this.onKeyUpPassword);
+            this.el.password1.focus();
+        } else {
+            this.el.controls.classList.add("hidden");
+            this.el.message.classList.add("hidden");
+            this.el.error.classList.remove("hidden");
+            this.el.error.innerHTML = "Missing token.";
         }
     }
-}
 
-/**
- * Try to reset password
- */
-async function resetPassword() {
-    const el_error = document.getElementById("error") as HTMLDivElement;
-    const el_mask = document.getElementById("mask") as HTMLDivElement;
-
-    const password = validatePassword();
-
-    if(password !== undefined && resettoken !== null) {
+    /**
+     * Make reset password request
+     * 
+     * @param password Password string
+     * @param token Token string
+     * @throws Error string 
+     */
+    private async passwordRequest(password: string, token: string) {
         try {
-            el_mask.classList.remove("hidden");
-            await passwordRequest(password, resettoken);
-            window.location.href = "/vote";
+            await axios.post("/user/password", {
+                "password": password,
+                "token": token
+            });
         } catch(exc) {
-            el_error.innerHTML = (typeof exc === "string") ? exc : "Unbekannter Fehler";
-            el_error.classList.remove("hidden");            
-        } finally {
-            el_mask.classList.add("hidden");
+            if(typeof exc === "object" && exc !== null) {
+                if("status" in exc && exc.status === 400 && 
+                    "data" in exc && typeof exc.data === "string" && exc.data.length > 0) {
+                    throw exc.data;
+                } else {
+                    throw "Es ist ein Fehler aufgetreten. :(";
+                }
+            } else {
+                throw "Verbindung zum Server nicht möglich.";
+            }
         }
     }
-}
 
-/**
- * Get validated password
- * @returns Password string
- */
-function validatePassword(): string | undefined {
-    const el_password1 = document.getElementById("password1") as HTMLInputElement;
-    const el_password2 = document.getElementById("password2") as HTMLInputElement;
+    /**
+     * Get validated password
+     * 
+     * @returns Valid password string or undefined
+     */
+    private validatePassword(): string | undefined {
+        if(this.el.password1.value.length >= 8 && this.el.password1.value === this.el.password2.value) {
+            this.el.password1.classList.remove("invalid");
+            this.el.password2.classList.remove("invalid");
+            return this.el.password1.value;
+        } else {
+            this.el.password1.classList.add("invalid");
+            this.el.password2.classList.add("invalid");
+            return undefined;
+        }
+    }
 
-    if(el_password1.value.length >= 8 && el_password1.value === el_password2.value) {
-        el_password1.classList.remove("invalid");
-        el_password2.classList.remove("invalid");
-        return el_password1.value;
-    } else {
-        el_password1.classList.add("invalid");
-        el_password2.classList.add("invalid");
-        return undefined;
+    /**
+     * Reset password
+     */
+    private async resetPassword() {
+        const password = this.validatePassword();
+
+        if(password !== undefined && this.token !== null) {
+            try {
+                this.el.mask.classList.remove("hidden");
+                await this.passwordRequest(password, this.token);
+                window.location.href = "/vote";
+            } catch(exc) {
+                this.el.error.innerHTML = (typeof exc === "string") ? exc : "Unbekannter Fehler";
+                this.el.error.classList.remove("hidden");            
+            } finally {
+                this.el.mask.classList.add("hidden");
+            }
+        }
+    }
+
+    /**
+     * "click" event handler of password inputs
+     */
+    private onKeyUpPassword = (e: KeyboardEvent) => {
+        if(e.key === "Enter") {
+            this.resetPassword().catch(err => {
+                console.error(err);
+            });
+        } else {
+            this.el.error.classList.add("hidden");
+            this.validatePassword();
+        }
+    }
+
+    /**
+     * Submit button "click" event handler
+     */
+    private onClickSubmit = () => {
+        this.resetPassword().catch(err => {
+            console.error(err);
+        })
     }
 }
 
-/**
- * Click event handler of submit button
- */
-function onClickSubmit() {
-    resetPassword();
-}
-
-/**
- * Initialize password page
- */
-function onLoad() {
-    const el_password1 = document.getElementById("password1") as HTMLInputElement;
-    const el_password2 = document.getElementById("password2") as HTMLInputElement;
-    const el_btn = document.getElementById("btnSubmit") as HTMLButtonElement;
-
-    const test = window.location.href.split('?');
-    if(test.length === 2) {
-        const querys = new URLSearchParams(test[1]);
-        resettoken = querys.get("token");
-    }
-
-    if(resettoken !== null) {
-        el_btn.addEventListener("click", onClickSubmit);
-        el_password1.addEventListener("keyup", validatePassword);
-        el_password2.addEventListener("keyup", validatePassword);
-        el_password1.focus();
-    } else {
-        const el_controls = document.getElementById("controls") as HTMLElement;
-        const el_error = document.getElementById("controls") as HTMLElement;
-        const el_message = document.getElementById("message") as HTMLElement;
-
-        el_controls.classList.add("hidden");
-        el_message.classList.add("hidden");
-        el_error.classList.remove("hidden");
-        el_error.innerHTML = "Ungültiges token.";
-    }
-}
-
-window.addEventListener("load", onLoad);
+window.addEventListener("load", () => {
+    new ResetPWHandler();
+});

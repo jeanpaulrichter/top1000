@@ -11,81 +11,180 @@ GNU General Public License for more details.
 */
 
 import axios from "redaxios";
+import { Modal } from "bootstrap";
 
-/**
- * Try to register
- */
-async function register() {
-    const el_controls = document.getElementById("controls") as HTMLElement;
-    const el_message = document.getElementById("message") as HTMLDivElement;
-    const el_error = document.getElementById("error") as HTMLDivElement;
-    const el_mask = document.getElementById("mask") as HTMLDivElement;
+type RegisterElements = {
+    dlg_privacy: HTMLElement,
+    controls: HTMLDivElement,
+    message: HTMLDivElement,
+    error: HTMLDivElement,
+    mask: HTMLDivElement,
+    email: HTMLInputElement,
+    password1: HTMLInputElement,
+    password2: HTMLInputElement,
+    btn_submit: HTMLButtonElement,
+    btn_privacy: HTMLButtonElement
+}
 
-    const password = validatePassword();
-    const email = validateEmail();
+class RegisterHandler {
+    private el: RegisterElements;
+    private dlg_privacy: Modal;
 
-    if(password !== undefined && email !== undefined) {
+    constructor() {
+        this.el = {
+            "dlg_privacy": document.getElementById("dlgPrivacy") as HTMLElement,
+            "controls": document.getElementById("controls") as HTMLDivElement,
+            "message": document.getElementById("message") as HTMLDivElement,
+            "error": document.getElementById("error") as HTMLDivElement,
+            "mask": document.getElementById("mask") as HTMLDivElement,
+            "email": document.getElementById("email") as HTMLInputElement,
+            "password1": document.getElementById("password1") as HTMLInputElement,
+            "password2": document.getElementById("password2") as HTMLInputElement,
+            "btn_submit": document.getElementById("btnSubmit") as HTMLButtonElement,
+            "btn_privacy": document.getElementById("btnPrivacy") as HTMLButtonElement
+        }
+
+        this.dlg_privacy = new Modal(this.el.dlg_privacy, {
+            "keyboard": false,
+            "focus": true
+        });
+     
+        this.el.btn_privacy.addEventListener("click", this.onClickBtnPrivacy);
+        this.el.btn_submit.addEventListener("click", this.onClickBtnSubmit);
+        this.el.password1.addEventListener("keyup", this.onKeyUpPassword);
+        this.el.password2.addEventListener("keyup", this.onKeyUpPassword);
+        this.el.email.addEventListener("keyup", this.onKeyUpEmail);
+
+        this.el.email.focus();
+    }
+
+    /**
+     * Make user register request
+     * 
+     * @param email Email string
+     * @param password Password string
+     */
+    private async registerRequest(email: string, password: string): Promise<void> {
         try {
-            el_mask.classList.remove("hidden");
-            const ret = await axios.post("/user/register", {
+            await axios.post("/user/register", {
                 "email": email,
                 "password": password
             });
-            if(ret.status !== 200) {
-                throw ret.statusText;
-            }
-            el_error.classList.add("hidden");
-            el_controls.classList.add("hidden");
-            el_message.innerHTML = "Alles klar. Bitte überprüfe deine Emails wegen des Aktivierungslinks! Derweilen noch schnell zur <a href=\"/\">Liste</a>?";
         } catch(exc) {
-            console.error(exc);
-            el_error.innerHTML = "Registrierung fehlgeschlagen :(";
-            el_error.classList.remove("hidden");            
-        } finally {
-            el_mask.classList.add("hidden");
+            if(typeof exc === "object" && exc !== null) {
+                if("status" in exc && exc.status === 400 && 
+                    "data" in exc && typeof exc.data === "string" && exc.data.length > 0) {
+                    throw exc.data;
+                } else {
+                    throw "Es ist ein Fehler aufgetreten";
+                }
+            } else {
+                throw "Verbindung zum Server nicht möglich";
+            }
+        }
+    }
+
+    /**
+     * Validate current value of password inputs
+     * 
+     * @returns Valid password string of undefined
+     */
+    private validatePassword(): string | undefined {
+        if(this.el.password1.value.length >= 8 && this.el.password1.value === this.el.password2.value) {
+            this.el.password1.classList.remove("invalid");
+            this.el.password2.classList.remove("invalid");
+            return this.el.password1.value;
+        } else {
+            this.el.password1.classList.add("invalid");
+            this.el.password2.classList.add("invalid");
+            return undefined;
+        }
+    }
+
+    /**
+     * Validate current value of email input
+     * 
+     * @returns Valid email string or undefined
+     */
+    private validateEmail(): string | undefined {
+        // Very simple but hopefully sufficient email regex
+        if(/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(this.el.email.value)) {
+            this.el.email.classList.remove("invalid");
+            return this.el.email.value;
+        } else {
+            this.el.email.classList.add("invalid");
+            return undefined;
+        }
+    }
+
+    /**
+     * Register new user account
+     */
+    private async register(): Promise<void> {
+        const password = this.validatePassword();
+        const email = this.validateEmail();
+    
+        if(password !== undefined && email !== undefined) {
+            try {
+                this.el.mask.classList.remove("hidden");
+                await this.registerRequest(email, password);
+                this.el.error.classList.add("hidden");
+                this.el.controls.classList.add("hidden");
+                this.el.message.innerHTML = "Alles klar. Bitte überprüfe deine Emails wegen des Aktivierungslinks! Derweilen noch schnell zur <a href=\"/\">Liste</a>?";
+            } catch(exc) {
+                this.el.error.innerHTML = typeof exc == "string" ? exc : "Registrierung fehlgeschlagen";
+                this.el.error.classList.remove("hidden"); 
+            } finally {
+                this.el.mask.classList.add("hidden");
+            }
+        }
+    }
+
+    /**
+     * Privacy dialog button "click" handler
+     */
+    private onClickBtnPrivacy = () => {
+        this.dlg_privacy.toggle();
+    }
+
+    /**
+     * Submit button "click" handler
+     */
+    private onClickBtnSubmit = () => {
+        this.register().catch(err => {
+            console.error(err);
+        })
+    }
+
+    /**
+     * Password inputs "keyup" event handler
+     */
+    private onKeyUpPassword = (e: KeyboardEvent) => {
+        if(e.key === "Enter") {
+            this.register().catch(err => {
+                console.error(err);
+            });
+        } else {
+            this.el.error.classList.add("hidden");
+            this.validatePassword();
+        }
+    }
+
+    /**
+     * Email input "keyup" event handler
+     */
+    private onKeyUpEmail = (e: KeyboardEvent) => {
+        if(e.key === "Enter") {
+            this.register().catch(err => {
+                console.error(err);
+            });
+        } else {
+            this.el.error.classList.add("hidden");
+            this.validateEmail();
         }
     }
 }
- 
-function validatePassword(): string | undefined {
-    const el_password1 = document.getElementById("password1") as HTMLInputElement;
-    const el_password2 = document.getElementById("password2") as HTMLInputElement;
 
-    if(el_password1.value.length >= 8 && el_password1.value === el_password2.value) {
-        el_password1.classList.remove("invalid");
-        el_password2.classList.remove("invalid");
-        return el_password1.value;
-    } else {
-        el_password1.classList.add("invalid");
-        el_password2.classList.add("invalid");
-        return undefined;
-    }
-}
-
-function validateEmail(): string | undefined {
-    const el_email = document.getElementById("email") as HTMLInputElement;
-
-    // Very simple but hopefully sufficient email regex
-    if(/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(el_email.value)) {
-        el_email.classList.remove("invalid");
-        return el_email.value;
-    } else {
-        el_email.classList.add("invalid");
-        return undefined;
-    }
-}
-
-function onLoad() {
-    const el_email = document.getElementById("email") as HTMLInputElement;
-    const el_password1 = document.getElementById("password1") as HTMLInputElement;
-    const el_password2 = document.getElementById("password2") as HTMLInputElement;
-    const el_btn = document.getElementById("btnSubmit") as HTMLButtonElement;
- 
-    el_btn.addEventListener("click", register);
-    el_password1.addEventListener("keyup", validatePassword);
-    el_password2.addEventListener("keyup", validatePassword);
-    el_email.addEventListener("keyup", validateEmail);
-    el_email.focus();
-}
-
-window.addEventListener("load", onLoad);
+window.addEventListener("load", () => {
+    new RegisterHandler();
+});
