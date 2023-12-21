@@ -38,16 +38,6 @@ new SyncManager("debug").sync([
         "dest": "www/javascript/select2.js"
     },
     {
-        "src": "node_modules/bootstrap/dist/css/bootstrap.min.css",
-        "dest": "www/css/bootstrap.css",
-        "replace": [
-            {
-                "from": "/*# sourceMappingURL=bootstrap.min.css.map */",
-                "to": ""
-            }
-        ]
-    },
-    {
         "src": "node_modules/select2/dist/css/select2.min.css",
         "dest": "www/css/select2.css"
     }

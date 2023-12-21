@@ -10,8 +10,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU General Public License for more details.
 */
 
-@import "common.scss";
-@import "main.scss";
+@use "variables" as *;
+@use "main.scss";
 
 /* ------------------------------------------------------------------------------------------------------------------------------------------ */
 
@@ -72,7 +72,7 @@ GNU General Public License for more details.
     color: black;
 }
 
-.game--focus {
+.game--selected {
     .game__expand {
         filter: brightness(0) saturate(100%) invert(30%) sepia(63%) saturate(5260%) hue-rotate(319deg) brightness(96%) contrast(100%) !important;
     }

@@ -10,12 +10,29 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU General Public License for more details.
 */
 
-import { ChartTypeRegistry } from "chart.js"
+import { Chart, ChartType } from "chart.js"
+
+/**
+ * HTMLElements used by ListHandler
+ */
+export type ListElements = {
+    mask: HTMLDivElement,
+    message: HTMLDivElement,
+    games: HTMLDivElement,
+    pages: HTMLDivElement,
+    filter: HTMLDivElement,
+    filter_gender: HTMLSelectElement,
+    filter_age: HTMLSelectElement,
+    filter_groups: HTMLInputElement[],
+    tml_game: HTMLTemplateElement,
+    btn_filter: HTMLButtonElement,
+    btn_statistics: HTMLButtonElement
+}
 
 /**
  * Information about platform of game
  */
-export type PlatformInfo = {
+export type Platform = {
     name: string,
     year: number
 }
@@ -23,14 +40,14 @@ export type PlatformInfo = {
 /**
  * Information about game
  */
-export type GameInfo = {
+export type Game = {
     id: string,
     title: string,
     moby_id: number,
     description: string,
     genres: string[],
     screenshots: string[],
-    platforms: PlatformInfo[],
+    platforms: Platform[],
     year: number,
     cover: string,
     screenshot: string,
@@ -40,51 +57,58 @@ export type GameInfo = {
 /**
  * Information about list entry
  */
-export type ListInfo = {
+export type ListEntry = {
     rank: number,
     votes: number,
     score: number,
     comments: string[],
-    game: GameInfo
+    game: Game
 }
 
 /**
- * Data returned by server for list page
+ * Data returned by api for list page
  */
-export type ListQuery = {
+export type ListData = {
     pages: number,
     limit: number,
-    data: ListInfo[]
+    data: ListEntry[]
 }
 
 /**
  * Filter Options
  */
 export type FilterOptions = {
-    group?: string,
-    gender?: string,
-    age?: number
+    group: string,
+    gender: string,
+    age: number
 }
 
 /**
- * 
+ * Game categories retured by statistics api
  */
-export type GameGroup = {
+export enum GameCategory {
+    genres = "genres",
+    gameplay = "gameplay",
+    perspectives = "perspectives",
+    settings = "settings",
+    topics = "topics",
+    platforms = "platforms",
+    decades = "decades"
+}
+
+/**
+ * See type Statistics
+ */
+export type GameCategoryEntry = {
     name: string,
     count: number
 };
 
 /**
- * Statistics returns by API
+ * Statistics returns by api
  */
 export type Statistics = {
-    genre: GameGroup[],
-    gameplay: GameGroup[],
-    perspective: GameGroup[],
-    setting: GameGroup[],
-    topic: GameGroup[],
-    platforms: GameGroup[],
-    [key: string]: GameGroup[]
+    [key in GameCategory]: GameCategoryEntry[]
 };
 
 /**
@@ -99,20 +123,21 @@ export type ChartData = {
 };
 
 /**
- * Stump chartjs instance
+ * Statistics chart for GameCategory
  */
-export type Chart = {
-    destroy(): void
-};
+export type GameChart = {
+    category: `${GameCategory}`,
+    chart: Chart,
+    whitelist?: string[]
+}
 
 /**
- * Definition of statistics chart
+ * Options for statistics chart
  */
-export type ChartInfo = {
-    canvas: HTMLCanvasElement,
-    obj: Chart | undefined,
-    type: keyof ChartTypeRegistry,
-    name: string,
-    options: { [key: string]: unknown }
-    filter?: string[]
+export type GameChartOptions = {
+    id: string,
+    type: ChartType,
+    category: `${GameCategory}`,
+    title: string,
+    whitelist?: string[]
 }

@@ -32,9 +32,9 @@ GNU General Public License for more details.
         <div id="top">
           <h1>Wasted (<img src="images/angel.svg">) Top1000</h1>
           <nav id="menu">
-            <button class="icon-chart" data-bs-toggle="modal" data-bs-target="#dlgChart" data-bs-placement="bottom" title="Statistik" id="btnStatistics"></button>
+            <button class="icon-chart" data-bs-placement="bottom" title="Statistik" id="btnStatistics"></button>
             <a href="/vote"><button class="icon-vote" data-bs-placement="bottom" title="Abstimmen"></button></a>
-            <button id="filterToggle" class="icon-menu"></button>
+            <button id="btnFilterToggle" title="Filter" class="icon-menu"></button>
           </nav>
           <div id="filter" class="hidden">
             <div class="row mb-3">
@@ -102,7 +102,7 @@ GNU General Public License for more details.
         <div id="footer"></div>
       </div>
     </div>
-    <div class="modal fade" id="dlgChart" tabindex="-1">
+    <div class="modal fade" id="dlgStatistics" tabindex="-1">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content chart-dialog">
           <div class="modal-header">
@@ -110,7 +110,7 @@ GNU General Public License for more details.
             <button type="button" class="btn-close chart-dialog-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            <div id="chartCarousel" class="carousel slide" data-bs-ride="false" data-bs-interval="false">
+            <div id="chartCarousel" class="carousel slide">
               <div class="carousel-indicators">
                 <button type="button" data-bs-target="#chartCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
                 <button type="button" data-bs-target="#chartCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>

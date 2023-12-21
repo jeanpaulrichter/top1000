@@ -17,7 +17,7 @@ import { MongoDB } from "./db.js";
 import { AuthError } from "./exceptions.js";
 import { ConfigData } from "./config.js";
 import { validateString, validateInteger, validateGender, validateFilterParams } from "./validate.js";
-import { VoterGroups, UserInfo } from "./types.js";
+import { VoterGroups, UserInfo, StringValidation } from "./types.js";
 
 /**
  * API express router
@@ -152,7 +152,7 @@ export class APIRouter
             const user = this.checkPermission(req);
 
             // Validate input
-            const comment = validateString(req.body.comment, "Invalid comment", 1, 3000);
+            const comment = validateString(req.body.comment, "Invalid comment", 1, 3000, StringValidation.Comment);
             const position = validateInteger(req.body.position, "Invalid position", 1, 100);
 
             // Update database

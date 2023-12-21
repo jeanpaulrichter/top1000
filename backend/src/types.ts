@@ -26,12 +26,13 @@ export type VoteGameGroup = {
  * Statistics about games in different genres, settings etc.
  */
 export type VoteStatistics = {
-    genre: VoteGameGroup[],
+    genres: VoteGameGroup[],
     gameplay: VoteGameGroup[],
-    perspective: VoteGameGroup[],
-    setting: VoteGameGroup[],
-    topic: VoteGameGroup[],
-    platforms: VoteGameGroup[]
+    perspectives: VoteGameGroup[],
+    settings: VoteGameGroup[],
+    topics: VoteGameGroup[],
+    platforms: VoteGameGroup[],
+    decades: VoteGameGroup[]
 };
 
 /**
@@ -194,5 +195,6 @@ export interface JSONObject {
 export enum StringValidation {
     None,
     Email,
-    Password
+    Password,
+    Comment
 }

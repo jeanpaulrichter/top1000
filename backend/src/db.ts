@@ -35,8 +35,6 @@ export class MongoDB
     private mail: Mailer;
     private images: ImageDownloader;
     private collections: {[key: string]: Collection} = {};
-    private regex_tags = /<[^\s].+?>/gi;
-    private regex_whitespace = /\s{2}/gi;
 
     constructor(log: Logger, config: ConfigData, mail: Mailer, moby: MobygamesLoader, images: ImageDownloader) {
         this.log = log;
@@ -611,22 +609,13 @@ export class MongoDB
             if(user_id.length !== 24) {
                 throw new Error("Invalid user id");
             }
-            if(!(Number.isInteger(position) && position > 0 && position <= 100)) {
-                throw new InputError("Invalid position");
-            }
-
-            let text = comment.replace(this.regex_tags, "").trim();
-            text = text.replace(this.regex_whitespace, " ");
-            if(text.length == 0) {
-                throw new InputError("Invalid comment");
-            }
 
             // Update comment
             const ret = await votes.updateOne({
                 "user_id": ObjectId.createFromHexString(user_id),
                 "position": position
             }, { "$set": {
-                "comment": text
+                "comment": comment
             } });
 
             if(ret.matchedCount !== 1) {
@@ -853,7 +842,7 @@ export class MongoDB
                             "_id": 0
                         } }
                     ],
-                    "years": [
+                    "decades": [
                         { "$bucket": {
                             "groupBy": "$game_year",
                             "boundaries": [

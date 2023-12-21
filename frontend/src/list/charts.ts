@@ -10,274 +10,248 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU General Public License for more details.
 */
 
-import { getChartData } from "./help.js";
-import { ChartData, ChartInfo, FilterOptions, GameGroup } from "./types.js";
-import { Chart, BarController, BarElement, CategoryScale, LinearScale, DoughnutController, ArcElement, PieController, Tooltip, Legend } from "chart.js";
-
-Chart.register(CategoryScale);
-Chart.register(LinearScale);
-Chart.register(BarController);
-Chart.register(BarElement);
-Chart.register(DoughnutController);
-Chart.register(ArcElement);
-Chart.register(PieController);
-Chart.register(Tooltip);
-Chart.register(Legend);
+import { default as axios } from "redaxios";
+import { GameChart, ChartData, FilterOptions, Statistics, GameCategory, GameCategoryEntry } from "./types.js";
+import { Chart, ChartType, BarController, BarElement, CategoryScale, LinearScale, DoughnutController, ArcElement, PieController, Tooltip, Legend, ChartOptions } from "chart.js";
 
 /**
- * Possible chart colors
+ * Manages charts for game categories
  */
-const colors = [
-    "#7f0000", "#191970", "#ff4500", "#00ced1", "#dc143c",
-    "#f4a460", "#0000ff", "#a020f0", "#adff2f", "#ff00ff",
-    "#1e90ff", "#db7093", "#ffff54", "#7fffd4", "#556b2f",
-    "#FF6633", "#FFB399", "#FF33FF", "#FFFF99", "#00B3E6",
-    "#E6B333", "#3366E6", "#999966", "#99FF99", "#B34D4D",
-    "#80B300", "#809900", "#E6B3B3", "#6680B3", "#66991A",
-    "#FF99E6", "#CCFF1A", "#FF1A66", "#E6331A", "#33FFCC",
-    "#66994D", "#B366CC", "#4D8000", "#B33300", "#CC80CC",
-    "#66664D", "#991AFF", "#E666FF", "#4DB3FF", "#1AB399",
-    "#E666B3", "#33991A", "#CC9999", "#B3B31A", "#00E680",
-    "#4D8066", "#809980", "#E6FF80", "#1AFF33", "#999933",
-    "#FF3380", "#CCCC00", "#66E64D", "#4D80CC", "#9900B3",
-    "#E64D66", "#4DB380", "#FF4D4D", "#99E6E6", "#6666FF"
-];
+export class ChartManager {
+    /**
+     * Possible chart colors
+     */
+    private static colors = [
+        "#7f0000", "#191970", "#ff4500", "#00ced1", "#dc143c",
+        "#f4a460", "#0000ff", "#a020f0", "#adff2f", "#ff00ff",
+        "#1e90ff", "#db7093", "#ffff54", "#7fffd4", "#556b2f",
+        "#FF6633", "#FFB399", "#FF33FF", "#FFFF99", "#00B3E6",
+        "#E6B333", "#3366E6", "#999966", "#99FF99", "#B34D4D",
+        "#80B300", "#809900", "#E6B3B3", "#6680B3", "#66991A",
+        "#FF99E6", "#CCFF1A", "#FF1A66", "#E6331A", "#33FFCC",
+        "#66994D", "#B366CC", "#4D8000", "#B33300", "#CC80CC",
+        "#66664D", "#991AFF", "#E666FF", "#4DB3FF", "#1AB399",
+        "#E666B3", "#33991A", "#CC9999", "#B3B31A", "#00E680",
+        "#4D8066", "#809980", "#E6FF80", "#1AFF33", "#999933",
+        "#FF3380", "#CCCC00", "#66E64D", "#4D80CC", "#9900B3",
+        "#E64D66", "#4DB380", "#FF4D4D", "#99E6E6", "#6666FF"
+    ];
 
-/**
- * Whitelist for shown game platforms
- */
-const main_platforms = [
-    "Game Boy",
-    "PlayStation",
-    "PlayStation 2",
-    "PlayStation 3",
-    "PlayStation 4",
-    "PlayStation 5",
-    "Wii",
-    "SNES",
-    "Xbox",
-    "Xbox 360",
-    "Xbox One",
-    "DOS",
-    "Atari ST",
-    "Commodore 64",
-    "Amiga",
-    "Wii U",
-    "SEGA Saturn",
-    "SEGA Master System",
-    "PSP",
-    "Nintendo Switch",
-    "Windows"
-];
+    /**
+     * All registered game charts
+     */
+    private charts: GameChart[] = [];
 
-/**
- * Definitions of all statistics charts
- */
-const charts: ChartInfo[] = [
-    {
-        "canvas": document.getElementById("chart_genre") as HTMLCanvasElement,
-        "obj": undefined,
-        "options": getPieChartOptions("Genres"),
-        "type": "pie",
-        "name": "genres"
-    },
-    {
-        "canvas": document.getElementById("chart_gameplay") as HTMLCanvasElement,
-        "obj": undefined,
-        "options": getBarChartOptions("Gameplay"),
-        "type": "bar",
-        "name": "gameplay"
-    },
-    {
-        "canvas": document.getElementById("chart_perspectives") as HTMLCanvasElement,
-        "obj": undefined,
-        "options": getPieChartOptions("Perspektiven"),
-        "type": "doughnut",
-        "name": "perspectives"
-    },
-    {
-        "canvas": document.getElementById("chart_settings") as HTMLCanvasElement,
-        "obj": undefined,
-        "options": getBarChartOptions("Setting"),
-        "type": "bar",
-        "name": "settings"
-    },
-    {
-        "canvas": document.getElementById("chart_topics") as HTMLCanvasElement,
-        "obj": undefined,
-        "options": getPieChartOptions("Themen"),
-        "type": "pie",
-        "name": "topics"
-    },
-    {
-        "canvas": document.getElementById("chart_platforms") as HTMLCanvasElement,
-        "obj": undefined,
-        "options": getBarChartOptions("Platformen"),
-        "type": "bar",
-        "name": "platforms",
-        "filter": main_platforms
-    },
-    {
-        "canvas": document.getElementById("chart_years") as HTMLCanvasElement,
-        "obj": undefined,
-        "options": getBarChartOptions("Jahrzehnte"),
-        "type": "bar",
-        "name": "years"
-    },
-]
+    constructor() {
+        Chart.register(CategoryScale);
+        Chart.register(LinearScale);
+        Chart.register(BarController);
+        Chart.register(BarElement);
+        Chart.register(DoughnutController);
+        Chart.register(ArcElement);
+        Chart.register(PieController);
+        Chart.register(Tooltip);
+        Chart.register(Legend);
+    }
 
-/* ------------------------------------------------------------------------------------------------------------------------------------------ */
+    /**
+     * Add/Create new chart
+     * 
+     * @param el_canvas Canvas element for chart
+     * @param type Type of chart
+     * @param category Game category visualized by chart
+     * @param title Title for chart
+     * @param whitelist Whitelist for category entries (optional)
+     * 
+     */
+    public add(el_canvas: HTMLCanvasElement, type: ChartType, category: `${GameCategory}`, title: string, whitelist?: string[]) {
+        this.charts.push({
+            "category": category,
+            "chart": new Chart(el_canvas, {
+                "type": type,
+                "options": this.getChartOptions(type, title),
+                "data": { "labels": [], "datasets": [] }
+            }),
+            "whitelist": whitelist
+        });
+    }
 
-/**
- * Get chartjs options for pie chart
- * @param title Title of chart
- * @returns options object
- */
- function getPieChartOptions(title: string) {
-    return {
-        "responsive": true,
-        "layout": {
-            "padding": {
-                "left": 20,
-                "right": 20,
-                "top": 0,
-                "bottom": 30
+    /**
+     * Load chart data from api
+     * 
+     * @param filter FilterOptions for request
+     */
+    public load(filter: FilterOptions): void {
+        this.dataRequest(filter).then(data => {
+            for(const chart of this.charts) {
+                chart.chart.data = this.getChartData(data[chart.category], chart.whitelist);
+                chart.chart.update("none");
             }
-        },
-        "datasets": {
-            "pie": {
-                "borderWidth": 1
-            },
-            "doughnut": {
-                "borderWidth": 1
-            }
-        },
-        "scales": {
-            "x": {
-                "grid": {
-                    "display": false
-                },
-                "ticks": {
-                    "display": false
-                }
-            },
-            "y": {
-                "grid": {
-                    "display": false
-                },
-                "ticks": {
-                    "display": false
-                }
-            }
-        },
-        "plugins": {
-            "legend": {
-                "display": true,
-                "labels": {
-                    "color": "rgb(255,255,255)"
-                }
-            },
-            "title": {
-                "display": true,
-                "text": title,
-                "color": "rgb(255,255,255)"
-            }
+        }).catch(exc => {
+            console.error(exc);
+        });
+    }
+
+    /**
+     * Query api for statistics data
+     * 
+     * @param filter FilterOptions
+     * @returns Statistics
+     * @throws Error
+     */
+    private async dataRequest(filter: FilterOptions) {
+        let url = "/api/statistics?";
+        if(filter.group !== "") {
+            url += "&group=" + filter.group;
         }
-    };
-}
-
-/**
- * Get options for chartjs bar chart
- * @param title Title of chart
- * @returns Options object
- */
-function getBarChartOptions(title: string) {
-    return {
-        "layout": {
-            "padding": {
-                "top": 0,
-                "bottom": 30
-            }
-        },
-        "indexAxis": "y",
-        "datasets": {
-            "bar": {
-                "barThickness": 12,
-                "maxBarThickness": 18,
-                "minBarLength": 2,
-            }
-        },
-        "scales": {
-            "y": {
-                "ticks": {
-                    "color": "rgb(255,255,255)",
-                    "font": {
-                        "size": 9
-                    }
-                },
-                "grid": {
-                    "display": false
-                }
-            }
-        },
-        "responsive": true,
-        "plugins": {
-            "legend": {
-                "display": false,
-            },
-            "title": {
-                "display": true,
-                "text": title,
-                "color": "rgb(255,255,255)"
-            }
+        if(filter.gender !== "") {
+            url += "&gender=" + filter.gender;
         }
-    };
-}
-
-/**
- * Get chartjs data object
- * @param info Input array
- * @param valid Positiv list (optional)
- * @returns 
- */
-function getDataObj(info: GameGroup[], valid?: string[]): ChartData {
-    const data: ChartData = {
-        labels: [],
-        datasets: [{
-          data: [],
-          backgroundColor: [],
-        }]
-    };
-    let color_i = 0;
-    for(let i = 0; i < info.length; i++) {
-        if(valid === undefined || valid.includes(info[i].name)) {
-            data.labels.push(info[i].name);
-            data.datasets[0].data.push(info[i].count);
-            data.datasets[0].backgroundColor.push(colors[color_i]);
-            color_i++;
+        if(filter.age > 0) {
+            url += "&age=" + filter.age;
+        }
+    
+        const ret = await axios.get(url);
+        if(ret.status === 200) {
+            return ret.data as Statistics;
+        } else {
+            throw new Error(ret.statusText);
         }
     }
-    return data;
-}
 
-/**
- * Load statistics charts for current filter options
- * @param filter FilterOptions
- */
-export function loadCharts(filter: FilterOptions) {
-    getChartData(filter).then(data => {
-        for(const chart of charts) {
-            if(chart.obj !== undefined) {
-                chart.obj.destroy();
+    /**
+     * Get ChartData object for chartjs
+     * 
+     * @param info Statistics for category
+     * @param whitelist Whitelist for entries (optional)
+     * @returns ChartData
+     */
+    private getChartData(info: GameCategoryEntry[], whitelist?: string[]): ChartData {
+        const data: ChartData = {
+            "labels": [],
+            "datasets": [{
+                "data": [],
+                "backgroundColor": [],
+            }]
+        };
+        let color_i = 0;
+        for(let i = 0; i < info.length; i++) {
+            if(whitelist === undefined || whitelist.includes(info[i].name)) {
+                data.labels.push(info[i].name);
+                data.datasets[0].data.push(info[i].count);
+                data.datasets[0].backgroundColor.push(ChartManager.colors[color_i]);
+                color_i++;
             }
-            chart.obj = new Chart(chart.canvas, {
-                type: chart.type,
-                "data": getDataObj(data[chart.name], chart.filter),
-                "options": chart.options
-            });
         }
-    }).catch(exc => {
-        console.error(exc);
-    });
-}
+        return data;
+    }
 
+    /**
+     * Get ChartOptions object for chartjs
+     * 
+     * @param type Chart type
+     * @param title Title of chart
+     * @returns ChartOptions
+     */
+    private getChartOptions(type: ChartType, title: string): ChartOptions {
+        switch(type) {
+            case "doughnut": case "pie": {
+                return {
+                    "responsive": true,
+                    "layout": {
+                        "padding": {
+                            "left": 20,
+                            "right": 20,
+                            "top": 0,
+                            "bottom": 30
+                        }
+                    },
+                    "datasets": {
+                        "pie": {
+                            "borderWidth": 1
+                        },
+                        "doughnut": {
+                            "borderWidth": 1
+                        }
+                    },
+                    "scales": {
+                        "x": {
+                            "grid": {
+                                "display": false
+                            },
+                            "ticks": {
+                                "display": false
+                            }
+                        },
+                        "y": {
+                            "grid": {
+                                "display": false
+                            },
+                            "ticks": {
+                                "display": false
+                            }
+                        }
+                    },
+                    "plugins": {
+                        "legend": {
+                            "display": true,
+                            "labels": {
+                                "color": "rgb(255,255,255)"
+                            }
+                        },
+                        "title": {
+                            "display": true,
+                            "text": title,
+                            "color": "rgb(255,255,255)"
+                        }
+                    }
+                };
+            }
+            case "bar": {
+                return {
+                    "layout": {
+                        "padding": {
+                            "top": 0,
+                            "bottom": 30
+                        }
+                    },
+                    "indexAxis": "y",
+                    "datasets": {
+                        "bar": {
+                            "barThickness": 12,
+                            "maxBarThickness": 18,
+                            "minBarLength": 2,
+                        }
+                    },
+                    "scales": {
+                        "y": {
+                            "ticks": {
+                                "color": "rgb(255,255,255)",
+                                "font": {
+                                    "size": 9
+                                }
+                            },
+                            "grid": {
+                                "display": false
+                            }
+                        }
+                    },
+                    "responsive": true,
+                    "plugins": {
+                        "legend": {
+                            "display": false,
+                        },
+                        "title": {
+                            "display": true,
+                            "text": title,
+                            "color": "rgb(255,255,255)"
+                        }
+                    }
+                };
+            }
+            default: {
+                return {};
+            }
+        }
+    }
+}

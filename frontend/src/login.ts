@@ -10,7 +10,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU General Public License for more details.
 */
 
-import axios from "redaxios";
+import { default as axios } from "redaxios";
 
 type LoginElements = {
     email: HTMLInputElement,

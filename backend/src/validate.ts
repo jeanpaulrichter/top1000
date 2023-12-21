@@ -20,6 +20,9 @@ import { InputError } from "./exceptions.js";
 const regex_email = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
 const regex_digit = /\d+/;
 const regex_special =/[^a-zA-Z0-9]/;
+const regex_tags = /<[^\s].*?>/gi;
+const regex_whitespace = /\s{2,}/gi;
+const regex_lines = /(.+)(\r\n|\r|\n)?/g;
 
 /**
  * Get valid string
@@ -47,6 +50,27 @@ export function validateString(s: unknown, error_msg: string, min_length = 0, ma
                 throw new InputError(error_msg);
             }
             break;
+        }
+        case StringValidation.Comment: {
+            const matches = s.matchAll(regex_lines);
+
+            const lines = [];
+        
+            for(const match of matches) {
+                const line = match[1].replace(regex_tags, " ").replace(regex_whitespace, " ").trim();
+                if(line.length > 0 && line.length < 256) {
+                    lines.push(line);
+                }
+                if(lines.length > 1) {
+                    break;
+                }
+            }
+        
+            const comment = lines.join("\n");
+            if(comment.length == 0 || comment.length > 768) {
+                throw new InputError(error_msg);
+            }
+            return comment;
         }
     }
     return s;
