@@ -601,7 +601,7 @@ export class MongoDB
      * @param comment Comment string
      * @throws InputError, LoggedError
      */
-    public async updateComment(user_id: string, position: number, comment: string): Promise<void> {
+    public async updateComment(user_id: string, position: number, comment: string): Promise<string> {
         try {
             const votes = this.getCollection("votes");
 
@@ -611,18 +611,22 @@ export class MongoDB
             }
 
             // Update comment
-            const ret = await votes.updateOne({
+            const ret = await votes.findOneAndUpdate({
                 "user_id": ObjectId.createFromHexString(user_id),
                 "position": position
             }, { "$set": {
                 "comment": comment
-            } });
+            } }, { "projection": { "comment": 1 }, "returnDocument": "after"});
 
-            if(ret.matchedCount !== 1) {
-                throw new Error("Failed to match vote");
-            } else if(ret.modifiedCount !== 1) {
-                throw new Error("Failed to modify vote")
+            if(ret === null) {
+                throw new Error("Failed to update comment");
             }
+
+            return ret.comment as string;
+
+            //if(ret.matchedCount !== 1) {
+            //    throw new Error("Failed to match vote");
+            //}
         } catch(exc) {
             if(exc instanceof InputError || exc instanceof LoggedError) {
                 throw exc;

@@ -11,6 +11,32 @@ GNU General Public License for more details.
 */
 
 /**
+ * Vote page element
+ */
+export type VoteElements = {
+    slides: HTMLElement,
+    step: HTMLDivElement,
+    progress: HTMLDivElement,
+    gender: HTMLSelectElement,
+    age: HTMLSelectElement,
+    group_hobby: HTMLInputElement,
+    group_journalist: HTMLInputElement,
+    group_scientist: HTMLInputElement,
+    group_critic: HTMLInputElement,
+    group_wasted: HTMLInputElement,
+    group_notwasted: HTMLInputElement,
+    btn_next: HTMLButtonElement,
+    btn_prev: HTMLButtonElement,
+    btn_help: HTMLButtonElement,
+    btn_addgame: HTMLButtonElement,
+    tml_slide: HTMLTemplateElement,
+    tml_game: HTMLTemplateElement,
+    dlg_help: HTMLDivElement,
+    addgame_url: HTMLInputElement,
+    addgame_msg: HTMLSpanElement
+}
+
+/**
  * Game platform info
  */
 export type PlatformInfo = {
@@ -67,4 +93,17 @@ export type SearchResult = {
 export type SlideOptions = {
     text: string,
     games: number
+}
+
+/**
+ * Set focus on voting list item
+ */
+export type S2Callback_focus = (e: HTMLElement, focus: boolean) => void;
+
+/**
+ * Autocomplete API request parameter
+ */
+export type AutocompleteAPIParam = {
+    page: number,
+    search: string
 }

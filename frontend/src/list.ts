@@ -544,5 +544,5 @@ window.addEventListener("load", () => {
     const x = new ListHandler();
     window.addEventListener("click", e => {
         x.click(e.target as HTMLElement);
-    })
+    });
 });

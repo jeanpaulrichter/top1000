@@ -10,333 +10,520 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU General Public License for more details.
 */
 
-import { setupSelect2, setSelect2Value, updateProgress } from "./vote/select2.js";
-import { findGame, findSlide, addGameRequest } from "./vote/help.js";
-import { setFocus } from "./vote/focus.js";
-import { SlideOptions, UserInfo, VoteInfo } from "./vote/types.js";
-import { Tooltip } from "bootstrap";
-import axios from "redaxios";
+import { Tooltip, Modal } from "bootstrap";
+import { default as axios } from "redaxios";
+import { VoteElements, UserInfo, SlideOptions } from "./vote/types.js";
+import { Select2Manager } from "vote/select2.js";
 
 /**
- * Slides with dropdown controls for game selection are dynamiclly created according to this object
+ * Handler for vote page
  */
-const slides: SlideOptions[] = [
-    {
-        "text": "Wähle jetzt deine Top-10 Videospiele aller Zeiten. Wenn du ein Spiel nicht finden kannst, klicke den Hilfe (?) Button rechts oben.",
-        "games": 10
-    },
-    {
-        "text": "Wenn du zu einem Spiel einen kurzen Kommentar hinterlassen möchtest, klicke auf den Button rechts neben jeder Zeile.",
-        "games": 10
-    },
-    {
-        "text": "Fast geschafft! Nur noch zehn weitere Spiele... ",
-        "games": 10
-    }
-]
+class VoteHandler {
+    /**
+     * Important elements in DOM tree
+     */
+    private el: VoteElements;
+    /**
+     * Modal help dialog
+     */
+    private dlg_help: Modal;
+    /**
+     * Array of all tooltips
+     */
+    private tooltips: Tooltip[] = [];
+    /**
+     * Current slide
+     */
+    private cur_step: number;
+    /**
+     * Number of slides
+     */
+    private max_steps: number;
+    /**
+     * Currently selected game dropdown select
+     */
+    private selection: HTMLElement | undefined;
+    /**
+     * Select2 handler
+     */
+    private select2: Select2Manager;
 
-/**
- * Create slides
- */
-function createSlides() {
-    // HTML templates for slide and game selector
-    const tml_slide = document.getElementById("tml_slide") as HTMLTemplateElement;
-    const tml_game = document.getElementById("tml_game") as HTMLTemplateElement;
+    /**
+     * Slides with dropdown controls for game selection are dynamiclly created according to this object
+     */
+    private static slides: SlideOptions[] = [
+        {
+            "text": "Wähle jetzt deine Top-10 Videospiele aller Zeiten. Wenn du ein Spiel nicht finden kannst, klicke den Hilfe (?) Button rechts oben.",
+            "games": 10
+        },
+        {
+            "text": "Wenn du zu einem Spiel einen kurzen Kommentar hinterlassen möchtest, klicke auf den Button rechts neben jeder Zeile.",
+            "games": 10
+        },
+        {
+            "text": "Fast geschafft! Nur noch zehn weitere Spiele... ",
+            "games": 10
+        }
+    ];
 
-    // Main form to append slides to
-    const el_form = document.getElementById("form") as HTMLElement;
-
-    let game_count = 0;
-    let step = 2;
-    const step_max = slides.length + 1;
-
-    for(const slide of slides) {
-        // Create new slide
-        const new_slide = tml_slide.content.cloneNode(true) as HTMLElement;
-        // Relevant nodes of new slide
-        const el_slide_div = new_slide.querySelector("div.slide") as HTMLDivElement;
-        const el_slide_step = new_slide.querySelector("span.slide__step") as HTMLSpanElement;
-        const el_slide_text = new_slide.querySelector("span.slide__text") as HTMLSpanElement;
-        const el_slide_games = new_slide.querySelector("div.slide__games") as HTMLDivElement;
-        const el_slide_buttons = new_slide.querySelectorAll("button");
-
-        // Set slide id
-        el_slide_div.id = `slide${step}`;
-
-        // Setup slide step and help text
-        el_slide_step.innerHTML = `${step}/${step_max}`;
-        el_slide_text.innerHTML = slide.text;
-
-        // Setup slide buttons
-        el_slide_buttons[0].value = "back";
-        el_slide_buttons[0].addEventListener("click", onClickButtonSlide);
-
-        if(step === step_max) {
-            const el_parent = el_slide_buttons[1].parentElement as HTMLElement;
-            el_parent.removeChild(el_slide_buttons[1]);
-        } else {
-            el_slide_buttons[1].value = "next";        
-            el_slide_buttons[1].addEventListener("click", onClickButtonSlide);
+    constructor() {
+        // Find important HTML elements
+        this.el = {
+            "slides": document.getElementById("slides") as HTMLElement,
+            "step": document.getElementById("step") as HTMLDivElement,
+            "progress": document.getElementById("progress") as HTMLDivElement,
+            "gender": document.getElementById("genderSelect") as HTMLSelectElement,
+            "age": document.getElementById("ageSelect") as HTMLSelectElement,
+            "group_hobby": document.getElementById("checkGroupHobby") as HTMLInputElement,
+            "group_journalist": document.getElementById("checkGroupJournalist") as HTMLInputElement,
+            "group_scientist": document.getElementById("checkGroupScientist") as HTMLInputElement,
+            "group_critic": document.getElementById("checkGroupCritic") as HTMLInputElement,
+            "group_wasted": document.getElementById("radioWasted") as HTMLInputElement,
+            "group_notwasted": document.getElementById("radioNotWasted") as HTMLInputElement,
+            "btn_next": document.getElementById("btnNextSlide") as HTMLButtonElement,
+            "btn_prev": document.getElementById("btnPrevSlide") as HTMLButtonElement,
+            "btn_help": document.getElementById("btnHelp") as HTMLButtonElement,
+            "btn_addgame": document.getElementById("btnAddGame") as HTMLButtonElement,
+            "tml_slide": document.getElementById("tml_slide") as HTMLTemplateElement,
+            "tml_game": document.getElementById("tml_game") as HTMLTemplateElement,
+            "dlg_help": document.getElementById("dlgHelp") as HTMLDivElement,
+            "addgame_url": document.getElementById("helpGameURL") as HTMLInputElement,
+            "addgame_msg": document.getElementById("addGameMsg") as HTMLSpanElement
         }
 
-        // Create game selectors for slide
-        for(let i = 0; i < slide.games; i++) {
-            const game_index = game_count + i;
-            const game_number = game_index + 1;
-            const game_name = `game${game_number}`;
+        // Setup select2
+        this.select2 = new Select2Manager(this.el.progress, this.setGameFocus.bind(this));
 
-            // Create new game selector from template
-            const new_game = tml_game.content.cloneNode(true) as HTMLElement;
-            // Relevant nodes of new game selector
-            const el_game_div = new_game.querySelector("div.game") as HTMLDivElement;
-            const el_game_number = new_game.querySelector("span.game__number") as HTMLSpanElement;
-            const el_game_select = new_game.querySelector("select") as HTMLSelectElement;
-            const el_game_btn_expand = new_game.querySelector("button[value='expand']") as HTMLButtonElement;
-            const el_game_textarea = new_game.querySelector("textarea") as HTMLTextAreaElement;
+        // Create slides
+        this.createSlides();
+        this.cur_step = 1;
+        this.max_steps = 1 + VoteHandler.slides.length;
+        this.updateStep();
+        this.select2.load();
 
-            // Setup names, ids and eventhandler etc.
-            el_game_div.dataset.index = game_index.toString();
-            el_game_number.innerHTML = game_number.toString() + ".";
-            el_game_btn_expand.addEventListener("click", onClickButtonExpand);
-            el_game_textarea.id = game_name + "_comment";
-            el_game_textarea.name = game_name + "_comment";
-            el_game_textarea.addEventListener("blur", onGameCommentBlur);
-
-            // Setup select2
-            el_game_select.name = game_name;
-            el_game_select.id = game_name;
-            el_game_select.dataset.position = game_number.toString();
-            el_game_select.dataset.index = game_index.toString();
-            setupSelect2(el_game_select);
-
-            // Add game selector to slide
-            el_slide_games.appendChild(new_game);
+        // Setup tooltips
+        const el_menu = document.getElementById("menu") as HTMLElement;
+        for(const el_tooltip of el_menu.querySelectorAll("button")) {
+            this.tooltips.push(new Tooltip(el_tooltip));
         }
 
-        // Append slide to form
-        el_form.appendChild(new_slide);
+        // Setup help dialog
+        this.dlg_help = new Modal(this.el.dlg_help);
 
-        game_count += slide.games;
-        step += 1;
+        // Setup event handlers
+        this.el.gender.addEventListener("change", this.onChangeUserInfo);
+        this.el.age.addEventListener("change", this.onChangeUserInfo);
+        this.el.group_hobby.addEventListener("change", this.onChangeUserInfo);
+        this.el.group_journalist.addEventListener("change", this.onChangeUserInfo);
+        this.el.group_scientist.addEventListener("change", this.onChangeUserInfo);
+        this.el.group_critic.addEventListener("change", this.onChangeUserInfo);
+        this.el.group_wasted.addEventListener("change", this.onChangeUserInfo);
+        this.el.group_notwasted.addEventListener("change", this.onChangeUserInfo);
+        this.el.btn_next.addEventListener("click", this.onClickNextSlide);
+        this.el.btn_prev.addEventListener("click", this.onClickPrevSlide);
+        this.el.btn_help.addEventListener("click", this.onClickHelp);
+        this.el.btn_addgame.addEventListener("click", this.onClickAddGame);
+        this.el.dlg_help.addEventListener("hidden.bs.modal", this.onCloseHelpDialog);
+        this.el.dlg_help.addEventListener("shown.bs.modal", this.onOpenHelpDialog);
+
+        // Load current user info
+        this.requestUserInfo();
     }
-}
 
-/* ------------------------------------------------------------------------------------------------------------------------------------------ */
-/* Event handlers */
-
-/**
- * Click event handler for expand/collapse button of game selectors
- * @param e Event
- */
-function onClickButtonExpand(e: Event) {
-    if(e.target instanceof HTMLElement) {
-        const el_game = findGame(e.target);
-        if(el_game !== null) {
-            setFocus(el_game, !el_game.classList.contains("game--focus"), true);
-        }
-    }
-}
-
-/**
- * Click event handler for slide buttons
- * @param e Event
- */
-function onClickButtonSlide(e: Event) {
-    const el = e.target as HTMLButtonElement;
-
-    switch(el.value) {
-        case "submit": 
-            break;
-
-        case "next": case "back": {
-            const el_slide = findSlide(el.parentElement as HTMLElement) as HTMLElement;
-            if(el.value === "next") {
-                // Show next slide
-                const el_next = el_slide.nextElementSibling as HTMLElement;
-                el_next.classList.remove("hidden");
-                el_slide.classList.add("hidden");
-            } else {
-                // Show previous slide
-                const el_prev = el_slide.previousElementSibling as HTMLElement;
-                el_prev.classList.remove("hidden");
-                el_slide.classList.add("hidden"); 
+    /**
+     * Handle click somewhere in window...
+     * 
+     * @param el Event target
+     */
+    public click(el: HTMLElement): void {
+        if(this.selection !== undefined) {
+            // Ignore clicks in current select2 (is dynamiclly added to body on focus)
+            if(document.body.lastElementChild && document.body.lastElementChild.tagName === "SPAN" &&
+                document.body.lastElementChild.contains(el)) {
+                return;
             }
-            // Scroll to top after dom changes
-            setTimeout(() => {
-                window.scrollTo(0, 0);
-            }, 10);
-            break;
+            // Ignore clicks in currently selected game
+            if(!this.selection.contains(el)) {
+                this.removeSelection(this.selection);
+            }
         }
     }
-}
 
-/**
- * Save user info on change of controls
- */
-function onChangeUserInfo() {
-    // Get relevant DOM nodes
-    const el_gender = document.getElementById("genderSelect") as HTMLSelectElement;
-    const el_age = document.getElementById("ageSelect") as HTMLSelectElement;
-    const el_group_hobby = document.getElementById("checkGroupHobby") as HTMLInputElement;
-    const el_group_journalist = document.getElementById("checkGroupJournalist") as HTMLInputElement;
-    const el_group_scientist = document.getElementById("checkGroupScientist") as HTMLInputElement;
-    const el_group_critic = document.getElementById("checkGroupCritic") as HTMLInputElement;
-    const el_check_wasted = document.getElementById("radioWasted") as HTMLInputElement;
+    /**
+     * Create slides to select games and add them to DOM
+     */
+    private createSlides() {
+        let game_count = 0;
+    
+        for(const slide of VoteHandler.slides) {
+            // Create new slide
+            const new_slide = this.el.tml_slide.content.cloneNode(true) as HTMLElement;
 
-    const gender = (el_gender.value === "") ? undefined : el_gender.value;
-    const age = el_age.value;
-    const gamer = (el_group_hobby.checked) ? "gamer": undefined;
-    const journalist = (el_group_journalist.checked) ? "journalist": undefined;
-    const scientist = (el_group_scientist.checked) ? "scientist": undefined;
-    const critic = (el_group_critic.checked) ? "critic": undefined;
-    const wasted = (el_check_wasted.checked) ? "yes": undefined;
+            // Relevant nodes of new slide
+            const el_slide_text = new_slide.children[0].children[0].children[0] as HTMLSpanElement;
+            const el_slide_games = new_slide.children[0].children[1] as HTMLDivElement;
+    
+            el_slide_text.innerHTML = slide.text;
+    
+            // Create game selectors for slide
+            for(let i = 0; i < slide.games; i++) {
+                const game_index = game_count + i;
+                const game_number = game_index + 1;
+                const game_name = `game${game_number}`;
+    
+                // Create new game selector from template
+                const new_game = this.el.tml_game.content.cloneNode(true) as HTMLElement;
+                // Relevant nodes of new game selector
+                const el_game_div = new_game.children[0] as HTMLDivElement;
+                const el_game_number = el_game_div.children[0].children[0].children[0] as HTMLSpanElement;
+                const el_game_select = el_game_div.children[0].children[1].children[0] as HTMLSelectElement;
+                const el_game_btn_expand = el_game_div.children[0].children[2].children[0] as HTMLButtonElement;
+                const el_game_textarea = el_game_div.children[1].children[1].children[0] as HTMLTextAreaElement;
+    
+                // Setup names, ids and eventhandler etc.
+                el_game_div.dataset.index = game_index.toString();
+                el_game_number.innerHTML = game_number.toString() + ".";
+                el_game_btn_expand.addEventListener("click", this.onClickButtonExpand);
+                el_game_textarea.id = game_name + "_comment";
+                el_game_textarea.name = game_name + "_comment";
+                el_game_textarea.addEventListener("blur", this.onGameCommentBlur);
+    
+                // Setup select2
+                el_game_select.name = game_name;
+                el_game_select.id = game_name;
+                el_game_select.dataset.position = game_number.toString();
+                el_game_select.dataset.index = game_index.toString();
+                this.select2.add(el_game_select);
+    
+                // Add game selector to slide
+                el_slide_games.appendChild(new_game);
+            }
+    
+            // Append slide to form
+            this.el.slides.appendChild(new_slide);
+    
+            game_count += slide.games;
+        }
+    }
 
-    axios.post("/api/user", {
-        "gender": gender,
-        "age": age,
-        "gamer": gamer,
-        "journalist": journalist,
-        "scientist": scientist,
-        "critic": critic,
-        "wasted": wasted
-    }).catch(err => {
-        console.error(err);
-    });
-}
+    /**
+     * Update current slide info
+     */
+    private updateStep() {
+        this.el.step.innerHTML = this.cur_step.toString() + "/" + this.max_steps.toString();
+        if(this.cur_step == 1) {
+            this.el.btn_prev.disabled = true;
+        } else {
+            this.el.btn_prev.disabled = false;
+        }
+        if(this.cur_step == this.max_steps) {
+            this.el.btn_next.disabled = true;
+        } else {
+            this.el.btn_next.disabled = false;
+        }
+    }
 
-/**
- * Blur event of comment textareas: save content
- * @param e Event
- */
-function onGameCommentBlur(e: Event) {
-    const el_text = e.target as HTMLTextAreaElement;
-    const el_game = findGame(el_text) as HTMLElement;
-    const el_select = el_game.querySelector("select") as HTMLSelectElement;
-    if(el_select.value !== "" && el_text.value !== "") {
-        axios.post("/api/comment", {
-            "position": el_select.dataset.position,
-            "comment": el_text.value
+    /**
+     * Start API request to get current user info
+     */
+    private requestUserInfo(): void {
+        axios.get("api/user").then(ret => {
+            const user = ret.data as UserInfo;
+            if(user !== undefined && !Array.isArray(user)) {
+                this.el.gender.value = user.gender;
+                this.el.age.value = user.age.toString();
+                this.el.group_hobby.checked = user.gamer;
+                this.el.group_journalist.checked = user.journalist;
+                this.el.group_scientist.checked = user.scientist;
+                this.el.group_critic.checked = user.critic;
+                this.el.group_wasted.checked = user.wasted;
+                this.el.group_notwasted.checked = !user.wasted;
+            }
         }).catch(err => {
             console.error(err);
         });
     }
-}
 
-/**
- * Click event handler for "Add Game" button of help dialog
- * @param e Event
- */
-function onClickAddGame(e: Event) {
-    const el_btn = e.target as HTMLButtonElement;
-    const el_input = document.getElementById("helpGameURL") as HTMLInputElement;
-    const el_msg = document.getElementById("addGameMsg") as HTMLDivElement;
-    el_btn.disabled = true;
-    el_input.disabled = true;
-    el_msg.className = "hidden";
-
-    // Try to add game to database...
-    addGameRequest(el_input.value).then(() => {
-        el_msg.className = "help-dialog__msg help-dialog__msg--success";
-        el_msg.innerHTML = "Spiel hinzugefügt."; 
-    }).catch(err => {
-        el_msg.className = "help-dialog__msg help-dialog__msg--error";
-        if(typeof err === "string") {
-            el_msg.innerHTML = err; 
-        }        
-        console.error(err);
-    }).finally(() => {
-        el_btn.disabled = false;
-        el_input.disabled = false;
-    })
-}
-
-/**
- * Hide dialog message on close (for next time...)
- */
-function onCloseHelpDialog() {
-    const el_msg = document.getElementById("addGameMsg") as HTMLDivElement;
-    el_msg.className = "hidden";
-}
-
-/* ------------------------------------------------------------------------------------------------------------------------------------------ */
-
-/**
- * Initialize vote page
- */
-function onLoad() {
-    // Create slides
-    createSlides();
-
-    // Next button of slide1
-    const el_btn = document.getElementById("btnSlide1Next") as HTMLButtonElement;
-    el_btn.addEventListener("click", onClickButtonSlide);
-
-    const el_btn_addgame = document.getElementById("btnAddGame") as HTMLButtonElement;
-    el_btn_addgame.addEventListener("click", onClickAddGame);
-
-    const el_help_dlg = document.getElementById("dlgHelp") as HTMLElement;
-    el_help_dlg.addEventListener("hidden.bs.modal", onCloseHelpDialog);
-    
-
-    // Userinfo controls
-    // Get relevant DOM nodes
-    const el_gender = document.getElementById("genderSelect") as HTMLSelectElement;
-    const el_age = document.getElementById("ageSelect") as HTMLSelectElement;
-    const el_group_hobby = document.getElementById("checkGroupHobby") as HTMLInputElement;
-    const el_group_journalist = document.getElementById("checkGroupJournalist") as HTMLInputElement;
-    const el_group_scientist = document.getElementById("checkGroupScientist") as HTMLInputElement;
-    const el_group_critic = document.getElementById("checkGroupCritic") as HTMLInputElement;
-    const el_check_wasted = document.getElementById("radioWasted") as HTMLInputElement;
-    const el_check_not_wasted = document.getElementById("radioNotWasted") as HTMLInputElement;
-    el_gender.addEventListener("change", onChangeUserInfo);
-    el_age.addEventListener("change", onChangeUserInfo);
-    el_group_hobby.addEventListener("change", onChangeUserInfo);
-    el_group_journalist.addEventListener("change", onChangeUserInfo);
-    el_group_scientist.addEventListener("change", onChangeUserInfo);
-    el_group_critic.addEventListener("change", onChangeUserInfo);
-    el_check_wasted.addEventListener("change", onChangeUserInfo);
-    el_check_not_wasted.addEventListener("change", onChangeUserInfo);
-
-    // Setup tooltips
-    const el_menu = document.getElementById("menu") as HTMLElement;
-    for(const el_tooltip of el_menu.querySelectorAll("button")) {
-        new Tooltip(el_tooltip);
-    }
-
-    // Get initial user info from server
-    axios.get("api/user").then(ret => {
-        const user = ret.data as UserInfo;
-        if(user !== undefined && !Array.isArray(user)) {
-            el_gender.value = user.gender;
-            el_age.value = user.age.toString();
-            el_group_hobby.checked = user.gamer;
-            el_group_journalist.checked = user.journalist;
-            el_group_scientist.checked = user.scientist;
-            el_group_critic.checked = user.critic;
-            el_check_wasted.checked = user.wasted;
-            el_check_not_wasted.checked = !user.wasted;
-        }
-    }).catch(err => {
-        console.error(err);
-    });
-
-    // Get current votes from server
-    axios.get("api/votes").then(ret => {
-        const votes = ret.data as VoteInfo[];
-        if(Array.isArray(votes)) {
-            for(const vote of votes) {
-                const el_select = document.getElementById("game" + vote.position) as HTMLSelectElement;
-                setSelect2Value(el_select, vote);
-                if(typeof vote.comment === "string" && vote.comment.length > 0) {
-                    const el_text = document.getElementById(`game${vote.position}_comment`) as HTMLTextAreaElement;
-                    el_text.value = vote.comment;
-                }
+    /**
+     * API request to add new game
+     * 
+     * @param moby_url Mobygames ID or url
+     */
+    private async addGameRequest(moby_url: string): Promise<void> {
+        try {
+            const ret = await axios.post("/api/addgame", {
+                "moby_url": moby_url
+            });
+            if(ret.status !== 200) {
+                throw ret.statusText;
+            }
+        } catch(exc) {
+            if(typeof exc === "object" && exc !== null && 
+                "status" in exc && exc.status === 40 &&
+                "data" in exc && typeof exc.data === "string" && exc.data.length > 0) {
+                throw exc.data;
+            } else {
+                throw "Es ist ein Fehler aufgetreten";
             }
         }
-        updateProgress();
-    }).catch(err => {
-        console.error(err);
-    });
+    }
+
+    /**
+     * Add/Remove game--selected class from game
+     * 
+     * @param el HTMLElement
+     * @param focus Focus: true/false
+     */
+    private setGameFocus(el: HTMLElement, focus: boolean) {
+        const el_game = this.isPartofGame(el);
+        if(el_game !== undefined) {
+            if(focus) {
+                el_game.classList.add("game--selected");
+            } else {
+                el_game.classList.remove("game--selected");
+            }
+        }
+    }
+
+    /**
+     * Toggle game selection
+     * 
+     * @param el_game game div
+     */
+    private toggleSelection(el_game: HTMLElement): void {
+        if(el_game.classList.contains("game--selected")) {
+            this.removeSelection(el_game);
+            this.selection = undefined;
+        } else {
+            this.setSelection(el_game);
+            this.selection = el_game;
+        }
+    }
+
+    /**
+     * Remove selection from game
+     * 
+     * @param el_game game div
+     */
+    private removeSelection(el_game: HTMLElement): void {
+        const el_body = el_game.children[1] as HTMLDivElement;
+        const el_icon = el_game.children[0].children[2].children[0].children[0] as HTMLSpanElement;
+
+        el_game.classList.remove("game--selected");
+        el_body.classList.add("hidden");
+        el_icon.classList.add("icon-expand");
+        el_icon.classList.remove("icon-collapse");
+
+        if(el_game === this.selection) {
+            this.selection = undefined;
+        }
+    }
+
+    /**
+     * Set game selection
+     * 
+     * @param el_game game div
+     */
+    private setSelection(el_game: HTMLElement): void {
+        // Find relevant dom nodes
+        const el_body = el_game.children[1] as HTMLDivElement;
+        const el_icon = el_game.children[0].children[2].children[0].children[0] as HTMLSpanElement;
+        const el_text = el_body.children[1].children[0] as HTMLTextAreaElement;
+    
+        if(el_game !== this.selection) {
+            el_game.classList.add("game--selected");
+            // Expand body div
+            el_body.classList.remove("hidden");
+            el_icon.classList.remove("icon-expand");
+            el_icon.classList.add("icon-collapse");
+    
+            if(this.selection !== undefined) {
+                // Remove focus from previously focused game
+                const el_cur_body = this.selection.children[1] as HTMLDivElement;
+                const el_cur_icon = this.selection.children[0].children[2].children[0].children[0] as HTMLSpanElement;
+    
+                this.selection.classList.remove("game--selected");
+                el_cur_body.classList.add("hidden");
+                el_cur_icon.classList.add("icon-expand");
+                el_cur_icon.classList.remove("icon-collapse");
+            }
+            this.selection = el_game;
+            el_text.focus();
+        }
+    }
+
+    /**
+     * Return game element if e is part of game
+     * 
+     * @param e HTMLElemnt
+     * @returns Game element or undefined
+     */
+    private isPartofGame(e: HTMLElement): HTMLElement | undefined {
+        while(!e.classList.contains("game") && e.parentElement !== null) {
+            e = e.parentElement;
+        }
+        if(e.classList.contains("game")) {
+            return e;
+        } else {
+            return undefined;
+        }
+    }
+
+    /**
+     * Hide all tooltips
+     */
+    private hideTooltips(): void {
+        for(const tooltip of this.tooltips) {
+            tooltip.hide();
+        }
+    }
+
+    /**
+     * Event handler for any change by user to his gender/age/group
+     */
+    private onChangeUserInfo = () => {
+        const gender = (this.el.gender.value === "") ? undefined : this.el.gender.value;
+        const age = this.el.age.value;
+        const gamer = (this.el.group_hobby.checked) ? "gamer": undefined;
+        const journalist = (this.el.group_journalist.checked) ? "journalist": undefined;
+        const scientist = (this.el.group_scientist.checked) ? "scientist": undefined;
+        const critic = (this.el.group_critic.checked) ? "critic": undefined;
+        const wasted = (this.el.group_wasted.checked) ? "yes": undefined;
+    
+        axios.post("/api/user", {
+            "gender": gender,
+            "age": age,
+            "gamer": gamer,
+            "journalist": journalist,
+            "scientist": scientist,
+            "critic": critic,
+            "wasted": wasted
+        }).catch(err => {
+            console.error(err);
+        });
+    }
+
+    /**
+     * "click" event handler for next slide button
+     */
+    private onClickNextSlide = () => {
+        if(this.cur_step < this.max_steps) {
+            this.el.slides.children[this.cur_step - 1].classList.add("hidden");
+            this.el.slides.children[this.cur_step].classList.remove("hidden");
+            this.cur_step++;
+            this.updateStep();
+        }
+    }
+
+    /**
+     * "click" event handler for previous slide button
+     */
+    private onClickPrevSlide = () => {
+        if(this.cur_step > 1) {
+            this.cur_step--;
+            this.el.slides.children[this.cur_step].classList.add("hidden");
+            this.el.slides.children[this.cur_step - 1].classList.remove("hidden");
+            this.updateStep();
+        }
+    }
+
+    /**
+     * "click" event handler for help dialog button
+     */
+    private onClickHelp = () => {
+        this.hideTooltips();
+        this.dlg_help.toggle();        
+    }
+
+    /**
+     * "click" event handler for "add game" button of help dialog
+     */
+    private onClickAddGame = () => {
+        this.el.btn_addgame.disabled = true;
+        this.el.addgame_url.disabled = true;
+        this.el.addgame_msg.className = "hidden";
+    
+        // Try to add game to database...
+        this.addGameRequest(this.el.addgame_url.value).then(() => {
+            this.el.addgame_msg.classList.add("help-dialog__msg--success");
+            this.el.addgame_msg.classList.remove("help-dialog__msg--error");
+            this.el.addgame_msg.innerHTML = "Spiel hinzugefügt."; 
+        }).catch((err: unknown) => {
+            this.el.addgame_msg.classList.remove("help-dialog__msg--success");
+            this.el.addgame_msg.classList.add("help-dialog__msg--error");
+            if(typeof err === "string") {
+                this.el.addgame_msg.innerHTML = err;
+            } else {
+                this.el.addgame_msg.innerHTML = "Hinzufügen fehlgeschlagen";
+            }
+            console.error(err);
+        }).finally(() => {
+            this.el.btn_addgame.disabled = false;
+            this.el.addgame_url.disabled = false;
+        })
+    }
+
+    /**
+     * Called when help dialog was closed
+     */
+    private onCloseHelpDialog = () => {
+        const el_msg = document.getElementById("addGameMsg") as HTMLDivElement;
+        el_msg.className = "hidden";
+    }
+
+    /**
+     * Called when help dialog is opened
+     */
+    private onOpenHelpDialog = () => {
+        this.el.addgame_url.focus();
+    }
+
+    /**
+     * "click" event handler for expand game button (to show comment input element)
+     * 
+     * @param e Event
+     */
+    private onClickButtonExpand = (e: Event) => {
+        if(e.target instanceof HTMLElement) {
+            const el_game = this.isPartofGame(e.target);
+            if(el_game !== undefined) {
+                e.stopPropagation();
+                this.toggleSelection(el_game);
+            }
+        }
+    }
+
+    /**
+     * Blur event handler for comment textareas: save comment
+     * 
+     * @param e Event
+     */
+    private onGameCommentBlur = (e: Event) => {
+        const el_text = e.target as HTMLTextAreaElement;
+        const el_game = this.isPartofGame(el_text) as HTMLElement;
+        if(el_game !== undefined) {
+            const el_select = el_game.children[0].children[1].children[0] as HTMLSelectElement;
+
+            if(el_select.value !== "" && el_text.value !== "") {
+                axios.post("/api/comment", {
+                    "position": el_select.dataset.position,
+                    "comment": el_text.value
+                }).then(ret => {
+                    if(typeof ret.data === "object" && ret.data !== null && "comment" in ret.data &&
+                        typeof ret.data.comment === "string") {
+                        el_text.value = ret.data.comment;
+                    }
+                }).catch(err => {
+                    console.error(err);
+                });
+            }
+        }
+    }
 }
 
-window.addEventListener("load", onLoad);
+window.addEventListener("load", () => {
+    const x = new VoteHandler();
+    window.addEventListener("click", e => {
+        x.click(e.target as HTMLElement);
+    });
+});

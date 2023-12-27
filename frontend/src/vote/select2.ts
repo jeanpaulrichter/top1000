@@ -10,220 +10,281 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU General Public License for more details.
 */
 
-import { SearchResult, GameInfo } from "./types.js";
-import { findGame, getLabel } from "./help.js";
-import { setFocus } from "./focus.js";
-import axios from "redaxios";
+import { SearchResult, GameInfo, VoteInfo, S2Callback_focus, AutocompleteAPIParam } from "./types.js";
+import { default as axios } from "redaxios";
 import "select2";
 
-// Array to save all currently selected game ids
-const game_ids: string[] = [];
-// Flag if custom eventhandler set
-let eventhandler_set = false;
-
-/* ------------------------------------------------------------------------------------------------------------------------------------------ */
-
-export function updateProgress() {
-    let votes = 0;
-    for(let i = 0; i < game_ids.length; i++) {
-        if(game_ids[i].length === 24) {
-            votes++;
-        }
-    }
-    const percent = Math.round(votes * 100 / game_ids.length);
-    const el_progress = document.getElementById("progress") as HTMLElement;
-    el_progress.innerHTML = `${percent}%`;
-}
-
-/* ------------------------------------------------------------------------------------------------------------------------------------------ */
-
 /**
- * Returns correct GET request parameter for API autocomplete request
- * @param params QueryOptions from select2
- * @returns 
+ * Manager of jquery/select2 dropdown elements
  */
-function select2_api_query(params: Select2.QueryOptions) {
-    return {
-        "search": params.term,
-        "page": params.page !== undefined ? params.page : 1
-    }
-}
+export class Select2Manager {
+    /**
+     * Callback to set focus on voting list item
+     */
+    private cb_focus_game: S2Callback_focus;
+    /**
+     * Progress div
+     */
+    private el_progress: HTMLElement;
+    /**
+     * Array of selected game ids
+     */
+    private selected_games: string[] = [];
 
-/**
- * Process API request result before showing autocomplete
- * @param data SearchResult
- * @returns processed data
- */
-function select2_processResults(data: SearchResult) {
-    // Make sure already selected games are not included in autocomplete
-    if(Array.isArray(data.results)) {
-        data.results = data.results.filter(el => {
-            return !game_ids.includes(el.id);
+    constructor(el_progress: HTMLElement, cb_focus_game: S2Callback_focus) {
+        // Setup select2 event handlers
+        const doc = $(document);
+        doc.on("select2:opening", this.onOpening);
+        doc.on("select2:open", this.onOpen);
+        doc.on("select2:close", this.onClose);
+        doc.on("select2:selecting", this.onSelecting);
+
+        this.el_progress = el_progress;
+        this.cb_focus_game = cb_focus_game;
+    }
+
+    /**
+     * Setup new select2 element
+     * 
+     * @param e HTML select element
+     */
+    public add(e: HTMLElement): void {
+        $(e).select2({
+            "ajax": {
+                "url": "/api/search",
+                "dataType": "json",
+                "data": this.apiQuery.bind(this),
+                "processResults": this.processResults.bind(this)
+            },
+            "templateResult": this.templateResult.bind(this),
+            "templateSelection": this.templateSelection.bind(this)
+        });
+        // Increase size of selected games array
+        this.selected_games.push("");
+    }
+
+    /**
+     * Get current user votes from API
+     */
+    public load(): void {
+        axios.get("api/votes").then(ret => {
+            const votes = ret.data as VoteInfo[];
+            if(Array.isArray(votes)) {
+                for(const vote of votes) {
+                    const el_select = document.getElementById("game" + vote.position) as HTMLSelectElement;
+
+                    // Set select2 set GameInfo
+                    const game_index = parseInt(el_select.dataset.index as string);
+                    const newOption = new Option(this.getLabel(vote), vote.id, false, false);
+                    $(el_select).html("").append(newOption).trigger("change");
+                    this.selected_games[game_index] = vote.id;
+
+                    if(typeof vote.comment === "string" && vote.comment.length > 0) {
+                        const el_text = document.getElementById(`game${vote.position}_comment`) as HTMLTextAreaElement;
+                        el_text.value = vote.comment;
+                    }
+                }
+            }
+            this.updateProgress();
+        }).catch(err => {
+            console.error(err);
         });
     }
-    return data;
-}
 
-/**
- * Returns html for autocomplete entry
- * @param data GameInfo
- * @returns 
- */
-function select2_template(data: GameInfo | Select2.LoadingData) {
-    if((data as Select2.LoadingData).loading === undefined) {
-        const item = data as GameInfo;
-        const label = getLabel(item);
-        const icon = (typeof item.icon === "string" && item.icon.length > 0) ? "data:image/webp;base64," + item.icon : "images/icon_missing.png";
-
-        return $("<div class=\"select2__suggestion\"><img src=\"" + icon + "\"/><span>" + label + "</span></div>");
-    } else {
-        return "";
-    }
-}
-
-/**
- * Returns label for selected game
- * @returns label string
- */
-function select2_label(data: GameInfo | Select2.LoadingData | Select2.IdTextPair) {
-    if(typeof (data as GameInfo).title === "string") {
-        return getLabel(data as GameInfo);
-    } else {
-        return "";
-    }
-}
-
-/* ------------------------------------------------------------------------------------------------------------------------------------------ */
-
-/**
- * Create new select2 element
- * @param el HTML select element
- */
- export function setupSelect2(el: HTMLSelectElement) {
-    if(!eventhandler_set) {
-        const doc = $(document);
-        doc.on("select2:opening", onSelect2Opening);
-        doc.on("select2:open", onSelect2Open);
-        doc.on("select2:close", onSelect2Close);
-        doc.on("select2:selecting", onSelect2Selecting);
-        eventhandler_set = true;
-    }
-
-    $(el).select2({
-        "ajax": {
-            "url": "/api/search",
-            "dataType": "json",
-            "data": select2_api_query,
-            "processResults": select2_processResults
-        },
-        "templateResult": select2_template,
-        "templateSelection": select2_label
-    });
-
-    // Increase size of game_ids array
-    game_ids.push("");
-}
-
-/**
- * Highlight select2 control
- * @param el Original select element
- * @param highlight
- */
-export function hightlightSelect2(el: HTMLSelectElement, highlight: boolean) {
-    // Find span created by select2 as label for select (maybe better search for span.select2-selection...)
-    let el_game_span = el.nextElementSibling as HTMLElement;
-    el_game_span = el_game_span.children[0].children[0] as HTMLSpanElement;
-
-    if(highlight) {
-        el_game_span.classList.add("select2--highlight");
-    } else {
-        el_game_span.classList.remove("select2--highlight");
-    }
-}
-
-/**
- * Set the value of an select2 element
- * @param el DOM select element of select2
- * @param game New value of select2
- */
-export function setSelect2Value(el: HTMLSelectElement, game: GameInfo) {
-    const game_index = parseInt(el.dataset.index as string);
-    const newOption = new Option(getLabel(game), game.id, false, false);
-    $(el).html("").append(newOption).trigger("change");
-    game_ids[game_index] = game.id;
-}
-
-/* ------------------------------------------------------------------------------------------------------------------------------------------ */
-/* Event handler */
-
-/**
- * Called before a select2 dropdown is opened
- * @param e 
- */
-function onSelect2Opening(e: Event) {
-    if(e.target instanceof HTMLElement) {
-        e.stopPropagation();
-        const el_game = findGame(e.target);
-        // Select corresponding game
-        if(el_game !== null) {
-            setFocus(el_game, true);
+    /**
+     * Returns label string for game
+     * 
+     * @param item GameInfo
+     * @returns label string
+     */
+    private getLabel(item: GameInfo): string {
+        if(item.text !== undefined) {
+            return item.text;
+        } else {
+            if(item.platforms !== undefined) {
+                let platforms = "";
+                for(let i = 0; i < item.platforms.length && i < 6; i++) {
+                    if(i > 0) {
+                        platforms += ", ";
+                    }
+                    platforms += item.platforms[i].name;
+                }
+                if(item.platforms.length > 6) {
+                    platforms += "...";
+                }
+                return item.title + " (" + item.year + ") [" + platforms + "]";
+            } else {
+                if(item.year !== 0) {
+                    return item.title + " (" + item.year + ")";
+                } else {
+                    return item.title;
+                }        
+            }
         }
     }
-}
 
-/**
- * Called when a select2 dropdown was opened
- */
-function onSelect2Open() {
-    setTimeout(() => {
-        // focus current select2 input field
-        const x = document.querySelector('.select2-search__field') as HTMLElement;
-        if(x !== null) {
-            x.focus();
+    /**
+     * Update voting progress
+     */
+    private updateProgress(): void {
+        let votes = 0;
+        for(let i = 0; i < this.selected_games.length; i++) {
+            if(this.selected_games[i].length === 24) {
+                votes++;
+            }
         }
-    }, 10);  
-}
+        const percent = Math.round(votes * 100 / this.selected_games.length);
+        this.el_progress.innerHTML = `${percent}%`;
+    }
 
-/**
- * Called when a select2 dropdown was closed
- * @param e Event
- */
-function onSelect2Close(e: Event) {
-    if(e.target instanceof HTMLElement) {
-        const el_game = findGame(e.target);
-        // Remove focus from currently selected game
-        if(el_game !== null) {
-            setFocus(el_game, false);
+    /**
+     * Add/remove select2--hightlight class to/from select2
+     * 
+     * @param el HTML select element
+     * @param highlight Highlight select2 yes/no
+     */
+    private highlight(el: HTMLElement, highlight: boolean): void {
+        // Find span created by select2 as label for select (maybe better search for span.select2-selection...)
+        let el_game_span = el.nextElementSibling as HTMLElement;
+        el_game_span = el_game_span.children[0].children[0] as HTMLSpanElement;
+    
+        if(highlight) {
+            el_game_span.classList.add("select2--highlight");
+        } else {
+            el_game_span.classList.remove("select2--highlight");
         }
     }
-}
 
-/**
- * Called before select2 selection
- * @param e event (should get rid of any...)
- */
-function onSelect2Selecting(e: any) {
-    // Stop selection
-    e.preventDefault();
+    /**
+     * Returns correct GET request parameter for API autocomplete request
+     * 
+     * @param params QueryOptions from select2
+     * @returns GET request parameter
+     */
+    private apiQuery(params: Select2.QueryOptions): AutocompleteAPIParam {
+        return {
+            "search": params.term ? params.term : "",
+            "page": params.page !== undefined ? params.page : 1
+        }
+    }
 
-    const el_select = e.target as HTMLSelectElement;
-    const game = e.params.args.data as GameInfo;
-    const game_index = parseInt(el_select.dataset.index as string);
+    /**
+     * Filter out already selected games from autocomplete result
+     * 
+     * @param data SearchResult
+     * @returns SearchResult
+     */
+    private processResults(data: SearchResult): SearchResult {
+        if(Array.isArray(data.results)) {
+            data.results = data.results.filter(el => {
+                return !this.selected_games.includes(el.id);
+            });
+        }
+        return data;
+    }
 
-    // Try to save vote and only on success change select2 selection
-    axios.post("/api/vote",  {
-        "game": game.id,
-        "position": el_select.dataset.position
-    }).then(() => {
-        const newOption = new Option(getLabel(game), game.id, false, false);
-        $(el_select).html("").append(newOption).trigger("change").select2("close");
-        // Save id of selected game
-        game_ids[game_index] = game.id;
-        // Remove hightlight from select
-        hightlightSelect2(el_select, false);
-        updateProgress();
-    }).catch(err => {
-        console.error(err);
-        $(el_select).select2("close");
-    });
+    /**
+     * Returns html for autocomplete entry
+     * 
+     * @param data GameInfo
+     * @returns 
+     */
+    private templateResult(data: GameInfo | Select2.LoadingData) {
+        if((data as Select2.LoadingData).loading === undefined) {
+            const item = data as GameInfo;
+            const label = this.getLabel(item);
+            const icon = (typeof item.icon === "string" && item.icon.length > 0) ? "data:image/webp;base64," + item.icon : "images/icon_missing.png";
+
+            return $("<div class=\"select2__suggestion\"><img src=\"" + icon + "\"/><span>" + label + "</span></div>");
+        } else {
+            return "";
+        }
+    }
+
+    /**
+     * Returns label for selected game
+     * 
+     * @returns label string
+     */
+    private templateSelection(data: GameInfo | Select2.LoadingData | Select2.IdTextPair) {
+        if(typeof (data as GameInfo).title === "string") {
+            return this.getLabel(data as GameInfo);
+        } else {
+            return "";
+        }
+    }
+
+    /**
+     * Called before a select2 dropdown is opened
+     * 
+     * @param e Event
+     */
+    private onOpening = (e: Event) => {
+        if(e.target instanceof HTMLElement) {
+            e.stopPropagation();
+            this.highlight(e.target, true);
+            this.cb_focus_game(e.target, true);
+        }
+    }
+
+    /**
+     * Called when a select2 dropdown was opened
+     */
+    private onOpen = () => {
+        setTimeout(() => {
+            // focus current select2 input field
+            const x = document.querySelector('.select2-search__field') as HTMLElement;
+            if(x !== null) {
+                x.focus();
+            }
+        }, 10);  
+    }
+
+    /**
+     * Called when a select2 dropdown was closed
+     * 
+     * @param e Event
+     */
+    private onClose = (e: Event) => {
+        if(e.target instanceof HTMLElement) {
+            this.cb_focus_game(e.target, false);
+            this.highlight(e.target, false);
+        }
+    }
+
+    /**
+     * Called before select2 selection
+     * 
+     * @param e event (should get rid of any...)
+     */
+    private onSelecting = (evt: Event) => {
+        // Stop default selection
+        evt.preventDefault();
+
+        if(!(evt.target !== null && "params" in evt && typeof evt.params === "object" && evt.params !== null && 
+            "args" in evt.params && typeof evt.params.args === "object" && evt.params.args !== null &&
+            "data" in evt.params.args && typeof evt.params.args.data === "object" && evt.params.args.data !== null)) {
+            return;
+        }
+        const el_select = evt.target as HTMLSelectElement;
+        const game = evt.params.args.data as GameInfo;
+        const game_index = parseInt(el_select.dataset.index as string);
+
+        // Try to save vote and only on success change select2 selection
+        axios.post("/api/vote",  {
+            "game": game.id,
+            "position": el_select.dataset.position
+        }).then(() => {
+
+            // Set select2 value
+            const newOption = new Option(this.getLabel(game), game.id, false, false);
+            $(el_select).html("").append(newOption).trigger("change").select2("close");
+            this.selected_games[game_index] = game.id;
+
+            this.updateProgress();
+        }).catch(err => {
+            console.error(err);
+            $(el_select).select2("close");
+        });
+    }
 }

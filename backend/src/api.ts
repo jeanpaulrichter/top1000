@@ -156,9 +156,12 @@ export class APIRouter
             const position = validateInteger(req.body.position, "Invalid position", 1, 100);
 
             // Update database
-            await this.db.updateComment(user.id, position, comment);
+            const new_comment = await this.db.updateComment(user.id, position, comment);
 
-            res.send({});
+            res.send({
+                "error": false,
+                "comment": new_comment
+            });
         } catch(exc) {
             next(exc);
         }

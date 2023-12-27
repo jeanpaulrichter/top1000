@@ -37,14 +37,12 @@ GNU General Public License for more details.
           <h1>Wasted (<img src="images/angel.svg">) Top1000</h1>
           <nav id="menu">
             <a href="/"><button class="icon-list" value="list" data-bs-placement="bottom" title="Zur Liste"></button></a>
-            <button class="icon-help" data-bs-toggle="modal" data-bs-target="#dlgHelp"></button>
+            <button class="icon-help" id="btnHelp" data-bs-placement="bottom" title="Hilfe"></button>
             <a href="/user/logout"><button class="icon-logout" data-bs-placement="bottom" title="Logout"></button></a>
           </nav>
         </div>
-        <div id="progress"></div>
-        <form id="form">
+        <form id="slides">
           <div id="slide1" class="slide">
-            <span class="slide__step">1/4</span>
             <div class="slide__info">
                 <span class="slide__text">
                   Hallo! Willkommen zur Abstimmung über die Wasted Top1000! Gefragt sind deine persönlichen Top-30 Videospiele: 
@@ -117,20 +115,24 @@ GNU General Public License for more details.
                 </div>
               </div>
             </div>
-            <div class="slide__buttons">
-              <button type="button" class="icon-next" value="next" id="btnSlide1Next"></button>
-            </div>
-            <div class="slide__footer"></div>
           </div>
         </form>
+        <div id="footer">
+          <div class="footer__buttons">
+            <button type="button" class="icon-prev" id="btnPrevSlide"></button>
+            <button type="button" class="icon-next" id="btnNextSlide"></button>
+          </div>
+          <div class="footer__progress" id="progress"></div>
+          <div class="footer__step" id="step">1/4</div>
+        </div>
       </div>
     </div>
 
     <div class="modal fade" id="dlgHelp" tabindex="-1">
-      <div class="modal-dialog">
+      <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content help-dialog">
           <div class="modal-header">
-            <h5 class="modal-title">Hilfe</h5>
+            <h5 class="modal-title"><b>Hilfe</b></h5>
             <button type="button" class="btn-close help-dialog-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
@@ -149,33 +151,26 @@ GNU General Public License for more details.
       </div>
     </div>
 
-    <!-- To remain flexible (i.e. ask user for top10, top15 or topXXX) slides with game select dropdowns are created dynamically from these templates (see script) -->
     <template id="tml_slide">
       <div class="slide hidden">
-        <span class="slide__step"></span>
         <div class="slide__info">
           <span class="slide__text"></span>
           <span class="slide__error hidden">Bitte fülle das Formular vollständig aus!</span>
         </div>
         <div class="slide__games"></div>
-        <div class="slide__buttons">
-          <button type="button" class="icon-prev"></button>
-          <button type="button" class="icon-next"></button>
-        </div>
-        <div class="slide__footer"></div>
       </div>
     </template>
 
     <template id="tml_game">
       <div class="game">
         <div class="game__head">
-          <div><span class="game__number"></span></div>
-          <div><select style="width: 100%; height: 100%"></select></div>
-          <div><button type="button" value="expand"><span class="game__expand icon-expand"></span></button></div>
+          <div class="game__number"><span></span></div>
+          <div class="game_select"><select style="width: 100%; height: 100%"></select></div>
+          <div class="game__expand"><button type="button" value="expand"><span class="icon-expand"></span></button></div>
         </div>
         <div class="game__body hidden">
-          <div></div>
-          <div><textarea></textarea></div>
+          <div class="game__spacer"></div>
+          <div class="game__comment"><textarea></textarea></div>
         </div>
       </div>
     </template>
