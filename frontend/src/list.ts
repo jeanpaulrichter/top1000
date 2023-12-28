@@ -219,6 +219,13 @@ class ListHandler {
                 this.el.games.appendChild(this.el.tml_game.content.cloneNode(true));
                 const el_game = this.el.games.lastElementChild as HTMLDivElement;
                 el_game.children[0].addEventListener("click", this.onClickGameHead);
+                // not ideal .... :)
+                const el_btn_help = el_game.children[1].children[0].children[1].children[0].children[3].children[1].children[1] as HTMLButtonElement;
+                this.tooltips.push(new Tooltip(el_btn_help, {
+                    "title": ListHandler.getHelpString as (() => string),
+                    "placement": "right"
+                }));
+                //el_btn_help.addEventListener("click", this.onClickHelp);
             }
 
             if(data.length > 0) {
@@ -249,6 +256,13 @@ class ListHandler {
             console.error(exc);
         } finally {
             this.el.mask.classList.add("hidden");
+        }
+    }
+
+    private static getHelpString(el: HTMLElement) {
+        switch(el.dataset.helpid) {
+            case "0": return "Das letztplatzierte Spiel eines Benutzers erhält gewichtet einen Punkt. Das erstplatzierte dagegen 10 Punkte.";
+            default: return "";
         }
     }
 
@@ -314,7 +328,7 @@ class ListHandler {
         el_votes.innerHTML = votes.toString();
 
         // Score
-        const el_score = el_table.children[3].children[1] as HTMLDivElement;
+        const el_score = el_table.children[3].children[1].children[0] as HTMLDivElement;
         el_score.innerHTML = score.toFixed(3).toString();
 
         // Screenshot
@@ -370,31 +384,99 @@ class ListHandler {
      * @param current Current page number
      */
     private setupPages(pages: number, current: number): void {
+
+        let nButtons = 0;
+        if(pages > 3) {
+            nButtons = 7;
+        } else if(pages > 1) {
+            nButtons = pages + 2;
+        } else {
+            nButtons = 0;
+        }
+
         // Remove not needed buttons
-        while(this.el.pages.children.length > pages && this.el.pages.lastElementChild !== null) {
+        while(this.el.pages.children.length > nButtons && this.el.pages.lastElementChild !== null) {
             this.el.pages.removeChild(this.el.pages.lastElementChild);
         }
     
         // Create needed buttons
-        while(this.el.pages.children.length < pages && this.el.pages.children.length < 500) {
+        while(this.el.pages.children.length < nButtons) {
             const el_btn = document.createElement("BUTTON") as HTMLButtonElement;
-            const page = this.el.pages.children.length + 1;
-            const page_str = page.toString();
-            el_btn.innerHTML = page_str;
-            el_btn.dataset.page = page_str;
             el_btn.addEventListener("click", this.onClickPage);
             this.el.pages.appendChild(el_btn);
         }
-    
-        // Set current button
-        for(let i = 0; i < this.el.pages.children.length; i++) {
-            const el_btn = this.el.pages.children[i] as HTMLButtonElement;
-            if(i === current - 1) {
-                el_btn.className = "page--current";
-                el_btn.disabled = true;
-            } else {
-                el_btn.className = "";
-                el_btn.disabled = false;
+
+        // Create 7 button pagination
+        if(nButtons === 7) {
+            const el_first = this.el.pages.children[0] as HTMLButtonElement;
+            el_first.dataset.page = "1";
+            el_first.className = "icon-first";
+            el_first.disabled = (current == 1);
+
+            const el_prev = this.el.pages.children[1] as HTMLButtonElement;
+            const prev_str = (current - 1).toString();
+            el_prev.dataset.page = prev_str;
+            el_prev.className = "icon-prev";
+            el_prev.disabled = (current == 1);
+
+            let i_page = current - 1;
+            if(current == 1) {
+                i_page = 1;
+            } else if(current == pages) {
+                i_page = pages - 2;
+            }
+            for(let i = 2; i < 5; i++) {
+                const el_btn = this.el.pages.children[i] as HTMLButtonElement;
+                const page_str = i_page.toString();
+                el_btn.dataset.page = page_str;
+                el_btn.innerHTML = page_str;
+                if(i_page === current) {
+                    el_btn.className = "page--current";
+                    el_btn.disabled = true;
+                } else {
+                    el_btn.className = "";
+                    el_btn.disabled = false;
+                }
+                i_page++;
+            }
+
+            const el_next = this.el.pages.children[5] as HTMLButtonElement;
+            const next_str = (current + 1).toString();
+            el_next.dataset.page = next_str;
+            el_next.className = "icon-next";
+            el_next.disabled = (current == pages);
+
+            const el_last = this.el.pages.children[6] as HTMLButtonElement;
+            el_last.dataset.page = pages.toString();
+            el_last.className = "icon-last";
+            el_last.disabled = (current == pages);
+        } else {
+            // Pagination with next and previous buttons
+            
+            const el_prev = this.el.pages.children[0] as HTMLButtonElement;
+            const prev_str = (current - 1).toString();
+            el_prev.dataset.page = prev_str;
+            el_prev.disabled = (current - 1 < 1);
+            el_prev.className = "icon-prev";
+
+            const el_next = this.el.pages.children[this.el.pages.children.length - 1] as HTMLButtonElement;
+            const next_str = (current + 1).toString();
+            el_next.dataset.page = next_str;
+            el_next.disabled = (current + 1 > pages);
+            el_next.className = "icon-next";
+
+            for(let i = 1; i < nButtons - 1; i++) {
+                const el_btn = this.el.pages.children[i] as HTMLButtonElement;
+                const page_str = i.toString();
+                el_btn.dataset.page = page_str;
+                el_btn.innerHTML = page_str;
+                if(i === current) {
+                    el_btn.className = "page--current";
+                    el_btn.disabled = true;
+                } else {
+                    el_btn.className = "";
+                    el_btn.disabled = false;
+                }
             }
         }
     }
@@ -458,6 +540,11 @@ class ListHandler {
         this.dlg_statistics.toggle();
     }
 
+    /**
+     * User changed chart of statistics dialog
+     * 
+     * @param e Bootstrap event
+     */
     private onStatisticsSwitch = (e: unknown) => {
         if(typeof e === "object" && e !== null && "to" in e) {
             switch(e.to) {

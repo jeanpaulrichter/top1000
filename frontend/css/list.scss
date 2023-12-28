@@ -40,15 +40,35 @@ GNU General Public License for more details.
 
 #pages {
     margin-top: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
     button {
+        color: white;
+        font-weight: bold;
+        font-size: 1.5rem;
         border: 0;
-        border-right: 1px solid $background-color;
-        background-color: white;
+        min-width: 2.5rem;
+        min-height: 2.5rem;
+        background-repeat: no-repeat;
+        background-position: 50%;
+        background-color: transparent;
+        background-size: 100%;
 
-        &:hover {
+        &:not(.page--current) {
+            &:disabled {
+                filter: saturate(5%) brightness(5%) contrast(5%);
+            }
+        }
+
+        &:hover:enabled {
             background-color: $wasted-color;
         }
+    }
+
+    .page--current {
+        background-color: $wasted-color !important;
     }
 }
 
@@ -67,10 +87,7 @@ GNU General Public License for more details.
 
 /* ------------------------------------------------------------------------------------------------------------------------------------------ */
 
-.page--current {
-    background-color: $wasted-color !important;
-    color: black;
-}
+
 
 .game--selected {
     .game__expand {
@@ -79,7 +96,7 @@ GNU General Public License for more details.
             transform: rotate(180deg);
         }
     }
-    span {
+    .game__head span {
         color: $wasted-color !important;
     }
     .game__head {
@@ -237,6 +254,30 @@ GNU General Public License for more details.
         flex-shrink: 1;
         width: 50%;
         padding-top: 0.5rem;
+    }
+
+    .game__table--button {
+        display: inline-flex;
+        align-items: center;
+
+        button {
+            width: 1.2rem;
+            height: 1.2rem;
+            border: none;
+            background-repeat: no-repeat;
+            background-position: 50%;
+            background-color: transparent;
+            background-size: 100%;
+            border-radius: 50%;
+            margin-left: 0.1rem;
+            margin-right: 0.1rem;
+            margin-top: 0;
+            margin-bottom: 0;
+        
+            &:hover {
+                filter: brightness(0) saturate(100%) invert(30%) sepia(63%) saturate(5260%) hue-rotate(319deg) brightness(96%) contrast(100%);
+            }
+        }
     }
 
     .game__lastline {
