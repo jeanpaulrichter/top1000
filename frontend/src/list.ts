@@ -326,8 +326,14 @@ class ListHandler {
         el_description.innerHTML = game.description;
 
         // Comments
-        const el_comments = el_body.children[1].children[0] as HTMLDivElement;
-        this.setupComments(el_comments, comments);
+        const el_comments_caption = el_body.children[1].children[0] as HTMLDivElement;
+        const el_comments_ul = el_body.children[1].children[1] as HTMLDivElement;
+        if(comments.length > 0) {
+            el_comments_caption.innerHTML = "Kommentare: ";
+        } else {
+            el_comments_caption.innerHTML = "";
+        }
+        this.setupComments(el_comments_ul, comments);
     }
 
     /**

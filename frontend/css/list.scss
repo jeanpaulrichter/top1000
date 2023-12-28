@@ -191,15 +191,27 @@ GNU General Public License for more details.
     }
 
     .game__comments {
+        display: flex;
         padding-left: 3rem;
-        padding-right: 2.5rem;
-        padding-bottom: 1rem;
+        padding-right: 3rem;
 
-        p {
-            font-size: 1.2rem;
-            font-style: italic;
-            margin: 0.3rem;
+        >div {
+            flex-grow: 0;
         }
+
+        >ul {
+            flex-grow: 1;
+            padding-left: 3rem;
+            padding-right: 2.5rem;
+            padding-bottom: 1rem;
+    
+            p {
+                font-size: 1.2rem;
+                font-style: italic;
+                margin: 0.3rem;
+            }
+        }
+
     }
 
     .game__cover {
