@@ -62,14 +62,15 @@ export class ChartManager {
      * @param category Game category visualized by chart
      * @param title Title for chart
      * @param whitelist Whitelist for category entries (optional)
+     * @param horizontal Horizontal bar chart (optional)
      * 
      */
-    public add(el_canvas: HTMLCanvasElement, type: ChartType, category: `${GameCategory}`, title: string, whitelist?: string[]) {
+    public add(el_canvas: HTMLCanvasElement, type: ChartType, category: `${GameCategory}`, title: string, whitelist?: string[], horizontal?: boolean) {
         this.charts.push({
             "category": category,
             "chart": new Chart(el_canvas, {
                 "type": type,
-                "options": this.getChartOptions(type, title),
+                "options": this.getChartOptions(type, title, horizontal),
                 "data": { "labels": [], "datasets": [] }
             }),
             "whitelist": whitelist
@@ -153,7 +154,7 @@ export class ChartManager {
      * @param title Title of chart
      * @returns ChartOptions
      */
-    private getChartOptions(type: ChartType, title: string): ChartOptions {
+    private getChartOptions(type: ChartType, title: string, horizontal = false): ChartOptions {
         switch(type) {
             case "doughnut": case "pie": {
                 return {
@@ -215,7 +216,7 @@ export class ChartManager {
                             "bottom": 30
                         }
                     },
-                    "indexAxis": "y",
+                    "indexAxis": horizontal ? "x" : "y",
                     "datasets": {
                         "bar": {
                             "barThickness": 12,

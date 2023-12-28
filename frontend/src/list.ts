@@ -58,7 +58,7 @@ class ListHandler {
             "Xbox", "Xbox 360", "Xbox One", "DOS", "Atari ST", "Commodore 64", "Amiga", "Wii U", "SEGA Saturn", "SEGA Master System",
             "PSP", "Nintendo Switch", "Windows"
         ] },
-        { "category": "decades", "title": "Jahrzehnte", "id": "chart_years", "type": "bar" }
+        { "category": "decades", "title": "Jahrzehnte", "id": "chart_years", "type": "bar", "horizontal": true }
     ];
     /**
      * Regex chain to encode user comments
@@ -84,6 +84,8 @@ class ListHandler {
             "filter_gender": document.getElementById("filterGender") as HTMLSelectElement,
             "filter_age": document.getElementById("filterAge") as HTMLSelectElement,
             "filter_groups": [],
+            "chart_carousel": document.getElementById("chartCarousel") as HTMLDivElement,
+            "chart_title": document.getElementById("statisticsTitle") as HTMLSpanElement,
             "tml_game": document.getElementById("tml_game") as HTMLTemplateElement,
             "btn_filter": document.getElementById("btnFilterToggle") as HTMLButtonElement,
             "btn_statistics": document.getElementById("btnStatistics") as HTMLButtonElement
@@ -103,6 +105,7 @@ class ListHandler {
         // Create statistics dialog
         const el_dlg_statistics = document.getElementById("dlgStatistics") as HTMLElement;
         this.dlg_statistics = new Modal(el_dlg_statistics);
+        this.el.chart_carousel.addEventListener("slid.bs.carousel", this.onStatisticsSwitch);
 
         // Setup tooltips
         const el_menu = document.getElementById("menu") as HTMLElement;
@@ -114,7 +117,7 @@ class ListHandler {
         this.chartmanager = new ChartManager();
         for(const info of ListHandler.charts) {
             const el_canvas = document.getElementById(info.id) as HTMLCanvasElement;
-            this.chartmanager.add(el_canvas, info.type, info.category, info.title, info.whitelist);
+            this.chartmanager.add(el_canvas, info.type, info.category, info.title, info.whitelist, info.horizontal);
         }
 
         // Setup accordion manager
@@ -447,6 +450,34 @@ class ListHandler {
     private onClickStatistics = () => {
         this.hideTooltips();
         this.dlg_statistics.toggle();
+    }
+
+    private onStatisticsSwitch = (e: unknown) => {
+        if(typeof e === "object" && e !== null && "to" in e) {
+            switch(e.to) {
+                case 0:
+                    this.el.chart_title.innerText = "Genres";
+                    break;
+                case 1:
+                    this.el.chart_title.innerText = "Gameplay";
+                    break;
+                case 2:
+                    this.el.chart_title.innerText = "Perspektiven";
+                    break;
+                case 3:
+                    this.el.chart_title.innerText = "Settings";
+                    break;
+                case 4:
+                    this.el.chart_title.innerText = "Themen";
+                    break;
+                case 5:
+                    this.el.chart_title.innerText = "Platformen";
+                    break;
+                case 6:
+                    this.el.chart_title.innerText = "Jahrzehnte";
+                    break;
+            }
+        }
     }
 
     /**

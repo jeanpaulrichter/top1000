@@ -24,6 +24,8 @@ export type ListElements = {
     filter_gender: HTMLSelectElement,
     filter_age: HTMLSelectElement,
     filter_groups: HTMLInputElement[],
+    chart_carousel: HTMLDivElement,
+    chart_title: HTMLSpanElement,
     tml_game: HTMLTemplateElement,
     btn_filter: HTMLButtonElement,
     btn_statistics: HTMLButtonElement
@@ -139,7 +141,8 @@ export type GameChartOptions = {
     type: ChartType,
     category: `${GameCategory}`,
     title: string,
-    whitelist?: string[]
+    whitelist?: string[],
+    horizontal?: boolean
 }
 
 /**
