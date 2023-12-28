@@ -14,6 +14,7 @@ import { default as axios } from "redaxios";
 import { Modal, Tooltip } from "bootstrap";
 import { ListElements, FilterOptions, Game, ListData, GameChartOptions } from "./list/types.js";
 import { ChartManager } from "list/charts.js";
+import { AccordionManager } from "accordion.js";
 
 /**
  * Mangages list.html
@@ -28,9 +29,9 @@ class ListHandler {
      */
     private filter: FilterOptions;
     /**
-     * Currently selected game/list item
+     * Game list accordion manager
      */
-    private selection: HTMLElement | undefined = undefined;
+    private accordion: AccordionManager;
     /**
      * ChartManager instance
      */
@@ -116,6 +117,9 @@ class ListHandler {
             this.chartmanager.add(el_canvas, info.type, info.category, info.title, info.whitelist);
         }
 
+        // Setup accordion manager
+        this.accordion = new AccordionManager();
+
         // Default filter
         this.filter = {
             "age": 0,
@@ -134,8 +138,8 @@ class ListHandler {
      * @param el Event target
      */
     public click(el: HTMLElement): void {
-        if(!this.isChildOfGame(el) && this.selection !== undefined) {
-            this.removeSelection(this.selection);
+        if(!this.isChildOfGame(el)) {
+            this.accordion.close();
         }
     }
 
@@ -196,9 +200,7 @@ class ListHandler {
             this.el.mask.classList.remove("hidden");
 
             // Remove selection
-            if(this.selection) {
-                this.removeSelection(this.selection);
-            }
+            this.accordion.close(true);
     
             // Get list data
             const ret = await this.listRequest(page);
@@ -389,71 +391,6 @@ class ListHandler {
     }
 
     /**
-     * Toggle game selection
-     * 
-     * @param el_game game div
-     */
-    private toggleSelection(el_game: HTMLElement): void {
-        if(el_game.classList.contains("game--selected")) {
-            this.removeSelection(el_game);
-            this.selection = undefined;
-        } else {
-            this.setSelection(el_game);
-            this.selection = el_game;
-        }
-    }
-
-    /**
-     * Remove selection from game
-     * 
-     * @param el_game game div
-     */
-    private removeSelection(el_game: HTMLElement): void {
-        const el_body = el_game.children[1] as HTMLDivElement;
-        const el_icon = el_game.children[0].children[3].children[0] as HTMLSpanElement;
-
-        el_game.classList.remove("game--selected");
-        el_body.classList.add("hidden");
-        el_icon.classList.add("icon-expand");
-        el_icon.classList.remove("icon-collapse");
-
-        if(el_game === this.selection) {
-            this.selection = undefined;
-        }
-    }
-
-    /**
-     * Set game selection
-     * 
-     * @param el_game game div
-     */
-    private setSelection(el_game: HTMLElement): void {
-        // Find relevant dom nodes
-        const el_body = el_game.children[1] as HTMLDivElement;
-        const el_icon = el_game.children[0].children[3].children[0] as HTMLSpanElement;
-    
-        if(el_game !== this.selection) {
-            el_game.classList.add("game--selected");
-            // Expand body div
-            el_body.classList.remove("hidden");
-            el_icon.classList.remove("icon-expand");
-            el_icon.classList.add("icon-collapse");
-    
-            if(this.selection !== undefined) {
-                // Remove focus from previously focused game
-                const el_cur_body = this.selection.children[1] as HTMLDivElement;
-                const el_cur_icon = this.selection.children[0].children[3].children[0] as HTMLSpanElement;
-    
-                this.selection.classList.remove("game--selected");
-                el_cur_body.classList.add("hidden");
-                el_cur_icon.classList.add("icon-expand");
-                el_cur_icon.classList.remove("icon-collapse");
-            }
-            this.selection = el_game;
-        }
-    }
-
-    /**
      * Hide all tooltips
      */
     private hideTooltips(): void {
@@ -534,7 +471,7 @@ class ListHandler {
         if(evt.target !== null) {
             const el_game = this.isChildOfGame(evt.target as HTMLElement);
             if(el_game !== undefined) {
-                this.toggleSelection(el_game);
+                this.accordion.toggle(el_game);
             }
         }
     }

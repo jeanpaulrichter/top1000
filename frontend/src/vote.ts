@@ -14,6 +14,7 @@ import { Tooltip, Modal } from "bootstrap";
 import { default as axios } from "redaxios";
 import { VoteElements, UserInfo, SlideOptions } from "./vote/types.js";
 import { Select2Manager } from "vote/select2.js";
+import { AccordionManager } from "accordion.js";
 
 /**
  * Handler for vote page
@@ -40,9 +41,9 @@ class VoteHandler {
      */
     private max_steps: number;
     /**
-     * Currently selected game dropdown select
+     * Accordion manager
      */
-    private selection: HTMLElement | undefined;
+    private accordion: AccordionManager;
     /**
      * Select2 handler
      */
@@ -91,6 +92,9 @@ class VoteHandler {
             "addgame_msg": document.getElementById("addGameMsg") as HTMLSpanElement
         }
 
+        // Setup accordion manager
+        this.accordion = new AccordionManager();
+
         // Setup select2
         this.select2 = new Select2Manager(this.el.progress, this.setGameFocus.bind(this));
 
@@ -136,16 +140,14 @@ class VoteHandler {
      * @param el Event target
      */
     public click(el: HTMLElement): void {
-        if(this.selection !== undefined) {
-            // Ignore clicks in current select2 (is dynamiclly added to body on focus)
-            if(document.body.lastElementChild && document.body.lastElementChild.tagName === "SPAN" &&
-                document.body.lastElementChild.contains(el)) {
-                return;
-            }
-            // Ignore clicks in currently selected game
-            if(!this.selection.contains(el)) {
-                this.removeSelection(this.selection);
-            }
+        // Ignore clicks in current select2 (is dynamiclly added to body on focus)
+        if(document.body.lastElementChild && document.body.lastElementChild.tagName === "SPAN" &&
+            document.body.lastElementChild.contains(el)) {
+            return;
+        }
+        // Ignore clicks in currently selected game
+        if(!this.isPartofGame(el)) {
+            this.accordion.close();
         }
     }
 
@@ -278,77 +280,10 @@ class VoteHandler {
         const el_game = this.isPartofGame(el);
         if(el_game !== undefined) {
             if(focus) {
-                el_game.classList.add("game--selected");
+                el_game.children[0].classList.add("select2--focus");
             } else {
-                el_game.classList.remove("game--selected");
+                el_game.children[0].classList.remove("select2--focus");
             }
-        }
-    }
-
-    /**
-     * Toggle game selection
-     * 
-     * @param el_game game div
-     */
-    private toggleSelection(el_game: HTMLElement): void {
-        if(el_game.classList.contains("game--selected")) {
-            this.removeSelection(el_game);
-            this.selection = undefined;
-        } else {
-            this.setSelection(el_game);
-            this.selection = el_game;
-        }
-    }
-
-    /**
-     * Remove selection from game
-     * 
-     * @param el_game game div
-     */
-    private removeSelection(el_game: HTMLElement): void {
-        const el_body = el_game.children[1] as HTMLDivElement;
-        const el_icon = el_game.children[0].children[2].children[0].children[0] as HTMLSpanElement;
-
-        el_game.classList.remove("game--selected");
-        el_body.classList.add("hidden");
-        el_icon.classList.add("icon-expand");
-        el_icon.classList.remove("icon-collapse");
-
-        if(el_game === this.selection) {
-            this.selection = undefined;
-        }
-    }
-
-    /**
-     * Set game selection
-     * 
-     * @param el_game game div
-     */
-    private setSelection(el_game: HTMLElement): void {
-        // Find relevant dom nodes
-        const el_body = el_game.children[1] as HTMLDivElement;
-        const el_icon = el_game.children[0].children[2].children[0].children[0] as HTMLSpanElement;
-        const el_text = el_body.children[1].children[0] as HTMLTextAreaElement;
-    
-        if(el_game !== this.selection) {
-            el_game.classList.add("game--selected");
-            // Expand body div
-            el_body.classList.remove("hidden");
-            el_icon.classList.remove("icon-expand");
-            el_icon.classList.add("icon-collapse");
-    
-            if(this.selection !== undefined) {
-                // Remove focus from previously focused game
-                const el_cur_body = this.selection.children[1] as HTMLDivElement;
-                const el_cur_icon = this.selection.children[0].children[2].children[0].children[0] as HTMLSpanElement;
-    
-                this.selection.classList.remove("game--selected");
-                el_cur_body.classList.add("hidden");
-                el_cur_icon.classList.add("icon-expand");
-                el_cur_icon.classList.remove("icon-collapse");
-            }
-            this.selection = el_game;
-            el_text.focus();
         }
     }
 
@@ -488,7 +423,8 @@ class VoteHandler {
             const el_game = this.isPartofGame(e.target);
             if(el_game !== undefined) {
                 e.stopPropagation();
-                this.toggleSelection(el_game);
+                const el_textarea = el_game.children[1].children[1].children[0] as HTMLElement;
+                this.accordion.toggle(el_game, el_textarea);
             }
         }
     }

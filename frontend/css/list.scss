@@ -75,6 +75,9 @@ GNU General Public License for more details.
 .game--selected {
     .game__expand {
         filter: brightness(0) saturate(100%) invert(30%) sepia(63%) saturate(5260%) hue-rotate(319deg) brightness(96%) contrast(100%) !important;
+        span {
+            transform: rotate(180deg);
+        }
     }
     span {
         color: $wasted-color !important;
@@ -167,11 +170,18 @@ GNU General Public License for more details.
             background-position: 50%;
             display: block;
             background-color: transparent;
+            transition: transform 0.35s ease;
         }
     }
 }
 
 .game__body {
+    overflow: hidden;
+    transition: height 0.35s ease;
+
+    &:not(.show) {
+        display: none;
+    }    
 
     .game__info {
         width: 100%;

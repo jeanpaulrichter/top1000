@@ -112,6 +112,7 @@ GNU General Public License for more details.
 .game--selected {
     .game__expand span {
         filter: brightness(0) saturate(100%) invert(30%) sepia(63%) saturate(5260%) hue-rotate(319deg) brightness(96%) contrast(100%) !important;
+        transform: rotate(180deg);
     }
     .game__number span {
         color: $wasted-color !important;
@@ -133,12 +134,14 @@ GNU General Public License for more details.
     display: flex;
     flex-flow: row nowrap;
 
-    &:hover {
-        .game__expand span {
-            filter: brightness(0) saturate(100%) invert(30%) sepia(63%) saturate(5260%) hue-rotate(319deg) brightness(96%) contrast(100%) !important;
-        }
-        .game__number span {
-            color: $wasted-color !important;
+    &:not(.select2--focus) {
+        &:hover {
+            .game__expand span {
+                filter: brightness(0) saturate(100%) invert(30%) sepia(63%) saturate(5260%) hue-rotate(319deg) brightness(96%) contrast(100%) !important;
+            }
+            .game__number span {
+                color: $wasted-color !important;
+            }
         }
     }
 
@@ -200,6 +203,7 @@ GNU General Public License for more details.
             background-position: 50%;
             background-size: 180%;
             background-color: transparent;
+            transition: transform 0.35s ease;
         }
     }
 }
@@ -208,6 +212,13 @@ GNU General Public License for more details.
     width: 100%;
     display: flex;
     flex-flow: row nowrap;
+
+    overflow: hidden;
+    transition: height 0.35s ease;
+
+    &:not(.show) {
+        display: none;
+    }  
 
     // Indentation container...
     .game__spacer {
@@ -221,7 +232,7 @@ GNU General Public License for more details.
     .game__comment {
         order: 2;
         flex-grow: 1;
-        padding: 3px;
+        padding: 3px 3px 0 3px;
 
         textarea {
             width: 100%; 
