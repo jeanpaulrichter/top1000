@@ -110,6 +110,7 @@ class VoteHandler {
         for(const el_tooltip of el_menu.querySelectorAll("button")) {
             this.tooltips.push(new Tooltip(el_tooltip));
         }
+        this.tooltips.push(new Tooltip(this.el.progress));
 
         // Setup help dialog
         this.dlg_help = new Modal(this.el.dlg_help);

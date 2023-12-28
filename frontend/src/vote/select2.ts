@@ -134,7 +134,11 @@ export class Select2Manager {
             }
         }
         const percent = Math.round(votes * 100 / this.selected_games.length);
-        this.el_progress.innerHTML = `${percent}%`;
+        //this.el_progress.innerHTML = `${percent}%`;
+        this.el_progress.ariaValueNow = percent.toString();
+        const x = this.el_progress.firstElementChild as HTMLElement;
+        x.style.width = percent + "%";
+        x.innerHTML = percent + "%"; 
     }
 
     /**

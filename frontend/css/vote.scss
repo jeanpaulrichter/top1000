@@ -45,7 +45,7 @@ GNU General Public License for more details.
     color: white;
     padding: 1rem;
     position: relative;
-    min-height: 32rem;
+    min-height: 34rem;
 }
 
 .slide__info {
@@ -62,13 +62,12 @@ GNU General Public License for more details.
 
 #footer {
     position: relative;
-    display: flex;
-    align-items: center;
+    text-align: center;
     box-sizing: border-box;
     padding: 1rem;
 
     .footer__buttons {
-        flex-grow: 1;
+        margin-top: 1rem;
 
         button {
             border: 0;
@@ -91,19 +90,19 @@ GNU General Public License for more details.
 
     .footer__step {
         color: white;
-        font-size: 3rem;
+        font-size: 0.9rem;
         user-select: none;
         font-style: italic;
-        line-height: 3rem;
+        font-weight: bold;
+        line-height: 0.9rem;
+        padding: 0.1rem;
+        margin-top: 0.2rem;
     }
 
     .footer__progress {
-        color: white;
-        font-size: 3rem;
+        margin-left: 10rem;
+        margin-right: 10rem;
         user-select: none;
-        font-style: italic;
-        line-height: 3rem;
-        margin-right: 1rem;
     }
 }
 
