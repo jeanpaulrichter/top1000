@@ -250,8 +250,7 @@ export class APIRouter
         try {
             this.checkPermission(req);
 
-            // Select2 will query with undefined searchterm first: send empty list
-            if(req.query.search === undefined) {
+            if(req.query.search === undefined || req.query.search === "") {
                 res.send([]);
             } else {
                 // Validate input

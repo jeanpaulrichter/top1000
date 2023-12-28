@@ -10,7 +10,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU General Public License for more details.
 */
 
-import { SearchResult, GameInfo, VoteInfo, S2Callback_focus, AutocompleteAPIParam } from "./types.js";
+import { SearchResult, GameInfo, VoteInfo, AutocompleteAPIParam } from "./types.js";
 import { default as axios } from "redaxios";
 import "select2";
 
@@ -18,10 +18,6 @@ import "select2";
  * Manager of jquery/select2 dropdown elements
  */
 export class Select2Manager {
-    /**
-     * Callback to set focus on voting list item
-     */
-    private cb_focus_game: S2Callback_focus;
     /**
      * Progress div
      */
@@ -31,7 +27,7 @@ export class Select2Manager {
      */
     private selected_games: string[] = [];
 
-    constructor(el_progress: HTMLElement, cb_focus_game: S2Callback_focus) {
+    constructor() {
         // Setup select2 event handlers
         const doc = $(document);
         doc.on("select2:opening", this.onOpening);
@@ -39,8 +35,7 @@ export class Select2Manager {
         doc.on("select2:close", this.onClose);
         doc.on("select2:selecting", this.onSelecting);
 
-        this.el_progress = el_progress;
-        this.cb_focus_game = cb_focus_game;
+        this.el_progress = document.getElementById("progress") as HTMLElement;
     }
 
     /**
@@ -123,23 +118,7 @@ export class Select2Manager {
         }
     }
 
-    /**
-     * Update voting progress
-     */
-    private updateProgress(): void {
-        let votes = 0;
-        for(let i = 0; i < this.selected_games.length; i++) {
-            if(this.selected_games[i].length === 24) {
-                votes++;
-            }
-        }
-        const percent = Math.round(votes * 100 / this.selected_games.length);
-        //this.el_progress.innerHTML = `${percent}%`;
-        this.el_progress.ariaValueNow = percent.toString();
-        const x = this.el_progress.firstElementChild as HTMLElement;
-        x.style.width = percent + "%";
-        x.innerHTML = percent + "%"; 
-    }
+
 
     /**
      * Add/remove select2--hightlight class to/from select2
@@ -156,6 +135,43 @@ export class Select2Manager {
             el_game_span.classList.add("select2--highlight");
         } else {
             el_game_span.classList.remove("select2--highlight");
+        }
+    }
+
+    /**
+     * Update voting progress
+     */
+    private updateProgress(): void {
+        let votes = 0;
+        for(let i = 0; i < this.selected_games.length; i++) {
+            if(this.selected_games[i].length === 24) {
+                votes++;
+            }
+        }
+        const percent = Math.round(votes * 100 / this.selected_games.length);
+        this.el_progress.ariaValueNow = percent.toString();
+        const el = this.el_progress.firstElementChild as HTMLElement;
+        const percent_str = percent.toString() + "%";
+        el.style.width = percent_str;
+        el.innerHTML = percent_str; 
+    }
+
+    /**
+     * Add/Remove select2--focus class from game head
+     * 
+     * @param el HTMLElement
+     * @param focus Focus: true/false
+     */
+    private setFocus(el: HTMLElement, focus: boolean) {
+        while(!el.classList.contains("game") && el.parentElement !== null) {
+            el = el.parentElement;
+        }
+        if(el.classList.contains("game")) {
+            if(focus) {
+                el.children[0].classList.add("select2--focus");
+            } else {
+                el.children[0].classList.remove("select2--focus");
+            }
         }
     }
 
@@ -227,7 +243,7 @@ export class Select2Manager {
         if(e.target instanceof HTMLElement) {
             e.stopPropagation();
             this.highlight(e.target, true);
-            this.cb_focus_game(e.target, true);
+            this.setFocus(e.target, true);
         }
     }
 
@@ -251,7 +267,7 @@ export class Select2Manager {
      */
     private onClose = (e: Event) => {
         if(e.target instanceof HTMLElement) {
-            this.cb_focus_game(e.target, false);
+            this.setFocus(e.target, false);
             this.highlight(e.target, false);
         }
     }

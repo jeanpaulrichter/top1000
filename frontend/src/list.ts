@@ -12,8 +12,8 @@ GNU General Public License for more details.
 
 import { default as axios } from "redaxios";
 import { Modal, Tooltip } from "bootstrap";
-import { ListElements, FilterOptions, Game, ListData, GameChartOptions } from "./list/types.js";
-import { ChartManager } from "list/charts.js";
+import { ListElements, FilterOptions, Game, ListData, GameChartOptions } from "./types.js";
+import { ChartManager } from "charts.js";
 import { AccordionManager } from "accordion.js";
 
 /**

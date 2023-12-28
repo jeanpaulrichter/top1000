@@ -10,13 +10,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU General Public License for more details.
 */
 
-type AccordionTransition = {
-    active: boolean,
-    el_selection?: HTMLElement,
-    el_expand?: HTMLElement,
-    el_collapse?: HTMLElement,
-    el_focus?: HTMLElement
-}
+import { AccordionTransition } from "types.js";
 
 /**
  * Manager of accordion transitions

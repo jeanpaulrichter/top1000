@@ -141,3 +141,107 @@ export type GameChartOptions = {
     title: string,
     whitelist?: string[]
 }
+
+/**
+ * Vote page element
+ */
+export type VoteElements = {
+    slides: HTMLElement,
+    step: HTMLDivElement,
+    progress: HTMLDivElement,
+    gender: HTMLSelectElement,
+    age: HTMLSelectElement,
+    group_hobby: HTMLInputElement,
+    group_journalist: HTMLInputElement,
+    group_scientist: HTMLInputElement,
+    group_critic: HTMLInputElement,
+    group_wasted: HTMLInputElement,
+    group_notwasted: HTMLInputElement,
+    btn_next: HTMLButtonElement,
+    btn_prev: HTMLButtonElement,
+    btn_help: HTMLButtonElement,
+    btn_addgame: HTMLButtonElement,
+    tml_slide: HTMLTemplateElement,
+    tml_game: HTMLTemplateElement,
+    dlg_help: HTMLDivElement,
+    addgame_url: HTMLInputElement,
+    addgame_msg: HTMLSpanElement
+}
+
+/**
+ * Game platform info
+ */
+export type PlatformInfo = {
+    name: string,
+    year: number
+}
+
+/**
+ * Suggested game for autocomplete
+ */
+export type GameInfo = {
+    id: string,
+    title: string,
+    year: number,
+    icon?: string,
+    platforms: PlatformInfo[],
+    text?: string
+}
+
+/**
+ * Information about user
+ */
+export type UserInfo = {
+    gender: string,
+    age: number,
+    gamer: boolean,
+    journalist: boolean,
+    scientist: boolean,
+    critic: boolean,
+    wasted: boolean
+}
+
+/**
+ * Vote information
+ */
+export type VoteInfo = {
+    position: number,
+    comment?: string
+} & GameInfo;
+
+/**
+ * Search result for select2 autocomplete
+ */
+export type SearchResult = {
+    results: GameInfo[],
+    pagination: {
+        more: boolean
+    }
+}
+
+/**
+ * Options for slide with game selectors
+ */
+export type SlideOptions = {
+    text: string,
+    games: number
+}
+
+/**
+ * Autocomplete API request parameter
+ */
+export type AutocompleteAPIParam = {
+    page: number,
+    search: string
+}
+
+/**
+ * Accordion transition info
+ */
+export type AccordionTransition = {
+    active: boolean,
+    el_selection?: HTMLElement,
+    el_expand?: HTMLElement,
+    el_collapse?: HTMLElement,
+    el_focus?: HTMLElement
+}

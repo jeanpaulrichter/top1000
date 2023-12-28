@@ -12,8 +12,8 @@ GNU General Public License for more details.
 
 import { Tooltip, Modal } from "bootstrap";
 import { default as axios } from "redaxios";
-import { VoteElements, UserInfo, SlideOptions } from "./vote/types.js";
-import { Select2Manager } from "vote/select2.js";
+import { VoteElements, UserInfo, SlideOptions } from "./types.js";
+import { Select2Manager } from "select2.js";
 import { AccordionManager } from "accordion.js";
 
 /**
@@ -96,7 +96,7 @@ class VoteHandler {
         this.accordion = new AccordionManager();
 
         // Setup select2
-        this.select2 = new Select2Manager(this.el.progress, this.setGameFocus.bind(this));
+        this.select2 = new Select2Manager();
 
         // Create slides
         this.createSlides();
@@ -267,23 +267,6 @@ class VoteHandler {
                 throw exc.data;
             } else {
                 throw "Es ist ein Fehler aufgetreten";
-            }
-        }
-    }
-
-    /**
-     * Add/Remove game--selected class from game
-     * 
-     * @param el HTMLElement
-     * @param focus Focus: true/false
-     */
-    private setGameFocus(el: HTMLElement, focus: boolean) {
-        const el_game = this.isPartofGame(el);
-        if(el_game !== undefined) {
-            if(focus) {
-                el_game.children[0].classList.add("select2--focus");
-            } else {
-                el_game.children[0].classList.remove("select2--focus");
             }
         }
     }
