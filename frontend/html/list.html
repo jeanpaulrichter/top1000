@@ -38,12 +38,13 @@ GNU General Public License for more details.
         <div id="top">
           <h1>Wasted (<img src="images/angel.svg">) Top1000</h1>
           <nav id="menu">
-            <a href="/vote"><button class="icon-vote" data-bs-placement="bottom" data-bs-title="Zur Abstimmung" id="btnVote"></button></a>
+            <a href="/vote"><button class="icon-vote hidden" data-bs-placement="bottom" data-bs-title="Zur Abstimmung" id="btnVote"></button></a>
             <button class="icon-chart" data-bs-placement="bottom" title="Statistik" id="btnStatistics"></button>
             <button id="btnFilterToggle" class="icon-filter" data-bs-placement="bottom"></button>
             <a href=""><button id="btnUser" class="" data-bs-placement="bottom"></button></a>
           </nav>
-          <div id="filter" class="hidden">
+          <div id="filter">
+            <div>
             <div class="row mb-3">
               <label class="col-sm-6 col-form-label" for="filterGender">Geschlecht</label>
               <div class="col-sm-6">
@@ -101,6 +102,7 @@ GNU General Public License for more details.
                 </div>
               </div>
             </div>
+          </div>
           </div>
         </div>
         <div id="message" class="hidden"></div>

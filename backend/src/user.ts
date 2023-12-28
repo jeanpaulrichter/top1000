@@ -62,7 +62,7 @@ export class UserRouter
             // Validate input
             const email = validateString(req.body.email, "Invalid email", 1, 128, StringValidation.Email);
             const password = validateString(req.body.password, "Invalid password", 8, 128);
-            const ip = validateString(req.ip, "Failed to read client IP", 7, 64);
+            const ip = validateString(req.ip, "Failed to read client IP", 3, 64);
             
             // Fetch and send user info
             req.session.user = await this.db.getUser(ip, email, password);    

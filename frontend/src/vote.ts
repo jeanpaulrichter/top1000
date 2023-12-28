@@ -14,7 +14,7 @@ import { Tooltip, Modal } from "bootstrap";
 import { default as axios } from "redaxios";
 import { VoteElements, UserInfo, SlideOptions } from "./types.js";
 import { Select2Manager } from "select2.js";
-import { AccordionManager } from "accordion.js";
+import { AccordionGameManger } from "accordion.js";
 
 /**
  * Handler for vote page
@@ -43,7 +43,7 @@ class VoteHandler {
     /**
      * Accordion manager
      */
-    private accordion: AccordionManager;
+    private accordion: AccordionGameManger;
     /**
      * Select2 handler
      */
@@ -93,7 +93,7 @@ class VoteHandler {
         }
 
         // Setup accordion manager
-        this.accordion = new AccordionManager();
+        this.accordion = new AccordionGameManger();
 
         // Setup select2
         this.select2 = new Select2Manager();

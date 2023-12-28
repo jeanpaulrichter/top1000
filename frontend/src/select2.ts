@@ -12,7 +12,6 @@ GNU General Public License for more details.
 
 import { SearchResult, GameInfo, VoteInfo, AutocompleteAPIParam } from "./types.js";
 import { default as axios } from "redaxios";
-import "select2";
 
 /**
  * Manager of jquery/select2 dropdown elements

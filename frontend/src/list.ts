@@ -14,7 +14,7 @@ import { default as axios } from "redaxios";
 import { Modal, Tooltip } from "bootstrap";
 import { ListElements, FilterOptions, Game, ListData, GameChartOptions } from "./types.js";
 import { ChartManager } from "charts.js";
-import { AccordionManager } from "accordion.js";
+import { AccordionGameManger, AccordionManager } from "accordion.js";
 
 /**
  * Mangages list.html
@@ -31,7 +31,11 @@ class ListHandler {
     /**
      * Game list accordion manager
      */
-    private accordion: AccordionManager;
+    private acc_games: AccordionGameManger;
+    /**
+     * Filter accordion manager
+     */
+    private acc_filter: AccordionManager;
     /**
      * ChartManager instance
      */
@@ -99,11 +103,11 @@ class ListHandler {
                 this.el.btn_user.className = "icon-logout";
                 this.el.btn_user.title = "Logout";
                 (this.el.btn_user.parentElement as HTMLLinkElement).href = "/user/logout";
+                el_btn_vote.classList.remove("hidden");
             } else {
                 this.el.btn_user.className = "icon-login";
                 this.el.btn_user.title = "Login";
-                (this.el.btn_user.parentElement as HTMLLinkElement).href = "/login";
-                el_btn_vote.className = "hidden";
+                (this.el.btn_user.parentElement as HTMLLinkElement).href = "/login";                
             }
         });
 
@@ -137,7 +141,8 @@ class ListHandler {
         }
 
         // Setup accordion manager
-        this.accordion = new AccordionManager();
+        this.acc_games = new AccordionGameManger();
+        this.acc_filter = new AccordionManager();
 
         // Default filter
         this.filter = {
@@ -158,7 +163,7 @@ class ListHandler {
      */
     public click(el: HTMLElement): void {
         if(!this.isChildOfGame(el)) {
-            this.accordion.close();
+            this.acc_games.close();
         }
     }
 
@@ -238,7 +243,7 @@ class ListHandler {
             this.el.mask.classList.remove("hidden");
 
             // Remove selection
-            this.accordion.close(true);
+            this.acc_games.close(true);
     
             // Get list data
             const ret = await this.listRequest(page);
@@ -577,13 +582,14 @@ class ListHandler {
      */
     private onClickFilterToggle = () => {
         this.hideTooltips();
-        if(this.el.filter.classList.contains("hidden")) {
-            this.el.filter.classList.remove("hidden");
+        this.acc_filter.toggle(this.el.filter);
+        if(!this.el.btn_filter.classList.contains("toggled")) {
+            //this.el.filter.classList.remove("hidden");
             this.el.btn_filter.classList.add("icon-filter-open");
             this.el.btn_filter.classList.add("toggled");
             this.el.btn_filter.classList.remove("icon-filter");
         } else {
-            this.el.filter.classList.add("hidden");
+            //this.el.filter.classList.add("hidden");
             this.el.btn_filter.classList.remove("icon-filter-open");
             this.el.btn_filter.classList.remove("toggled");
             this.el.btn_filter.classList.add("icon-filter");
@@ -653,7 +659,7 @@ class ListHandler {
         if(evt.target !== null) {
             const el_game = this.isChildOfGame(evt.target as HTMLElement);
             if(el_game !== undefined) {
-                this.accordion.toggle(el_game);
+                this.acc_games.toggle(el_game);
             }
         }
     }

@@ -23,7 +23,7 @@ export class AccordionManager {
     /**
      * Currently selected element
      */
-    private selection?: HTMLElement;
+    protected selection?: HTMLElement;
     /**
      * Length of transition in milliseconds
      */
@@ -38,14 +38,14 @@ export class AccordionManager {
     /**
      * Toggle transition
      * 
-     * @param el_game Accordion element
+     * @param el Accordion element
      * @param focus Element to focus on after transition
      */
-    public toggle(el_game: HTMLElement, focus?: HTMLElement) {
-        if(this.selection === el_game) {
-            this.startTransition(undefined, el_game, focus);
+    public toggle(el: HTMLElement, focus?: HTMLElement): boolean {
+        if(this.selection === el) {
+            return this.startTransition(undefined, el, focus);
         } else {
-            this.startTransition(el_game, this.selection, focus);
+            return this.startTransition(el, this.selection, focus);
         }
     }
 
@@ -57,8 +57,7 @@ export class AccordionManager {
     public close(skipAnimation = false) {
         if(this.selection !== undefined) {
             if(skipAnimation) {
-                this.selection.children[1].classList.remove("show");
-                this.selection.classList.remove("game--selected");
+                this.selection.classList.remove("show");
                 this.selection = undefined;
             } else {
                 this.startTransition(undefined, this.selection);
@@ -66,38 +65,37 @@ export class AccordionManager {
         }
     }
 
+    protected isActive() {
+        return this.transition.active;
+    }
+
     /**
      * Start transition animation
      * 
-     * @param el_game_expand Element to expand
-     * @param el_game_collapse Element to collapse
+     * @param el_expand Element to expand
+     * @param el_collapse Element to collapse
      * @param el_focus Element to focus on after transition
      */
-    private startTransition(el_game_expand?: HTMLElement, el_game_collapse?: HTMLElement, el_focus?: HTMLElement) {
-        if(!(el_game_expand || el_game_collapse) || this.transition.active) {
-            return;
+    protected startTransition(el_expand?: HTMLElement, el_collapse?: HTMLElement, el_focus?: HTMLElement) {
+        if(!(el_expand || el_collapse) || this.transition.active) {
+            return false;
         }
-        if(el_game_expand) {
-            this.transition.el_selection = el_game_expand;
-            this.transition.el_expand = el_game_expand.children[1] as HTMLElement;
-
-            el_game_expand.classList.add("game--selected");
-        
+        if(el_expand) {
+            this.transition.el_selection = el_expand;
+            this.transition.el_expand = el_expand;
         } else {
             this.transition.el_expand = undefined;
             this.transition.el_selection = undefined;
         }
-        if(el_game_collapse) {
-            this.transition.el_collapse = el_game_collapse.children[1] as HTMLElement;
-    
-            el_game_collapse.classList.remove("game--selected");
-
+        if(el_collapse) {
+            this.transition.el_collapse = el_collapse;
         } else {
             this.transition.el_collapse = undefined;
         }
         this.transition.el_focus = el_focus;
         this.transition.active = true;
         requestAnimationFrame(this.setStart);
+        return true;
     }
 
     /**
@@ -107,7 +105,7 @@ export class AccordionManager {
         if(this.transition.el_expand) {
             this.transition.el_expand.classList.add("show");
             this.transition.el_expand.style.height = "0px";
-        }
+        }        
         if(this.transition.el_collapse) {
             this.transition.el_collapse.style.height = this.transition.el_collapse.scrollHeight + "px";
         }
@@ -142,5 +140,50 @@ export class AccordionManager {
         }
         this.selection = this.transition.el_selection;
         this.transition.active = false;
+    }
+}
+
+export class AccordionGameManger extends AccordionManager {
+    constructor() {
+        super();
+    }
+
+    /**
+     * Toggle transition
+     * 
+     * @param el_game Accordion element
+     * @param focus Element to focus on after transition
+     */
+    public toggle(el_game: HTMLElement, focus?: HTMLElement) {
+        if(super.isActive()) {
+            return false;
+        }
+        if(this.selection === el_game.children[1]) {
+            el_game.classList.remove("game--selected");
+            return super.startTransition(undefined, el_game.children[1] as HTMLElement, focus);            
+        } else {
+            el_game.classList.add("game--selected");
+            if(this.selection) {
+                this.selection.parentElement?.classList.remove("game--selected");
+            }
+            return super.startTransition(el_game.children[1] as HTMLElement, this.selection, focus);
+        }
+    }
+
+    /**
+     * Close currently selected accordion element
+     * 
+     * @param skipAnimation Skip transition animation
+     */
+    public close(skipAnimation = false) {
+        if(this.selection !== undefined) {
+            this.selection.parentElement?.classList.remove("game--selected");
+            if(skipAnimation) {
+                this.selection.classList.remove("show");
+                this.selection = undefined;
+            } else {
+                super.startTransition(undefined, this.selection);
+            }
+        }
     }
 }
