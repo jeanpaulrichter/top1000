@@ -164,7 +164,7 @@ class VoteHandler {
 
             // Relevant nodes of new slide
             const el_slide_text = new_slide.children[0].children[0].children[0] as HTMLSpanElement;
-            const el_slide_games = new_slide.children[0].children[1] as HTMLDivElement;
+            const el_slide_games = new_slide.children[0].children[2] as HTMLDivElement;
     
             el_slide_text.innerHTML = slide.text;
     

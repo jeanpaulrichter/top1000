@@ -60,6 +60,50 @@ GNU General Public License for more details.
     font-weight: bold;
 }
 
+.slide__title__placement {
+    float: left;
+    margin-left: 0.8rem;
+
+    >span:first-of-type {
+        width: 1.6rem;
+        height: 1.6rem;        
+        background-repeat: no-repeat;
+        background-position: 0 0;
+        background-size: 100% 100%;
+        display: table-cell;
+    }
+
+    >span:last-of-type {
+        font-size: 0.9rem;
+        display: table-cell;
+        margin-left: 0.2rem;
+        line-height: 0.6rem;
+        user-select: none;
+    }
+}
+
+.slide__title__comment {
+    float: right;
+    margin-right: 0.5rem;
+
+    >span:first-of-type {
+        font-size: 0.9rem;
+        display: table-cell;
+        margin-left: 0.2rem;
+        line-height: 0.6rem;
+        user-select: none;
+    }
+
+    >span:last-of-type {
+        width: 1.6rem;
+        height: 1.6rem;        
+        background-repeat: no-repeat;
+        background-position: 0 0;
+        background-size: 100% 100%;
+        display: table-cell;
+    }
+}
+
 #footer {
     position: relative;
     text-align: center;
