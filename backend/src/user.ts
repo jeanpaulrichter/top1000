@@ -38,6 +38,7 @@ export class UserRouter
 
         this.router.get("/logout", this.logout.bind(this));
         this.router.get("/validate", this.validate.bind(this));
+        this.router.get("/status", this.status.bind(this));
     }
 
     /**
@@ -68,6 +69,17 @@ export class UserRouter
             res.send({});
         } catch(exc) {
             next(exc);
+        }
+    }
+
+    /**
+     * Status request
+     */
+    private status(req: express.Request, res: express.Response) {
+        if(req.session.user !== undefined) {
+            res.send({"login": true});
+        } else {
+            res.send({"login": false})
         }
     }
     

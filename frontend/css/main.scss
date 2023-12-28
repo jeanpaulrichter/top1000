@@ -46,9 +46,15 @@ GNU General Public License for more details.
         background-color: transparent;
         background-size: 100%;
         border-radius: 50%;
-    
-        &:hover {
+
+        &.toggled {
             filter: brightness(0) saturate(100%) invert(30%) sepia(63%) saturate(5260%) hue-rotate(319deg) brightness(96%) contrast(100%);
+        }
+    
+        &:not(.toggled) {
+            &:hover {
+                filter: brightness(0) saturate(100%) invert(30%) sepia(63%) saturate(5260%) hue-rotate(319deg) brightness(96%) contrast(100%);
+            }
         }
     }
 }

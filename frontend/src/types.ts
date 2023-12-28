@@ -28,7 +28,8 @@ export type ListElements = {
     chart_title: HTMLSpanElement,
     tml_game: HTMLTemplateElement,
     btn_filter: HTMLButtonElement,
-    btn_statistics: HTMLButtonElement
+    btn_statistics: HTMLButtonElement,
+    btn_user: HTMLButtonElement
 }
 
 /**

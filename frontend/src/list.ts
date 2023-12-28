@@ -88,8 +88,24 @@ class ListHandler {
             "chart_title": document.getElementById("statisticsTitle") as HTMLSpanElement,
             "tml_game": document.getElementById("tml_game") as HTMLTemplateElement,
             "btn_filter": document.getElementById("btnFilterToggle") as HTMLButtonElement,
-            "btn_statistics": document.getElementById("btnStatistics") as HTMLButtonElement
+            "btn_statistics": document.getElementById("btnStatistics") as HTMLButtonElement,
+            "btn_user": document.getElementById("btnUser") as HTMLButtonElement
         }
+
+        const el_btn_vote = document.getElementById("btnVote") as HTMLElement;
+
+        this.isValidUser().then(ret => {
+            if(ret) {
+                this.el.btn_user.className = "icon-logout";
+                this.el.btn_user.title = "Logout";
+                (this.el.btn_user.parentElement as HTMLLinkElement).href = "/user/logout";
+            } else {
+                this.el.btn_user.className = "icon-login";
+                this.el.btn_user.title = "Login";
+                (this.el.btn_user.parentElement as HTMLLinkElement).href = "/login";
+                el_btn_vote.className = "hidden";
+            }
+        });
 
         // Setup event handler
         const el_groups = document.querySelectorAll<HTMLInputElement>("#filterGroups input");
@@ -108,10 +124,10 @@ class ListHandler {
         this.el.chart_carousel.addEventListener("slid.bs.carousel", this.onStatisticsSwitch);
 
         // Setup tooltips
-        const el_menu = document.getElementById("menu") as HTMLElement;
-        for(const el_tooltip of el_menu.querySelectorAll("button")) {
-            this.tooltips.push(new Tooltip(el_tooltip));
-        }
+        this.tooltips.push(new Tooltip(el_btn_vote));
+        this.tooltips.push(new Tooltip(this.el.btn_statistics));
+        this.tooltips.push(new Tooltip(this.el.btn_filter, { "title": ListHandler.getTooltipString as () => string }));
+        this.tooltips.push(new Tooltip(this.el.btn_user, { "title": ListHandler.getTooltipString as () => string }));
 
         // Setup ChartManager
         this.chartmanager = new ChartManager();
@@ -162,6 +178,25 @@ class ListHandler {
                 this.filter.group = el_radio.value;
                 break;
             }
+        }
+    }
+
+    /**
+     * Query server if user is logged in
+     * 
+     * @returns true or false
+     */
+    private async isValidUser(): Promise<boolean> {
+        try {
+            const ret = await axios.get("/user/status");
+            if(ret.status === 200 && typeof ret.data === "object" && ret.data !== null 
+                && "login" in ret.data && ret.data.login === true) {
+                    return true;
+            } else {
+                return false;
+            }
+        } catch {
+            return false;
         }
     }
 
@@ -263,6 +298,27 @@ class ListHandler {
         switch(el.dataset.helpid) {
             case "0": return "Das letztplatzierte Spiel eines Benutzers erhält gewichtet einen Punkt. Das erstplatzierte dagegen 10 Punkte.";
             default: return "";
+        }
+    }
+
+    private static getTooltipString(el: HTMLElement) {
+        switch(el.id) {
+            case "btnFilterToggle": {
+                if(el.classList.contains("toggled")) {
+                    return "Filter ausblenden";
+                } else {
+                    return "Filter einblenden";
+                }
+            }
+            case "btnUser": {
+                if(el.className === "icon-login") {
+                    return "Login";
+                } else {
+                    return "Logout";
+                }
+            }
+            default:
+                return "";
         }
     }
 
@@ -452,7 +508,7 @@ class ListHandler {
             el_last.disabled = (current == pages);
         } else {
             // Pagination with next and previous buttons
-            
+
             const el_prev = this.el.pages.children[0] as HTMLButtonElement;
             const prev_str = (current - 1).toString();
             el_prev.dataset.page = prev_str;
@@ -523,12 +579,14 @@ class ListHandler {
         this.hideTooltips();
         if(this.el.filter.classList.contains("hidden")) {
             this.el.filter.classList.remove("hidden");
-            this.el.btn_filter.classList.add("icon-menu-open");
-            this.el.btn_filter.classList.remove("icon-menu");
+            this.el.btn_filter.classList.add("icon-filter-open");
+            this.el.btn_filter.classList.add("toggled");
+            this.el.btn_filter.classList.remove("icon-filter");
         } else {
             this.el.filter.classList.add("hidden");
-            this.el.btn_filter.classList.remove("icon-menu-open");
-            this.el.btn_filter.classList.add("icon-menu");
+            this.el.btn_filter.classList.remove("icon-filter-open");
+            this.el.btn_filter.classList.remove("toggled");
+            this.el.btn_filter.classList.add("icon-filter");
         }
     }
 

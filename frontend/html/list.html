@@ -18,13 +18,15 @@ GNU General Public License for more details.
     <link rel="shortcut icon" href="images/favicon.webp">
     <link rel="preload" as="image" href="css/icons/vote.svg">
     <link rel="preload" as="image" href="css/icons/pie_chart.svg">
-    <link rel="preload" as="image" href="css/icons/menu.svg">
-    <link rel="preload" as="image" href="css/icons/menu_open.svg">
+    <link rel="preload" as="image" href="css/icons/filter.svg">
+    <link rel="preload" as="image" href="css/icons/filter_open.svg">
     <link rel="preload" as="image" href="css/icons/pattern1.svg">
     <link rel="preload" as="image" href="css/icons/prev.svg">
     <link rel="preload" as="image" href="css/icons/next.svg">
     <link rel="preload" as="image" href="css/icons/first.svg">
     <link rel="preload" as="image" href="css/icons/last.svg">
+    <link rel="preload" as="image" href="css/icons/login.svg">
+    <link rel="preload" as="image" href="css/icons/logout.svg">
     <link rel="stylesheet" href="css/bootstrap.css">
     <link rel="stylesheet" href="css/list.css">
     <script src="javascript/list.js" type="module"></script>
@@ -36,9 +38,10 @@ GNU General Public License for more details.
         <div id="top">
           <h1>Wasted (<img src="images/angel.svg">) Top1000</h1>
           <nav id="menu">
+            <a href="/vote"><button class="icon-vote" data-bs-placement="bottom" data-bs-title="Zur Abstimmung" id="btnVote"></button></a>
             <button class="icon-chart" data-bs-placement="bottom" title="Statistik" id="btnStatistics"></button>
-            <a href="/vote"><button class="icon-vote" data-bs-placement="bottom" title="Abstimmen"></button></a>
-            <button id="btnFilterToggle" title="Filter" class="icon-menu"></button>
+            <button id="btnFilterToggle" class="icon-filter" data-bs-placement="bottom"></button>
+            <a href=""><button id="btnUser" class="" data-bs-placement="bottom"></button></a>
           </nav>
           <div id="filter" class="hidden">
             <div class="row mb-3">
