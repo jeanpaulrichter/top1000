@@ -89,7 +89,7 @@ const directories: BuildDirectory[] = [
     {
         "src": "frontend/images",
         "dest": "www/images",
-        "extensions": [".png", ".jpg", ".webp", ".gif"],
+        "extensions": [".png", ".jpg", ".webp", ".gif", ".svg"],
     },
 ]
 
