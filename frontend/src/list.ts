@@ -511,7 +511,7 @@ class ListHandler {
             el_last.dataset.page = pages.toString();
             el_last.className = "icon-last";
             el_last.disabled = (current == pages);
-        } else {
+        } else if(nButtons > 0) {
             // Pagination with next and previous buttons
 
             const el_prev = this.el.pages.children[0] as HTMLButtonElement;

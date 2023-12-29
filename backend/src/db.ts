@@ -28,7 +28,8 @@ import { ConfigData } from "./config.js";
  */
 export class MongoDB
 {
-    private client: MongoClient | undefined;
+    private client?: MongoClient;
+    private client_images?: MongoClient;
     private log: Logger;
     private config: ConfigData;
     private moby: MobygamesLoader;
@@ -62,19 +63,33 @@ export class MongoDB
             // Select database
             const db = this.client.db(this.config.mongodb.database);
             await db.command({ ping: 1 });
+            this.log.info("Connected to database");
+
+            if(this.config.mongodb_images) {
+                this.log.info("Connecting to images database ...");
+                this.client_images = await MongoClient.connect(this.config.mongodb_images.uri, options);
+    
+                // Select database
+                const db_images = this.client_images.db(this.config.mongodb_images.database);
+                await db_images.command({ ping: 1 });
+                this.log.info("Connected to images database");
+
+                this.collections.images = db_images.collection("images");
+            }
 
             // Get collections
             this.collections.games = db.collection("games");
             this.collections.votes = db.collection("votes");
             this.collections.users = db.collection("users");
             this.collections.ipblock = db.collection("ipblock");
-            this.collections.images = db.collection("images");
 
-            this.log.info("Connected to mongodb database");
+            if(!this.config.mongodb_images) {
+                this.collections.images = db.collection("images");
+            }
+            
         } catch(err) {
             await this.close();
             this.log.error(err);
-            this.log.error("Failed to connect to " + this.config.mongodb.uri);
             throw new LoggedError();
         }
     }
@@ -85,6 +100,10 @@ export class MongoDB
     public async close(): Promise<void> {
         if(this.client !== undefined) {
             await this.client.close();
+            this.client = undefined;
+        }
+        if(this.client_images !== undefined) {
+            await this.client_images.close();
             this.client = undefined;
         }
     }

@@ -36,7 +36,7 @@ export class StaticRouter
     };
 
     private images:{[key:string]:string} = {
-        missing: "missing_screenshot.gif"
+        missing: "nocover.webp"
     }
 
     constructor(db: MongoDB, log: Logger) {

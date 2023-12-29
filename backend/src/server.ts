@@ -104,7 +104,9 @@ try {
             }
         });
     }).catch(exc => {
-        log.error(exc);
+        if(!(exc instanceof LoggedError)) {
+            log.error(exc);
+        }
     });
 
 } catch(err) {

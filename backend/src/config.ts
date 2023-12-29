@@ -43,6 +43,13 @@ export interface ConfigData {
         readonly database: string
     }
 
+    readonly mongodb_images?: {
+        /** Connection URI to mongodb server. */
+        readonly uri: string,
+        /** Name of top1000 database on mongodb server */
+        readonly database: string
+    }
+
     readonly email: {
         readonly smtp: {
             /** SMTP Server address for register/reset emails */
@@ -149,6 +156,7 @@ export class ConfigFile implements ConfigData {
     public readonly log;
     public readonly moby_api_key;
     public readonly mongodb;
+    public readonly mongodb_images?;
     public readonly email;    
     public readonly session;
     public readonly crypto;
@@ -190,6 +198,13 @@ export class ConfigFile implements ConfigData {
                 "uri": validateString(obj.mongodb.uri, "Invalid mongodb connection uri (mongodb.uri)", 1, 256),
                 "database": validateString(obj.mongodb.database, "Invalid mongodb database name (mongodb.database)", 1, 256)
             };
+
+            if(typeof obj.mongodb_images === "object" && !Array.isArray(obj.mongodb_images)) {
+                this.mongodb_images = {
+                    "uri": validateString(obj.mongodb_images.uri, "Invalid mongodb connection uri (mongodb.uri)", 1, 256),
+                    "database": validateString(obj.mongodb_images.database, "Invalid mongodb database name (mongodb.database)", 1, 256)
+                };
+            }
 
             if(typeof obj.email !== "object" || Array.isArray(obj.email) || 
                 typeof obj.email.smtp !== "object" || Array.isArray(obj.email.smtp) || 

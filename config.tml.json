@@ -11,6 +11,10 @@
         "uri": "",
         "database": ""
     },
+    "mongodb_images": {
+        "uri": "",
+        "database": ""
+    },
     "email": {
         "smtp": {
             "server": "",
