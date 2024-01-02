@@ -1,0 +1,4 @@
+
+- filter not only by users but also by game genre etc.
+- allow users to take back votes
+- show own placements in list somehow

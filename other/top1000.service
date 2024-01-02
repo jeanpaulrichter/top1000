@@ -1,0 +1,17 @@
+[Unit]
+Description=top1000
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/node /whoknowns/server.js
+WorkingDirectory=/whoknows
+User=john
+Restart=no
+Environment=NODE_ENV=production
+StandardInput=null
+StandardOutput=syslog
+StandardError=syslog
+
+[Install]
+WantedBy=multi-user.target
